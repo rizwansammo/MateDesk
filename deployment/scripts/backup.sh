@@ -1,10 +1,10 @@
 #!/bin/bash
 # MateDesk — Database + media backup script
-# Suggested cron: 0 3 * * * /opt/matedesk/deployment/scripts/backup.sh >> /opt/matedesk/backup.log 2>&1
+# Suggested cron: 0 3 * * * /opt/MateDesk/deployment/scripts/backup.sh >> /opt/MateDesk/backup.log 2>&1
 
 set -euo pipefail
 
-DEPLOY_DIR="/opt/matedesk"
+DEPLOY_DIR="/opt/MateDesk"
 BACKUP_DIR="$DEPLOY_DIR/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 KEEP_DAYS=7

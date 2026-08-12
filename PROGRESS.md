@@ -166,7 +166,74 @@ backup.sh), `.github/workflows/deploy.yml`.
 **Verified:** `docker compose config --quiet` → VALID. No `rmm` / `mateconnect` /
 `rustdesk` / `MateDesk Pro` references remain in any infra file.
 
-### 🔴 M3 BLOCKED — every deploy value is still the OLD VPS's
+### M3 — retargeted to MateServer (169.58.114.252)
+
+**Target box:** `MateServer`, Ubuntu 26.04, 6 cores / 11 GB RAM / 180 GB free.
+Shares one host nginx with **NetaMate** (`127.0.0.1:8001`, netamate.com) and
+**TalkRoom** (`network_mode: host`, `*:4000`, talkroom.club). Host Postgres 18 on
+`127.0.0.1:5432` and host Redis on `127.0.0.1:6379` belong to other apps —
+MateDesk does **not** share them.
+
+**Ports chosen:** backend `127.0.0.1:8005`, frontend `127.0.0.1:3005`. Verified free.
+Postgres + Redis have **no host port at all**.
+
+**Deploy dir:** `/opt/MateDesk` (capital D — corrected in `deploy.sh`, `backup.sh`,
+and the workflow).
+
+**⚠️ The OLD production box (`176.57.188.13`) is DEAD** — ports 22/80/443 all closed,
+100% packet loss. `matedesk.pro` DNS still points there. This means there is **no live
+production to cut over from**, so the originally-planned Phase 7/8/9 (data migration
+rehearsal, agent continuity bridge, cutover) are **not needed** — this is a first
+deploy. Unconfirmed: whether any data on that box is still wanted.
+
+**Done this session:**
+- Deploy keypair `github-actions-matedesk-deploy` (ed25519) generated; public key
+  **appended** to `/root/.ssh/authorized_keys` (backup at
+  `authorized_keys.bak.before-matedesk`, 3 → 4 keys, existing 3 intact). Auth verified.
+- GitHub secrets set on `rizwansammo/MateDesk`: `VPS_HOST`, `VPS_USER`, `VPS_PATH`,
+  `VPS_SSH_KEY` (private key piped from file, never echoed).
+- `docker-compose.yml` rewritten for this box: **pgAdmin dropped entirely** (was
+  ledger #1), isolated Redis + Postgres with no host ports, GHCR images with
+  `${MATEDESK_*_IMAGE}` overrides, `build:` kept only as a first-deploy fallback.
+- `.github/workflows/deploy.yml` rewritten: **build in Actions → push to GHCR → SSH →
+  `docker compose pull && up -d`**, with a health-check gate and SHA-pinned images for
+  rollback. The old version built on the VPS, which the other apps on this box don't do.
+- `deployment/nginx/matedesk.pro` written (replaces `matedesk.conf`), HTTP-only so
+  certbot can add TLS. Filename matches the box convention.
+- `.env.example`: pgAdmin block removed, `CELERY_BROKER_URL` added (settings.py reads
+  it but it was never in the file), host-port + image-pinning sections added.
+- `/opt/MateDesk/docker-compose.yml` + `/opt/MateDesk/.env` (chmod 600, 19 keys) placed
+  and validated on the VPS. `docker compose config` → VALID, 6 services, only the two
+  expected `127.0.0.1` bindings. NetaMate + TalkRoom confirmed still running.
+
+**Not done — waiting on external steps:**
+1. **Nothing pushed to GitHub yet.** Owner is handling pushes. No GHCR images exist
+   until CI runs, so the stack has not been started.
+2. **DNS.** `matedesk.pro` (Namecheap BasicDNS) still points at the dead box. A
+   wildcard `*` A record already exists, so only the target IP needs changing.
+   **Records needed: `@`, `www`, `*` → 169.58.114.252. That is all — no `app`.**
+   `app.matedesk.pro` was dropped: Django listed it in `NON_TENANT_HOSTS` while the
+   Next.js middleware parsed the leftover label as tenant slug `"app"`, so it could
+   only ever serve a login form whose API calls `IsTenantUser` refused — and it made
+   `app` an unusable tenant slug. Removed from nginx, both `.env.example` files, and
+   the live `/opt/MateDesk/.env`.
+   `www` now has its **own nginx server block returning 301 to the apex**. It must not
+   share `server_name` with the apex, or it hits the identical "tenant www" trap.
+3. **Wildcard TLS.** certbot 4.0.0 on the box has only `nginx`/`standalone`/`webroot` —
+   **none can issue a wildcard.** Needs `python3-certbot-dns-cloudflare` +
+   a Zone:DNS:Edit token. Recommendation: move nameservers to Cloudflare (free) and
+   keep Namecheap as registrar. Namecheap's own API is gated behind account
+   eligibility rules and is not reliable here.
+4. **nginx site not installed on the VPS yet** — deliberately deferred, since
+   `nginx -t && systemctl reload` briefly touches two live sites and the block does
+   nothing until DNS points here.
+
+**Secrets note:** `SECRET_KEY`, `JWT_SECRET_KEY`, `POSTGRES_PASSWORD` were generated and
+appear in this session's transcript. Rotate before go-live if that matters; the app is
+not serving traffic yet. The deploy private key lives only in the GitHub secret now
+(local copy is in a session-temp scratchpad and should not be relied on).
+
+### 🔴 Superseded — the old-VPS values M3 originally inherited
 
 The infra was copied verbatim, so all deployment-specific values are inherited from the
 existing Contabo box and are **wrong for a new VPS**. Do not deploy until these are set.

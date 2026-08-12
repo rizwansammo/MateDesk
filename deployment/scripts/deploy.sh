@@ -1,10 +1,10 @@
 #!/bin/bash
 # MateDesk — Production deploy script
-# Run on the VPS from /opt/matedesk or triggered by GitHub Actions via SSH
+# Run on the VPS from /opt/MateDesk or triggered by GitHub Actions via SSH
 
 set -euo pipefail
 
-DEPLOY_DIR="/opt/matedesk"
+DEPLOY_DIR="/opt/MateDesk"
 LOG_FILE="$DEPLOY_DIR/deploy.log"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }

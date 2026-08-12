@@ -1,3 +1,21 @@
+# Production stack for /opt/MateDesk on MateServer (169.58.114.252).
+#
+# Follows the same shape as the other apps already on this box:
+#   * nothing binds a public port — the app listens on 127.0.0.1 only and the
+#     host's existing nginx proxies to it, so ports 80/443 and the NetaMate /
+#     TalkRoom stacks are untouched
+#   * Postgres and Redis have NO host port at all; they are reachable only from
+#     the app containers over the internal bridge network
+#   * images are pulled from GHCR by tag; `build:` is a fallback for the very
+#     first deploy from a checkout, before CI has published anything
+#
+# There is deliberately no pgAdmin service. It was published on 0.0.0.0 in the
+# previous stack, which exposed a DB console to the internet with no TLS and
+# outside nginx. Use `docker compose exec postgres psql -U matedesk` or an SSH
+# tunnel instead.
+
+name: matedesk
+
 services:
 
   # ── PostgreSQL ───────────────────────────────────────────────────────────────
@@ -7,23 +25,25 @@ services:
     environment:
       POSTGRES_DB:       ${POSTGRES_DB:-matedesk}
       POSTGRES_USER:     ${POSTGRES_USER:-matedesk}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - matedesk_pgdata:/var/lib/postgresql/data
     networks:
       - internal
     healthcheck:
-      test:     ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matedesk}"]
-      interval: 10s
-      timeout:  5s
-      retries:  5
+      test:         ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matedesk} -d ${POSTGRES_DB:-matedesk}"]
+      interval:     10s
+      timeout:      5s
+      retries:      5
+      start_period: 20s
 
-  # ── Redis ────────────────────────────────────────────────────────────────────
+  # ── Redis — isolated to MateDesk (the host also runs one on 127.0.0.1:6379
+  #    for another app; this container is deliberately separate) ───────────────
   redis:
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
-      - redis_data:/data
+      - matedesk_redis:/data
     networks:
       - internal
     healthcheck:
@@ -32,20 +52,23 @@ services:
       timeout:  3s
       retries:  5
 
-  # ── Django / Gunicorn ────────────────────────────────────────────────────────
+  # ── Django / Gunicorn (ASGI via Uvicorn workers) ─────────────────────────────
   backend:
+    image: ${MATEDESK_BACKEND_IMAGE:-ghcr.io/rizwansammo/matedesk-backend:latest}
     build:
       context:    ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Host-local only. The host nginx reaches this; the internet cannot.
     ports:
-      - "127.0.0.1:8005:8005"
-    env_file: .env
+      - "127.0.0.1:${BACKEND_PORT:-8005}:8005"
+    env_file:
+      - .env
     environment:
-      PORT:                "8005"
-      GUNICORN_WORKERS:    "3"
+      PORT:                  "8005"
+      GUNICORN_WORKERS:      "3"
       CHANNEL_LAYER_BACKEND: "redis"
-      CHANNEL_REDIS_URL:   "redis://redis:6379/2"
+      CHANNEL_REDIS_URL:     "redis://redis:6379/2"
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,16 +77,15 @@ services:
     networks:
       - internal
     volumes:
-      - media_files:/app/media
+      - matedesk_media:/app/media
 
-  # ── Celery Worker ────────────────────────────────────────────────────────────
+  # ── Celery worker — automation rules, mailbox polling ────────────────────────
   celery_worker:
-    build:
-      context:    ./backend
-      dockerfile: Dockerfile
+    image: ${MATEDESK_BACKEND_IMAGE:-ghcr.io/rizwansammo/matedesk-backend:latest}
     command: celery -A core worker -l info --concurrency=2
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,47 +94,29 @@ services:
     networks:
       - internal
     volumes:
-      - media_files:/app/media
+      - matedesk_media:/app/media
 
-  # ── Celery Beat (scheduler) ───────────────────────────────────────────────
+  # ── Celery beat — scheduler ──────────────────────────────────────────────────
   celery_beat:
-    build:
-      context:    ./backend
-      dockerfile: Dockerfile
+    image: ${MATEDESK_BACKEND_IMAGE:-ghcr.io/rizwansammo/matedesk-backend:latest}
     command: celery -A core beat -l info
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # ── pgAdmin ──────────────────────────────────────────────────────────────────
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    restart: unless-stopped
-    ports:
-      # Loopback only, like backend and frontend. Published on 0.0.0.0 previously,
-      # which exposed the DB console to the internet with no TLS, outside nginx.
-      - "127.0.0.1:5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_EMAIL:-admin@matedesk.pro}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
-      PGADMIN_CONFIG_SERVER_MODE: "True"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "True"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      postgres:
         condition: service_healthy
     networks:
       - internal
 
   # ── Next.js ──────────────────────────────────────────────────────────────────
+  # NOTE: NEXT_PUBLIC_* values are inlined at BUILD time, so they are supplied as
+  # build args in CI — not here. Changing the domain therefore requires a rebuild,
+  # not just a restart.
   frontend:
+    image: ${MATEDESK_FRONTEND_IMAGE:-ghcr.io/rizwansammo/matedesk-frontend:latest}
     build:
       context:    ./frontend
       dockerfile: Dockerfile
@@ -121,15 +125,16 @@ services:
         NEXT_PUBLIC_APP_DOMAIN: ${NEXT_PUBLIC_APP_DOMAIN:-matedesk.pro}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3005:3005"
+      - "127.0.0.1:${FRONTEND_PORT:-3005}:3005"
+    depends_on:
+      - backend
     networks:
       - internal
 
 volumes:
-  postgres_data:
-  redis_data:
-  media_files:
-  pgadmin_data:
+  matedesk_pgdata:
+  matedesk_redis:
+  matedesk_media:
 
 networks:
   internal:

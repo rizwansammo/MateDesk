@@ -8,21 +8,31 @@
 #   ln -s /etc/nginx/sites-available/matedesk.pro /etc/nginx/sites-enabled/matedesk.pro
 #   nginx -t && systemctl reload nginx
 #
-# ── TLS: this app needs a WILDCARD certificate ────────────────────────────────
-# Tenancy is subdomain-based (company.matedesk.pro), and in production
-# IsTenantUser rejects every tenant-scoped API call made on the root domain. So
-# *.matedesk.pro must be covered, and a wildcard can ONLY be issued via DNS-01 —
-# --nginx / webroot / standalone cannot do it.
+# ── TLS ───────────────────────────────────────────────────────────────────────
+# Tenancy is subdomain-based (company.matedesk.pro) and in production
+# IsTenantUser rejects tenant-scoped API calls made on the root domain, so the
+# certificate MUST cover *.matedesk.pro. A wildcard can only be issued via
+# DNS-01 — --nginx / webroot / standalone cannot do it. Issued with:
 #
-#   apt install python3-certbot-dns-cloudflare
-#   printf 'dns_cloudflare_api_token = <token>\n' > /root/.cloudflare.ini
-#   chmod 600 /root/.cloudflare.ini
 #   certbot certonly --dns-cloudflare \
 #     --dns-cloudflare-credentials /root/.cloudflare.ini \
-#     -d matedesk.pro -d '*.matedesk.pro'
-#   certbot install --nginx --cert-name matedesk.pro
+#     --dns-cloudflare-propagation-seconds 30 \
+#     -d matedesk.pro -d '*.matedesk.pro' --cert-name matedesk.pro
 #
-# Install this file HTTP-only first and let certbot add the TLS listener.
+# Renewal is unattended via the existing certbot.timer. Verify occasionally with
+# `certbot renew --dry-run`.
+
+# ── HTTP → HTTPS (apex + all tenant subdomains) ───────────────────────────────
+server {
+    listen      80;
+    listen      [::]:80;
+    server_name matedesk.pro *.matedesk.pro;
+
+    # Let certbot answer HTTP-01 if it is ever used as a fallback.
+    location /.well-known/acme-challenge/ { root /var/www/html; }
+
+    location / { return 301 https://$host$request_uri; }
+}
 
 # ── www → apex ────────────────────────────────────────────────────────────────
 # MUST be its own server block. If www is folded into the main server_name below,
@@ -30,10 +40,17 @@
 # and renders a login page for a non-existent workspace — while the Django side
 # treats the same host as non-tenant and rejects every API call from it.
 server {
-    listen      80;
-    listen      [::]:80;
+    listen      443 ssl;
+    listen      [::]:443 ssl;
+    http2       on;
     server_name www.matedesk.pro;
-    return 301  http://matedesk.pro$request_uri;
+
+    ssl_certificate     /etc/letsencrypt/live/matedesk.pro/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/matedesk.pro/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    return 301 https://matedesk.pro$request_uri;
 }
 
 # ── apex + tenant subdomains ──────────────────────────────────────────────────
@@ -42,17 +59,27 @@ server {
 # so it could only ever serve a login form whose API calls were refused. It also
 # made "app" an unusable tenant slug.
 server {
-    listen      80;
-    listen      [::]:80;
+    listen      443 ssl;
+    listen      [::]:443 ssl;
+    http2       on;
     server_name matedesk.pro *.matedesk.pro;
 
-    # Security headers. NOTE: nginx only inherits add_header into a location when
-    # that location declares none of its own — so any location below that sets a
-    # header must repeat these. See /static/.
-    add_header X-Frame-Options        "SAMEORIGIN"                      always;
-    add_header X-Content-Type-Options "nosniff"                         always;
-    add_header X-XSS-Protection       "1; mode=block"                   always;
-    add_header Referrer-Policy        "strict-origin-when-cross-origin" always;
+    ssl_certificate     /etc/letsencrypt/live/matedesk.pro/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/matedesk.pro/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Security headers, set once at the edge.
+    #
+    # Django also emits HSTS when DEBUG=False, which would give proxied responses
+    # the header twice. proxy_hide_header drops the upstream copy so exactly one
+    # is sent, and the edge stays the single place this is configured.
+    proxy_hide_header Strict-Transport-Security;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options           "SAMEORIGIN"                      always;
+    add_header X-Content-Type-Options    "nosniff"                         always;
+    add_header X-XSS-Protection          "1; mode=block"                   always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
 
     # Ticket attachments and KB images.
     client_max_body_size 25M;
@@ -106,11 +133,13 @@ server {
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         add_header Cache-Control "public, max-age=2592000, immutable";
-        # Repeated because the add_header above suppresses inheritance.
-        add_header X-Frame-Options        "SAMEORIGIN"                      always;
-        add_header X-Content-Type-Options "nosniff"                         always;
-        add_header X-XSS-Protection       "1; mode=block"                   always;
-        add_header Referrer-Policy        "strict-origin-when-cross-origin" always;
+        # Repeated because the add_header above suppresses inheritance from the
+        # server level — nginx only inherits when the location declares none.
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header X-Frame-Options           "SAMEORIGIN"                      always;
+        add_header X-Content-Type-Options    "nosniff"                         always;
+        add_header X-XSS-Protection          "1; mode=block"                   always;
+        add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
         access_log off;
     }
 

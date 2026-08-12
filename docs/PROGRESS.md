@@ -6,8 +6,8 @@ Session handoff log. Update at the end of every phase. Read with `SPLIT_PLAN.md`
 |---|---|---|
 | M1 — backend | **COMPLETE** | all exit criteria met against Postgres |
 | M2 — frontend | **code complete** | `tsc` + `next build` green; visual parity not yet checked |
-| M3 — infra | **BLOCKED** | carve + fixes #1/#4 done, but ALL deploy values are still the OLD VPS's — see "M3 blocked" |
-| M4 — docs/branding | not started | branding rule + full occurrence map now in `SPLIT_PLAN.md` |
+| M3 — infra | **COMPLETE — DEPLOYED LIVE** | https://matedesk.pro serving over HTTPS with wildcard TLS |
+| M4 — docs | **COMPLETE** | written fresh, not split — see below |
 
 ---
 
@@ -165,6 +165,85 @@ backup.sh), `.github/workflows/deploy.yml`.
 
 **Verified:** `docker compose config --quiet` → VALID. No `rmm` / `mateconnect` /
 `rustdesk` / `MateDesk Pro` references remain in any infra file.
+
+## M4 — docs written fresh (scope changed mid-phase)
+
+The original plan was to copy the six pre-split docs and surgically remove the ~810 of
+~4,000 lines that were MateConnect content. **Dropped that approach.** The old docs are
+preserved permanently in the frozen `MateDesk-Pro` repo, so copying them just to delete a
+fifth of each achieved nothing — and an index of `DECISIONS.md` showed the large majority
+of it was MateConnect (Phases R0–R8C: agent, enrollment, installer, remote access).
+
+Written instead — 809 lines describing what actually exists:
+
+| File | Lines | Purpose |
+|---|---|---|
+| `README.md` | 126 | Entry point: capabilities, stack, layout, local dev |
+| `ARCHITECTURE.md` | 204 | Tenancy model, request flow, the two auth systems, apps, known weaknesses |
+| `DEPLOYMENT.md` | 258 | **Operations runbook** — the highest-value piece |
+| `DECISIONS.md` | 221 | 19 decisions in force with rationale, plus 5 open questions |
+
+`DEPLOYMENT.md` captures the operational knowledge that previously existed only in a chat
+session: the port map including the neighbouring apps, why the shared Docker credential must
+not be repointed, that deleting `/root/.cloudflare.ini` silently kills TLS renewal ~90 days
+later, SHA-pinned rollback, and the three CI failures with their causes.
+
+Stale `NEXT_PHASE.md` was never copied, so there was nothing to delete — it remains only in
+the frozen repo. Brand images (`MateDesk.png`, `MetaDeskWide.png`, `NetaMate.png`,
+`favicon.png`) were carried over as assets.
+
+## 🟢 LIVE — https://matedesk.pro
+
+Deployed to MateServer (169.58.114.252), `/opt/MateDesk`. Verified externally with full
+cert validation:
+
+| URL | Result |
+|---|---|
+| `https://matedesk.pro` | 200 (marketing site) |
+| `http://matedesk.pro` | 301 → HTTPS |
+| `https://www.matedesk.pro` | 301 → apex |
+| `https://netamate.matedesk.pro/login` | 200 (tenant workspace) |
+| `https://matedesk.pro/platform-admin/login/` | 200 (operator console) |
+| `https://matedesk.pro/api/health/` | `{"status": "ok", "service": "MateDesk API"}` |
+| API login as `contact@netamate.com` | access token issued, role `msp_owner`, tenant `netamate` |
+
+**TLS:** wildcard cert `matedesk.pro` + `*.matedesk.pro`, expires 2026-11-10, issued via
+`dns-cloudflare` DNS-01. `certbot renew --dry-run` succeeds for **all three** certs on the
+box (matedesk, netamate, talkroom) — unattended renewal confirmed on the existing
+`certbot.timer`. Token at `/root/.cloudflare.ini` (chmod 600) — **deleting it breaks renewal.**
+
+**DNS:** Cloudflare (free) as nameservers, Namecheap still registrar. Records `@`, `www`, `*`
+→ 169.58.114.252, all **DNS-only / grey cloud** (not proxied — deliberate, so there is one
+predictable TLS path).
+
+**CI/CD:** push to `main` → build both images in Actions → GHCR → SSH → `docker compose pull`
++ health-gated restart. **~26 second deploys.** GHCR auth uses an isolated
+`DOCKER_CONFIG=/root/.docker-matedesk` with the ephemeral `GITHUB_TOKEN`, so the box's
+shared credential (a different account, used by TalkRoom/NetaMate) is never touched.
+
+**Accounts created:**
+- Platform admin — `mrizwan.sammo@gmail.com` (tenant=None, is_staff, is_superuser)
+- Tenant — `NetaMate Solutions` / slug `netamate`, plan `enterprise`, status `active`
+- MSP owner — `contact@netamate.com`, role `msp_owner`
+
+**Three CI failures along the way, all diagnosed:**
+1. old workflow using non-existent `CNTB_*` secrets → replaced the workflow
+2. GHCR `denied` → box's shared docker credential belongs to another account; fixed with
+   the isolated config above
+3. health probe 400 → `curl 127.0.0.1` has a Host header Django rejects via ALLOWED_HOSTS.
+   Fixed by sending `Host: matedesk.pro` rather than loosening ALLOWED_HOSTS.
+
+### ⚠️ Open items
+
+1. **No database backups.** `deployment/scripts/backup.sh` exists in git but is **not on the
+   box and not in cron**. Neither are the other two apps. Highest-priority gap now that
+   real data will accumulate.
+2. **Email ingestion not configured** — the helpdesk's email-to-ticket core needs mailbox
+   credentials via Settings → Email in the app.
+3. **No monitoring/uptime checks.**
+4. **Secrets in session transcript:** `SECRET_KEY`, `JWT_SECRET_KEY`, `POSTGRES_PASSWORD`,
+   the Cloudflare token, and both account passwords. Rotate when convenient.
+5. **M5 theme bugs are live** — 64 confirmed defects incl. 5 critical. Deliberately deferred.
 
 ### M3 — retargeted to MateServer (169.58.114.252)
 

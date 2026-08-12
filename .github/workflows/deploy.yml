@@ -111,9 +111,13 @@ jobs:
             docker compose pull backend frontend
             docker compose up -d --remove-orphans
 
+            # The Host header is required: ALLOWED_HOSTS lists only real public
+            # hostnames, so Django answers a bare 127.0.0.1 request with 400
+            # DisallowedHost. Sending the real Host also makes this probe exercise
+            # the same path nginx will, rather than a special-cased one.
             echo "--- waiting for backend health ---"
             for i in $(seq 1 30); do
-              if curl -fsS --max-time 5 http://127.0.0.1:8005/api/health/ >/dev/null 2>&1; then
+              if curl -fsS --max-time 5 -H "Host: matedesk.pro" http://127.0.0.1:8005/api/health/ >/dev/null 2>&1; then
                 echo "backend healthy after ${i}0s"; break
               fi
               if [ "$i" = "30" ]; then

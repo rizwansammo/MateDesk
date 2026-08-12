@@ -8,6 +8,82 @@ Session handoff log. Update at the end of every phase. Read with `SPLIT_PLAN.md`
 | M2 — frontend | **code complete** | `tsc` + `next build` green; visual parity not yet checked |
 | M3 — infra | **COMPLETE — DEPLOYED LIVE** | https://matedesk.pro serving over HTTPS with wildcard TLS |
 | M4 — docs | **COMPLETE** | written fresh, not split — see below |
+| M5 — theme + branding | **Stage 1 shipped · rest PAUSED** | paused for beta-tester feedback, not finished — see below |
+| M6 — tests + CI gates | **NEXT — deferred to after the weekly usage reset** | sliced into 6 sessions, see below |
+| M7 — SEO | not started | technical foundation only; see the note on realistic keywords |
+
+---
+
+## M6 — planned, sliced (start here next session)
+
+Deferred by the owner until after the weekly usage limit resets. **Begin with Slice 1.**
+
+The cost driver is *reading* code never opened in earlier phases — ~5,850 lines across five
+areas — so M6 is deliberately split. Each slice is self-contained and must leave the repo
+green.
+
+| Slice | Reading | Scope |
+|---|---|---|
+| **1 — CI gates + ESLint** | ~0 lines | Add to the workflow: run the test suite, `makemigrations --check`, `tsc --noEmit`, `next build`. **Configure ESLint** — it is installed (`eslint`, `eslint-config-next`) with **no config file**, so linting has never run on this codebase. Expect hundreds of first-run warnings; gate on errors only, not style. |
+| 2 — Billing | 670 | invoice totals, rate application, rounding, PDF generation on edge cases |
+| 3 — SLA | 471 | breach calculation, business-hours arithmetic, VIP rule precedence, timezones |
+| 4 — Email ingestion | 1,148 | reply parsing, threading to the correct ticket, duplicate suppression, Fernet round-trip |
+| 5 — Automation | 1,700 (≈570 is template data, skimmable) | rule matching, action execution, the overdue/stale sweeps |
+| 6 — Tickets | 1,861 (only transition + merge paths needed) | state transitions, merge/absorb, attachment permissions |
+
+**Why Slice 1 first:** without the gates, tests written in later slices can silently rot.
+It is also almost free — YAML plus an ESLint config.
+
+**Why billing before SLA** despite SLA being smaller: a silent bug in invoice arithmetic
+costs money and trust; a silent SLA bug costs a missed commitment. Both matter, money first.
+
+Current baseline: **16 tests for ~12,000 lines**, all RBAC, all in `apps/tickets/tests_rbac.py`.
+Zero coverage on billing, SLA, automation and email ingestion.
+
+Also queued, both small and independent of M6:
+- **`noindex` on tenant subdomains** — Google can currently index every tenant's login page
+  (no robots.txt, no sitemap, no `X-Robots-Tag` anywhere). This is a defect, not an SEO campaign.
+- **Replace `appleboy/ssh-action` with plain `ssh`** — it downloads a `drone-ssh` binary from
+  GitHub releases on every run and has already failed once (`curl: (56)`), killing a deploy
+  after a successful build. The runner has `ssh` built in; ~10 lines removes the flake and a
+  third-party action from the path of your production SSH key.
+
+---
+
+## M5 — Stage 1 shipped, remainder paused
+
+**Shipped and live** (verified in the deployed CSS bundle on matedesk.pro):
+
+- `--text-4` was byte-identical `#64748b` in both blocks — i.e. not themed at all — and failed
+  AA (3.5:1 on `--bg-card`). Now `#7c8ba1` dark / `#5b6675` light, both >5:1.
+- `--text-5` was 2.5:1 dark and 2.3:1 light — **both halves of the original "dull in dark,
+  washed out in light" complaint**. Now an alias of `--text-3`.
+- `--text-pale` inverted its contrast rank between themes. Also aliased to `--text-3`.
+- `--bg-panel` and `--bg-input` were consumed at 14 sites and **defined in neither block** —
+  see-through KB menus in both themes. Now defined in both.
+
+Aliasing rather than rewriting ~280 call sites was deliberate: same outcome, far less risk.
+
+**Decision made (owner delegated it):** the text ramp is now **four readable steps (0–3)
+plus one explicitly decorative step (4)**. Six mutually distinguishable greys cannot all
+clear 4.5:1 on `#0f1117`, so the previous six-step ramp guaranteed unreadable labels.
+`--text-4` sits at 4.2:1 on `--bg-elevated` in dark — acceptable only because it is
+decorative-by-contract; using it for a label is a defect again. See `DECISIONS.md` D18.
+
+**NOT done — 4 of the 5 criticals remain live:**
+
+| Critical | Where |
+|---|---|
+| Ticket queue badges dark-only → 1.4–2.1:1 in light | `requests/page.tsx:22-31` |
+| Dashboard donut legend + tooltip invisible in light (1.0:1) | `charts/PriorityDonutChart.tsx` |
+| Public-reply vs internal-note label unreadable | `requests/[id]/page.tsx:1266,1276` |
+| KB code blocks unreadable in light (no light hljs palette) | `kb/TipTapEditor.tsx:264` |
+
+Also pending: ~90 hardcoded colour literals, badge consolidation, the black flash on every
+navigation, an Appearance-page theme toggle (the only one is buried in the profile
+dropdown), and the `MATEDESKPRO` → `MATEDESK` branding sweep.
+
+Roughly 25–30% of M5 by effort, but the highest-leverage part.
 
 ---
 

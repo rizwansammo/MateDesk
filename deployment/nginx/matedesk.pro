@@ -22,6 +22,20 @@
 # Renewal is unattended via the existing certbot.timer. Verify occasionally with
 # `certbot renew --dry-run`.
 
+# ── Search-engine visibility by hostname ──────────────────────────────────────
+# Only the apex is a public marketing site. Every tenant subdomain serves the same
+# login screen, so leaving them crawlable would let Google index one near-identical
+# thin page per customer — diluting the apex's authority and exposing customer
+# workspace URLs in public results.
+#
+# nginx omits add_header entirely when the value evaluates to an empty string, so
+# the apex sends no X-Robots-Tag and everything else is excluded.
+map $host $robots_tag {
+    default           "noindex, nofollow";
+    matedesk.pro      "";
+    www.matedesk.pro  "";   # 301s to the apex anyway
+}
+
 # ── HTTP → HTTPS (apex + all tenant subdomains) ───────────────────────────────
 server {
     listen      80;
@@ -80,6 +94,8 @@ server {
     add_header X-Content-Type-Options    "nosniff"                         always;
     add_header X-XSS-Protection          "1; mode=block"                   always;
     add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+    # Empty on the apex, "noindex, nofollow" on every tenant subdomain.
+    add_header X-Robots-Tag              $robots_tag                       always;
 
     # Ticket attachments and KB images.
     client_max_body_size 25M;
@@ -104,6 +120,8 @@ server {
 
     # ── Platform Admin (operator console, server-rendered Django) ─────────────
     location /platform-admin/ {
+        # Never indexable, on any host — this is the cross-tenant operator console.
+        add_header X-Robots-Tag "noindex, nofollow" always;
         proxy_pass http://127.0.0.1:8005;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
@@ -118,6 +136,7 @@ server {
 
     # ── Hidden Django built-in admin (emergency access only) ─────────────────
     location /django-admin/ {
+        add_header X-Robots-Tag "noindex, nofollow" always;
         proxy_pass http://127.0.0.1:8005;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
@@ -140,6 +159,7 @@ server {
         add_header X-Content-Type-Options    "nosniff"                         always;
         add_header X-XSS-Protection          "1; mode=block"                   always;
         add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+        add_header X-Robots-Tag              $robots_tag                       always;
         access_log off;
     }
 

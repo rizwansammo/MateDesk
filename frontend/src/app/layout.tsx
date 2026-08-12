@@ -32,14 +32,67 @@ const hemiHead = localFont({
   weight: '700',
 });
 
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'matedesk.pro';
+const SITE_URL = `https://${APP_DOMAIN}`;
+
 export const metadata: Metadata = {
+  // Required for Open Graph and canonical URLs to resolve to absolute addresses.
+  // Without it Next.js emits relative og:image paths, which crawlers and social
+  // scrapers cannot fetch.
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'MateDesk',
+    default: 'MateDesk — Multi-Tenant Helpdesk for MSPs',
     template: '%s | MateDesk',
   },
-  description: 'Multi-tenant MSP Helpdesk & RMM SaaS Platform by NetaMate Solutions',
+  description:
+    'Multi-tenant helpdesk built for managed service providers. Isolated client '
+    + 'workspaces, email-to-ticket automation, SLA tracking and a knowledge base. '
+    + 'By NetaMate Solutions.',
+  applicationName: 'MateDesk',
+  keywords: [
+    'helpdesk software',
+    'MSP helpdesk',
+    'multi-tenant helpdesk',
+    'managed service provider ticketing',
+    'service desk software',
+    'email to ticket',
+    'SLA tracking',
+  ],
+  authors: [{ name: 'NetaMate Solutions' }],
+  creator: 'NetaMate Solutions',
+  publisher: 'NetaMate Solutions',
+  alternates: { canonical: '/' },
+  // Deliberately no explicit `robots: { index: true }`. This layout also renders on
+  // tenant subdomains, where nginx sends X-Robots-Tag: noindex — emitting a positive
+  // meta robots tag there would be a contradictory signal. Absence means "indexable",
+  // which is correct for the apex, and the header still excludes the subdomains.
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png', sizes: '528x528' },
+    ],
+    apple: [{ url: '/favicon.png', sizes: '528x528' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'MateDesk',
+    url: SITE_URL,
+    title: 'MateDesk — Multi-Tenant Helpdesk for MSPs',
+    description:
+      'Isolated client workspaces, email-to-ticket automation, SLA tracking and a '
+      + 'knowledge base — built for managed service providers.',
+    images: [
+      { url: '/MetaDeskWide.png', width: 1919, height: 820, alt: 'MateDesk' },
+    ],
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MateDesk — Multi-Tenant Helpdesk for MSPs',
+    description:
+      'Isolated client workspaces, email-to-ticket automation, SLA tracking and a '
+      + 'knowledge base — built for managed service providers.',
+    images: ['/MetaDeskWide.png'],
   },
 };
 

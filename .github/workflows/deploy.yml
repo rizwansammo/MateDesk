@@ -1,0 +1,30 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Contabo VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host:     ${{ secrets.CNTB_HOST }}
+          username: ${{ secrets.CNTB_USER }}
+          key:      ${{ secrets.CNTB_SSH_KEY }}
+          timeout:  30s
+          command_timeout: 15m
+          script: |
+            set -e
+            cd /opt/matedesk
+            bash deployment/scripts/deploy.sh

@@ -1,0 +1,136 @@
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-matedesk}
+      POSTGRES_USER:     ${POSTGRES_USER:-matedesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test:     ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matedesk}"]
+      interval: 10s
+      timeout:  5s
+      retries:  5
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test:     ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout:  3s
+      retries:  5
+
+  # ── Django / Gunicorn ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context:    ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8005:8005"
+    env_file: .env
+    environment:
+      PORT:                "8005"
+      GUNICORN_WORKERS:    "3"
+      CHANNEL_LAYER_BACKEND: "redis"
+      CHANNEL_REDIS_URL:   "redis://redis:6379/2"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+    volumes:
+      - media_files:/app/media
+
+  # ── Celery Worker ────────────────────────────────────────────────────────────
+  celery_worker:
+    build:
+      context:    ./backend
+      dockerfile: Dockerfile
+    command: celery -A core worker -l info --concurrency=2
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+    volumes:
+      - media_files:/app/media
+
+  # ── Celery Beat (scheduler) ───────────────────────────────────────────────
+  celery_beat:
+    build:
+      context:    ./backend
+      dockerfile: Dockerfile
+    command: celery -A core beat -l info
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ── pgAdmin ──────────────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    ports:
+      # Loopback only, like backend and frontend. Published on 0.0.0.0 previously,
+      # which exposed the DB console to the internet with no TLS, outside nginx.
+      - "127.0.0.1:5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_EMAIL:-admin@matedesk.pro}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "True"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ── Next.js ──────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context:    ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL:    ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_APP_DOMAIN: ${NEXT_PUBLIC_APP_DOMAIN:-matedesk.pro}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3005:3005"
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_files:
+  pgadmin_data:
+
+networks:
+  internal:
+    driver: bridge

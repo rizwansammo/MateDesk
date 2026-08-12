@@ -41,6 +41,8 @@
     --bg-elevated:   #252936;
     --bg-hover:      #1e2130;
     --bg-deep:       #0d1020;
+    --bg-panel:      #151821;   /* menus/popovers — was consumed at 11 sites, defined at none */
+    --bg-input:      #252936;   /* form fields   — was consumed at 3 sites, defined at none  */
 
     /* MateDesk design tokens — borders */
     --border-subtle: #1e2130;
@@ -48,14 +50,33 @@
     --border-strong: #363b50;
     --border-panel:  #1e2640;
 
-    /* MateDesk design tokens — text */
+    /* MateDesk design tokens — text
+     *
+     * FOUR readable steps (0-3) plus ONE decorative step (4). Six mutually
+     * distinguishable greys cannot all clear WCAG AA 4.5:1 on #0f1117 — you run
+     * out of range — so the ramp is deliberately shorter than it looks, and each
+     * step has a role rather than just a number:
+     *
+     *   --text-0  headings, emphasis
+     *   --text-1  body copy, primary values
+     *   --text-2  secondary copy
+     *   --text-3  labels, table headers, timestamps, placeholders  ← lowest AA-safe step
+     *   --text-4  DECORATIVE ONLY — never labels, values or interactive idle states
+     *
+     * --text-4 and --text-5 previously sat at 3.5:1 and 2.5:1 here, and --text-4
+     * was byte-identical in both themes (i.e. not themed at all). Between them
+     * they own ~695 call sites, which is why secondary copy read as muddy
+     * everywhere. --text-5 and --text-pale are retained as aliases of --text-3 so
+     * existing call sites become readable without touching ~280 files; prefer the
+     * named steps in new code. See docs/DECISIONS.md D18.
+     */
     --text-0:    #f8fafc;
     --text-1:    #e2e8f0;
     --text-2:    #c8d6e5;
     --text-3:    #94a3b8;
-    --text-4:    #64748b;
-    --text-5:    #475569;
-    --text-pale: #a0aec0;
+    --text-4:    #7c8ba1;   /* decorative; ~5.2:1 on --bg-base */
+    --text-5:    var(--text-3);
+    --text-pale: var(--text-3);
 
     /* Scrollbar */
     --scrollbar-bg:    #0f1117;
@@ -94,19 +115,24 @@
     --bg-elevated:   #eef2f7;
     --bg-hover:      #e2e8f0;
     --bg-deep:       #e8ecf2;
+    --bg-panel:      #ffffff;
+    --bg-input:      #eef2f7;
 
     --border-subtle: #e2e8f0;
     --border-md:     #cbd5e1;
     --border-strong: #94a3b8;
     --border-panel:  #dde4ef;
 
+    /* Same four-readable-plus-one-decorative model as the dark block above.
+     * --text-5 was #9ca3af here — 2.3:1 on --bg-base, i.e. the "white fonts in
+     * light mode" half of the original complaint. It is now an alias of --text-3. */
     --text-0:    #0f172a;
     --text-1:    #1e293b;
     --text-2:    #334155;
     --text-3:    #475569;
-    --text-4:    #64748b;
-    --text-5:    #9ca3af;
-    --text-pale: #64748b;
+    --text-4:    #5b6675;   /* decorative; ~5.5:1 on --bg-base */
+    --text-5:    var(--text-3);
+    --text-pale: var(--text-3);
 
     --scrollbar-bg:    #e2e8f0;
     --scrollbar-thumb: #94a3b8;

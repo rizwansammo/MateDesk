@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Platform Admin — {% block title %}MateDesk{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'platform_admin/admin.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'platform_admin/img/NetaMate.png' %}">
+  <link rel="shortcut icon" href="{% static 'platform_admin/img/NetaMate.png' %}">
+</head>
+<body>
+
+<!-- Page Transition Splash -->
+<div id="pto" role="status" aria-label="Loading"
+     style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:999999;
+            background:#0d1117;display:flex;align-items:center;justify-content:center;">
+  <!-- Ring wrapper — fixed 160×160 square, logo centered inside -->
+  <div style="position:relative;width:160px;height:160px;
+              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <!-- Track ring -->
+    <div style="position:absolute;top:0;right:0;bottom:0;left:0;
+                border-radius:50%;border:2px solid rgba(255,255,255,0.12);"></div>
+    <!-- Spinning arc — class only for @keyframes -->
+    <div class="pto-arc"></div>
+    <!-- Logo capped at 104×104 inside the ring -->
+    <img src="{% static 'platform_admin/img/NetaMate.png' %}" alt="" draggable="false"
+         style="width:104px;height:104px;object-fit:contain;display:block;flex-shrink:0;
+                position:relative;z-index:1;" />
+  </div>
+</div>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99;"></div>
+
+<!-- Profile Panel Overlay -->
+<div class="profile-panel-overlay" id="profile-panel-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ── Full-Width Topbar ── -->
+  <header class="topbar">
+
+    <!-- Brand (left) -->
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="17" height="17">
+          <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8-2.5h-4.5z" fill="#fff"/>
+          <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <span class="brand-wordmark">Mate<span>Desk</span></span>
+    </div>
+
+    <!-- Mobile menu toggle -->
+    <button class="mobile-menu-btn" id="mobile-menu-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Spacer pushes right-side items to the right -->
+    <div style="flex:1;"></div>
+
+    <span class="topbar-env-badge">Platform Admin</span>
+
+    <div class="topbar-actions">
+      <a href="{% url 'platform_admin:audit_logs' %}" class="topbar-icon-btn" title="Audit Logs">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1.5L2 4v4c0 3.5 2.5 6 6 7.5C14 14 14 11.5 14 8V4L8 1.5z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <div class="user-avatar topbar-avatar-btn" id="topbar-avatar" style="width:32px;height:32px;font-size:12px;" title="Profile">
+        {% if request.platform_admin %}{{ request.platform_admin.first_name|slice:":1"|upper }}{% else %}A{% endif %}
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ── App Body (sidebar + content) ── -->
+  <div class="app-body">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Nav -->
+      <nav class="sidebar-nav">
+
+        <!-- Overview -->
+        <div class="nav-section">
+          <span class="nav-section-label">Overview</span>
+          <a href="{% url 'platform_admin:dashboard' %}" class="nav-item {% if page == 'dashboard' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.8"/>
+              <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/>
+              <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/>
+              <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.6"/>
+            </svg>
+            Dashboard
+          </a>
+        </div>
+
+        <!-- Tenant Control -->
+        <div class="nav-section">
+          <span class="nav-section-label">Tenant Control</span>
+          <a href="{% url 'platform_admin:tenants_list' %}" class="nav-item {% if page == 'tenants' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="7" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <circle cx="8" cy="11" r="1.2" fill="currentColor"/>
+            </svg>
+            All Tenants
+          </a>
+          <a href="{% url 'platform_admin:tenant_create' %}" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Create Tenant
+          </a>
+          <a href="{% url 'platform_admin:tenants_list' %}?status=suspended" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Suspended Tenants
+          </a>
+        </div>
+
+        <!-- Subscriptions -->
+        <div class="nav-section">
+          <span class="nav-section-label">Subscriptions</span>
+          <a href="{% url 'platform_admin:plans_list' %}" class="nav-item {% if page == 'subscriptions_plans' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <rect x="1.5" y="3" width="13" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M1.5 6.5h13" stroke="currentColor" stroke-width="1.3"/>
+              <circle cx="4.5" cy="9.5" r="1" fill="currentColor" opacity="0.6"/>
+            </svg>
+            Plans
+          </a>
+          <a href="{% url 'platform_admin:subscriptions_list' %}" class="nav-item {% if page == 'subscriptions_list' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M2 4h12M2 8h8M2 12h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Active Subscriptions
+          </a>
+        </div>
+
+        <!-- Accounts -->
+        <div class="nav-section">
+          <span class="nav-section-label">Accounts</span>
+          <a href="{% url 'platform_admin:admins_list' %}" class="nav-item {% if page == 'accounts_admins' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M11 8l1 1 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            Platform Admins
+          </a>
+          <a href="{% url 'platform_admin:msp_owners' %}" class="nav-item {% if page == 'accounts_owners' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            </svg>
+            MSP Owners
+          </a>
+        </div>
+
+        <!-- Helpdesk Control -->
+        <div class="nav-section">
+          <span class="nav-section-label">Helpdesk Control</span>
+          <a href="{% url 'platform_admin:helpdesk_overview' %}" class="nav-item {% if page == 'helpdesk_overview' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M2 12V5a1 1 0 011-1h10a1 1 0 011 1v7" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M1 12h14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M5 8h6M5 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+            Ticket Overview
+          </a>
+          <a href="{% url 'platform_admin:email_health' %}" class="nav-item {% if page == 'helpdesk_email' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            </svg>
+            Email Health
+          </a>
+        </div>
+
+        <!-- Security -->
+        <div class="nav-section">
+          <span class="nav-section-label">Security</span>
+          <a href="{% url 'platform_admin:audit_logs' %}" class="nav-item {% if page == 'security_audit' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5L2 4v4c0 3.5 2.5 6 6 7.5C14 14 14 11.5 14 8V4L8 1.5z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            Audit Logs
+          </a>
+          <a href="{% url 'platform_admin:login_activity' %}" class="nav-item {% if page == 'security_login' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M10 8H2m0 0l3-3m-3 3l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M6 4V3a1 1 0 011-1h6a1 1 0 011 1v10a1 1 0 01-1 1H7a1 1 0 01-1-1v-1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            </svg>
+            Login Activity
+          </a>
+          <a href="{% url 'platform_admin:two_fa_setup' %}" class="nav-item {% if page == 'security_2fa' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <circle cx="8" cy="10.5" r="1" fill="currentColor"/>
+            </svg>
+            My 2FA
+            {% if request.platform_admin and not request.platform_admin.two_fa_enabled %}
+            <span style="margin-left:auto;font-size:10px;padding:2px 6px;background:rgba(251,191,36,.15);
+                         border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;line-height:1.4;">
+              Off
+            </span>
+            {% endif %}
+          </a>
+        </div>
+
+        <!-- Settings -->
+        <div class="nav-section">
+          <span class="nav-section-label">System</span>
+          <a href="{% url 'platform_admin:settings' %}" class="nav-item {% if page == 'settings' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+            Platform Settings
+          </a>
+          <a href="#" id="pgadmin-link" target="_blank" rel="noopener noreferrer" class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <ellipse cx="8" cy="5" rx="6" ry="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M2 5v4c0 1.66 2.69 3 6 3s6-1.34 6-3V5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M2 9v2c0 1.66 2.69 3 6 3s6-1.34 6-3V9" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            </svg>
+            Database (pgAdmin)
+            <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;margin-left:auto;opacity:0.5;">
+              <path d="M4 4h8v8M12 4L4 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </a>
+          <script>
+            document.getElementById('pgadmin-link').href = 'http://' + window.location.hostname + ':5050';
+          </script>
+          <a href="{% url 'platform_admin:logout' %}" class="nav-item" style="color:var(--accent-red);opacity:0.8;">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M6 8h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M10 4V3a1 1 0 00-1-1H3a1 1 0 00-1 1v10a1 1 0 001 1h6a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            </svg>
+            Logout
+          </a>
+        </div>
+
+      </nav>
+
+      <!-- Sidebar User (bottom) -->
+      <div class="sidebar-user">
+        <div class="sidebar-user-inner">
+          <div class="user-avatar">
+            {% if request.platform_admin %}{{ request.platform_admin.first_name|slice:":1"|upper }}{% else %}A{% endif %}
+          </div>
+          <div class="user-info">
+            <div class="user-name">
+              {% if request.platform_admin %}{{ request.platform_admin.full_name|default:request.platform_admin.email }}{% else %}Admin{% endif %}
+            </div>
+            <span class="user-role-badge">Platform Admin</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── Main Wrapper ── -->
+    <div class="main-wrap">
+
+      <!-- Flash Messages -->
+      {% if messages %}
+      <div class="messages-wrap">
+        {% for message in messages %}
+        <div class="flash flash-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+          <div style="flex:1">{{ message }}</div>
+          <button class="flash-close" type="button">&times;</button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Main Content -->
+      <main class="main-content">
+        {% block content %}{% endblock %}
+      </main>
+
+    </div><!-- .main-wrap -->
+
+  </div><!-- .app-body -->
+
+  <!-- ── Profile Panel ── -->
+  <div class="profile-panel" id="profile-panel">
+    <div class="profile-panel-head">
+      <div class="profile-panel-avatar-lg">
+        {% if request.platform_admin %}{{ request.platform_admin.first_name|slice:":1"|upper }}{% else %}A{% endif %}
+      </div>
+      <div class="profile-panel-name">
+        {% if request.platform_admin %}{{ request.platform_admin.full_name|default:"Platform Admin" }}{% else %}Admin{% endif %}
+      </div>
+      <div class="profile-panel-email">
+        {% if request.platform_admin %}{{ request.platform_admin.email }}{% else %}admin@netamate.com{% endif %}
+      </div>
+    </div>
+    <div class="profile-panel-body">
+      <a href="{% url 'platform_admin:settings' %}" class="profile-panel-item">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Platform Settings
+      </a>
+      <a href="{% url 'platform_admin:admins_list' %}" class="profile-panel-item">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        </svg>
+        Admin Accounts
+      </a>
+      <a href="{% url 'platform_admin:audit_logs' %}" class="profile-panel-item">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1.5L2 4v4c0 3.5 2.5 6 6 7.5C14 14 14 11.5 14 8V4L8 1.5z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        Audit Logs
+      </a>
+      <a href="{% url 'platform_admin:dashboard' %}" class="profile-panel-item">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.7"/>
+          <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/>
+          <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/>
+          <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.6"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="{% url 'platform_admin:logout' %}" class="profile-panel-item danger">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <path d="M6 8h8m0 0l-3-3m3 3l-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M10 4V3a1 1 0 00-1-1H3a1 1 0 00-1 1v10a1 1 0 001 1h6a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        </svg>
+        Sign Out
+      </a>
+    </div>
+    <div class="profile-panel-footer">
+      <span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;box-shadow:0 0 5px #22c55e;flex-shrink:0;"></span>
+      MateDesk — Platform Control
+    </div>
+  </div>
+
+</div><!-- .app-shell -->
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-title" id="confirm-modal-title">Confirm Action</div>
+    <div class="modal-body" id="confirm-modal-body">Are you sure you want to proceed?</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="confirm-modal-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'platform_admin/admin.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

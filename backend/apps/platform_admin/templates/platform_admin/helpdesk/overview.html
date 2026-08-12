@@ -1,0 +1,69 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Helpdesk Overview{% endblock %}
+{% block breadcrumb %}Helpdesk Control{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Helpdesk Control — Ticket Overview</div>
+    <div class="page-subtitle">Ticket volume and status distribution across all MSP tenants.</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>Total Tickets</th>
+        <th>Open / Active</th>
+        <th>Solved / Closed</th>
+        <th>Open Rate</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in ticket_stats %}
+      <tr>
+        <td>
+          <div style="font-weight:600;color:var(--fg-1);">{{ row.tenant__name }}</div>
+          <span class="t-slug">{{ row.tenant__slug }}</span>
+        </td>
+        <td>
+          <span style="font-weight:700;color:var(--fg-1);">{{ row.total }}</span>
+        </td>
+        <td>
+          {% if row.open > 0 %}
+          <span style="color:var(--accent-orange);font-weight:600;">{{ row.open }}</span>
+          {% else %}
+          <span class="text-muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if row.solved > 0 %}
+          <span style="color:var(--accent-green);font-weight:600;">{{ row.solved }}</span>
+          {% else %}
+          <span class="text-muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if row.total > 0 %}
+          <div class="usage-bar" style="width:80px;display:inline-block;vertical-align:middle;">
+            <div class="usage-bar-fill {% if row.open > row.total|add:'-5' %}warn{% else %}ok{% endif %}"
+                 style="width:{% widthratio row.open row.total 100 %}%"></div>
+          </div>
+          <span class="text-mono text-sm" style="margin-left:6px;">{% widthratio row.open row.total 100 %}%</span>
+          {% else %}
+          <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="table-empty">No ticket data available.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

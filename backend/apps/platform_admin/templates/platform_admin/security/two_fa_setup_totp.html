@@ -1,0 +1,113 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Set Up Authenticator App{% endblock %}
+{% block breadcrumb %}Set Up Authenticator{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Set Up Authenticator App</div>
+    <div class="page-subtitle">Scan the QR code with Google Authenticator, Authy, or any TOTP app.</div>
+  </div>
+</div>
+
+<div style="max-width:560px;">
+
+  {% if error %}
+  <div class="sc-notice yellow" style="margin-bottom:20px;">{{ error }}</div>
+  {% endif %}
+
+  <div class="sc-card">
+    <div class="sc-body" style="padding:28px 28px 24px;">
+
+      <!-- Steps -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Step 1 -->
+        <div style="display:flex;gap:16px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-blue);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                      font-size:13px;font-weight:700;">1</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">
+              Scan the QR code
+            </div>
+            <div style="font-size:12px;color:var(--fg-3);margin-bottom:16px;line-height:1.6;">
+              Open your authenticator app and scan the code below.
+            </div>
+            <!-- QR code SVG -->
+            <div style="background:#fff;border-radius:8px;padding:12px;display:inline-block;line-height:0;">
+              {{ qr_svg|safe }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual entry fallback -->
+        <div style="background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:6px;
+                    padding:12px 16px;">
+          <div style="font-size:11px;color:var(--fg-4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">
+            Can't scan? Enter this key manually
+          </div>
+          <div style="font-family:monospace;font-size:14px;color:var(--fg-2);letter-spacing:2px;
+                      word-break:break-all;">{{ secret }}</div>
+        </div>
+
+        <!-- Step 2 — Confirm -->
+        <div style="display:flex;gap:16px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#1a2540;border:1px solid var(--border-subtle);
+                      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                      font-size:13px;font-weight:700;color:var(--fg-3);">2</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">
+              Enter the 6-digit code from your app
+            </div>
+            <div style="font-size:12px;color:var(--fg-3);margin-bottom:14px;line-height:1.6;">
+              This confirms the app is correctly configured.
+            </div>
+            <form method="post">
+              {% csrf_token %}
+              <input type="text" name="code" id="totp-code"
+                     placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                     style="width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border-subtle);
+                            border-radius:6px;color:var(--fg-1);font-size:24px;font-family:monospace;font-weight:600;
+                            letter-spacing:8px;text-align:center;outline:none;box-sizing:border-box;">
+              <div style="display:flex;gap:10px;margin-top:14px;">
+                <a href="{% url 'platform_admin:two_fa_setup' %}"
+                   style="flex:1;display:block;text-align:center;padding:10px;background:var(--bg-input);
+                          border:1px solid var(--border-subtle);border-radius:6px;color:var(--fg-3);
+                          font-size:13px;text-decoration:none;">Cancel</a>
+                <button type="submit"
+                        style="flex:2;padding:10px;background:var(--accent-blue);border:none;border-radius:6px;
+                               color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+                  Confirm &amp; Enable 2FA
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="sc-notice muted" style="margin-top:16px;">
+    Keep your authenticator app installed — you will need it every time you log in. If you lose access, contact another Platform Admin to disable your 2FA.
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var inp = document.getElementById('totp-code');
+  if (inp) {
+    inp.focus();
+    inp.addEventListener('input', function () {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 6);
+      if (inp.value.length === 6) inp.closest('form').submit();
+    });
+  }
+});
+</script>
+{% endblock %}

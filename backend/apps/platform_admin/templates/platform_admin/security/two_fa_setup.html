@@ -1,0 +1,172 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Two-Factor Authentication{% endblock %}
+{% block breadcrumb %}My 2FA Settings{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Two-Factor Authentication</div>
+    <div class="page-subtitle">Enable one or both methods. You can choose which to use at each login.</div>
+  </div>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="sc-notice {% if msg.tags == 'success' %}green{% else %}yellow{% endif %}" style="margin-bottom:20px;">
+  {{ msg }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div style="max-width:700px;">
+
+  <!-- Status banner -->
+  <div class="sc-card" style="margin-bottom:20px;">
+    <div class="sc-head">
+      <div class="sc-head-icon">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          <circle cx="8" cy="10.5" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="sc-head-text">
+        <div class="sc-head-title">Account: {{ admin.email }}</div>
+        <div class="sc-head-desc">
+          {% if admin.totp_enabled and admin.email_2fa_enabled %}
+            Both methods active — you can choose either at login.
+          {% elif admin.totp_enabled %}
+            Authenticator app active.
+          {% elif admin.email_2fa_enabled %}
+            Email OTP active.
+          {% else %}
+            No 2FA enabled — your account is not protected.
+          {% endif %}
+        </div>
+      </div>
+      {% if admin.two_fa_enabled %}
+      <span class="sc-head-badge on">2FA On</span>
+      {% else %}
+      <span class="sc-head-badge off">2FA Off</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Method cards — independent -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- ── Authenticator App ── -->
+    <div class="sc-card">
+      <div class="sc-head">
+        <div class="sc-head-icon">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <rect x="3" y="1.5" width="10" height="13" rx="2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <circle cx="8" cy="12" r="0.9" fill="currentColor"/>
+            <path d="M6 4h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+          </svg>
+        </div>
+        <div class="sc-head-text">
+          <div class="sc-head-title">Authenticator App</div>
+          <div class="sc-head-desc">Google Authenticator, Authy, etc.</div>
+        </div>
+        {% if admin.totp_enabled %}
+        <span class="sc-head-badge on">Active</span>
+        {% else %}
+        <span class="sc-head-badge off">Off</span>
+        {% endif %}
+      </div>
+      <div class="sc-body">
+        <ul style="font-size:12px;color:var(--fg-3);line-height:1.8;padding-left:16px;margin-bottom:16px;">
+          <li>Works without internet after setup</li>
+          <li>Most secure — codes change every 30 s</li>
+          <li>Scan QR code with your app</li>
+        </ul>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="{% url 'platform_admin:two_fa_setup_totp' %}"
+             style="display:block;text-align:center;padding:9px;background:var(--accent-blue);
+                    border-radius:6px;color:#fff;font-size:13px;font-weight:500;text-decoration:none;">
+            {% if admin.totp_enabled %}Re-setup / Replace App{% else %}Set Up Authenticator App{% endif %}
+          </a>
+          {% if admin.totp_enabled %}
+          <form method="post" action="{% url 'platform_admin:two_fa_disable_totp' %}"
+                onsubmit="return confirm('Remove authenticator app from your account?')">
+            {% csrf_token %}
+            <button type="submit"
+                    style="width:100%;padding:8px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);
+                           border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;">
+              Remove App
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Email OTP ── -->
+    <div class="sc-card">
+      <div class="sc-head">
+        <div class="sc-head-icon">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          </svg>
+        </div>
+        <div class="sc-head-text">
+          <div class="sc-head-title">Email OTP</div>
+          <div class="sc-head-desc">Code sent to your email.</div>
+        </div>
+        {% if admin.email_2fa_enabled %}
+        <span class="sc-head-badge on">Active</span>
+        {% else %}
+        <span class="sc-head-badge off">Off</span>
+        {% endif %}
+      </div>
+      <div class="sc-body">
+        <ul style="font-size:12px;color:var(--fg-3);line-height:1.8;padding-left:16px;margin-bottom:16px;">
+          <li>Code sent to <strong style="color:var(--fg-2);">{{ admin.email }}</strong></li>
+          <li>Great backup if you lose your app</li>
+          <li>Requires SMTP configured in Email Settings</li>
+        </ul>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% if not admin.email_2fa_enabled %}
+          <form method="post" action="{% url 'platform_admin:two_fa_enable_email' %}">
+            {% csrf_token %}
+            <button type="submit"
+                    style="width:100%;padding:9px;background:var(--bg-input);border:1px solid var(--border-subtle);
+                           border-radius:6px;color:var(--fg-2);font-size:13px;font-weight:500;cursor:pointer;">
+              Enable Email OTP
+            </button>
+          </form>
+          {% else %}
+          <div style="padding:9px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);
+                      border-radius:6px;text-align:center;font-size:12px;color:#4ade80;">
+            ✓ Email OTP is enabled
+          </div>
+          <form method="post" action="{% url 'platform_admin:two_fa_disable_email' %}"
+                onsubmit="return confirm('Disable Email OTP?')">
+            {% csrf_token %}
+            <button type="submit"
+                    style="width:100%;padding:8px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);
+                           border-radius:6px;color:#f87171;font-size:12px;cursor:pointer;">
+              Disable Email OTP
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {% if admin.totp_enabled and admin.email_2fa_enabled %}
+  <div class="sc-notice green" style="margin-top:16px;">
+    Both methods are active. At login, you can switch between them — use the app when available, fall back to email if needed.
+  </div>
+  {% else %}
+  <div class="sc-notice muted" style="margin-top:16px;">
+    Tip: enable both methods. That way if you ever lose access to your authenticator app, you can use Email OTP as a backup at login.
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

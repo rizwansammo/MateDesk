@@ -1,0 +1,66 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Active Subscriptions{% endblock %}
+{% block breadcrumb %}Active Subscriptions{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Active Subscriptions</div>
+    <div class="page-subtitle">Billing status and subscription details for all MSP tenants.</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>Plan</th>
+        <th>Billing Status</th>
+        <th>Trial Ends</th>
+        <th>Renewal Date</th>
+        <th>Tickets</th>
+        <th>Users</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tenants %}
+      <tr>
+        <td>
+          <div class="t-name-wrap">
+            <div class="t-avatar">{{ t.name|slice:":2"|upper }}</div>
+            <div>
+              <a href="{% url 'platform_admin:tenant_detail' pk=t.pk %}" style="color:var(--fg-1);font-weight:600;text-decoration:none;">{{ t.name }}</a>
+              <span class="t-slug">{{ t.slug }}</span>
+            </div>
+          </div>
+        </td>
+        <td><span class="plan-badge plan-{{ t.plan }}">{{ t.get_plan_display }}</span></td>
+        <td>
+          <span class="pill
+            {% if t.billing_status == 'paid' %}pill-active
+            {% elif t.billing_status == 'past_due' %}pill-suspended
+            {% elif t.billing_status == 'trial' %}pill-trial
+            {% else %}pill-cancelled{% endif %}">
+            {{ t.get_billing_status_display }}
+          </span>
+        </td>
+        <td class="text-muted text-sm">{{ t.trial_ends_at|date:"M j, Y"|default:"—" }}</td>
+        <td class="text-muted text-sm">{{ t.renewal_date|date:"M j, Y"|default:"—" }}</td>
+        <td class="text-muted">{{ t.ticket_count }}</td>
+        <td class="text-muted">{{ t.user_count }}</td>
+        <td>
+          <a href="{% url 'platform_admin:tenant_detail' pk=t.pk %}?tab=subscription" class="btn btn-secondary btn-sm">Details</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="table-empty">No subscriptions found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,419 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Platform Admin Login — MateDesk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'HemiHead';
+      src: url("{% static 'platform_admin/fonts/HemiHead-Bold.otf' %}") format('opentype');
+      font-weight: bold;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg-page:        #0d1117;
+      --bg-panel:       #0f1520;
+      --bg-input:       #0b1019;
+      --border-subtle:  #1e2a3a;
+      --border-soft:    #253147;
+      --accent-blue:    #3b6dff;
+      --accent-blue-hi: #5580ff;
+      --fg-1: #ffffff;
+      --fg-2: #b8c4d8;
+      --fg-3: #7a8ba0;
+      --fg-4: #4a5568;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--fg-1);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Splash overlay ── */
+    #pto {
+      opacity: 1;
+      pointer-events: all;
+      transition: opacity 0.35s ease;
+    }
+    #pto.out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .pto-arc {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      border-top-color: #fff;
+      border-right-color: rgba(255,255,255,0.55);
+      animation: pto-spin 0.85s linear infinite;
+    }
+    @keyframes pto-spin { to { transform: rotate(360deg); } }
+
+    /* ── Background ── */
+    .login-bg {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, #1a2535 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .login-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 35%, rgba(59,109,255,0.09) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 0;                        /* sharp corners */
+      padding: 40px 36px 30px;
+      box-shadow: 0 12px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Thin accent line top */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3b6dff 40%, #3b6dff 60%, transparent);
+    }
+
+    /* ── Brand block ── */
+    .login-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+      gap: 0;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: #1F4ED8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .brand-wordmark {
+      font-family: 'HemiHead', 'Inter', sans-serif;
+      font-size: 30px;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .login-title {
+      font-family: 'HemiHead', 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .login-subtitle {
+      font-family: 'HemiHead', 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      line-height: 1.5;
+      margin-bottom: 0;
+      opacity: 0.75;
+    }
+
+    /* ── Error ── */
+    .error-msg {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 0;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: #f87171;
+      margin-bottom: 16px;
+    }
+
+    /* ── Form ── */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--fg-3);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--fg-4);
+      pointer-events: none;
+    }
+    .field input {
+      width: 100%;
+      padding: 10px 12px 10px 35px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 0;
+      color: var(--fg-1);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(59,109,255,0.12);
+    }
+    .field input::placeholder { color: var(--fg-4); }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--fg-3);
+      cursor: pointer;
+    }
+    .remember-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      border-radius: 0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .btn-login:hover {
+      background: var(--accent-blue-hi);
+      box-shadow: 0 4px 20px rgba(59,109,255,0.45);
+    }
+
+    /* ── Security notice ── */
+    .security-notice {
+      margin-top: 18px;
+      padding: 11px 14px;
+      background: rgba(34,197,94,0.07);
+      border: 1px solid rgba(34,197,94,0.22);
+      border-radius: 0;
+      font-family: 'IBM Plex Sans', 'Inter', sans-serif;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #22c55e;
+      text-align: center;
+      line-height: 1.55;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 20px 0;
+    }
+
+    /* ── Footer ── */
+    .login-footer {
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #22c55e;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Splash overlay -->
+<div id="pto" role="status" aria-label="Loading"
+     style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:999999;
+            background:#0d1117;display:flex;align-items:center;justify-content:center;">
+  <div style="position:relative;width:160px;height:160px;
+              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <div style="position:absolute;top:0;right:0;bottom:0;left:0;
+                border-radius:50%;border:2px solid rgba(255,255,255,0.12);"></div>
+    <div class="pto-arc"></div>
+    <img src="{% static 'platform_admin/img/NetaMate.png' %}" alt="" draggable="false"
+         style="width:104px;height:104px;object-fit:contain;display:block;flex-shrink:0;
+                position:relative;z-index:1;" />
+  </div>
+</div>
+
+<div class="login-bg">
+  <div class="login-card">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8-2.5h-4.5z" fill="#fff"/>
+          <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="brand-wordmark">Mate<span style="color:#1F4ED8;">Desk</span></div>
+      <div class="login-title">MateDesk Platform Admin</div>
+      <div class="login-subtitle">Secure internal control center for NetaMate Solutions.</div>
+    </div>
+
+    {% if error %}
+    <div class="error-msg">
+      <strong>Access Denied:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="">
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="login-email">Email Address</label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+          </svg>
+          <input type="email" id="login-email" name="email" placeholder="admin@netamate.com"
+                 autocomplete="email" required value="{{ request.POST.email|default:'' }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="login-password">Password</label>
+        <div class="input-wrap">
+          <svg class="input-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <circle cx="8" cy="10.5" r="1" fill="currentColor"/>
+          </svg>
+          <input type="password" id="login-password" name="password" placeholder="••••••••••••"
+                 autocomplete="current-password" required>
+        </div>
+      </div>
+
+      <label class="remember-row">
+        <input type="checkbox" name="remember_me">
+        Keep me signed in for 30 days
+      </label>
+
+      <button type="submit" class="btn-login">Sign In to Platform Admin</button>
+    </form>
+
+    <div class="security-notice">
+      Authorized NetaMate personnel only. All actions are monitored and logged.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="login-footer">
+      <span class="status-dot"></span>
+      Powered by NetaMate Solution
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var overlay = document.getElementById('pto');
+  if (!overlay) return;
+
+  window._ptoShow = function () { overlay.classList.remove('out'); };
+
+  // Dismiss once page content is painted
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      overlay.classList.add('out');
+    });
+  });
+
+  // Show on form submit (sign-in) or any link navigation
+  document.addEventListener('submit', function (e) {
+    if (!e.defaultPrevented) window._ptoShow();
+  });
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href || href === '#' || href.startsWith('#') ||
+        href.startsWith('javascript') || link.target === '_blank') return;
+    window._ptoShow();
+  });
+})();
+</script>
+</body>
+</html>

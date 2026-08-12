@@ -1,0 +1,695 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}{{ tenant.name }}{% endblock %}
+{% block breadcrumb %}{{ tenant.name }}{% endblock %}
+
+{% block content %}
+
+<!-- Tenant Header -->
+<div class="tenant-header">
+  <div class="tenant-header-inner">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div class="tenant-name">{{ tenant.name }}</div>
+        <span class="pill pill-{{ tenant.status }}">{{ tenant.get_status_display }}</span>
+        <span class="plan-badge plan-{{ tenant.plan }}">{{ tenant.get_plan_display }}</span>
+      </div>
+      <div class="tenant-meta" style="margin-top:8px;">
+        <span class="tenant-slug">{{ tenant.slug }}</span>
+        {% if owner %}<span class="text-muted text-sm">Owner: {{ owner.full_name|default:owner.email }} [{{ owner.email }}]</span>{% endif %}
+        <span class="text-muted text-sm">Created {{ tenant.created_at|date:"M j, Y" }}</span>
+        {% if tenant.deletion_scheduled_at %}
+        <span style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px;">
+          Pending Deletion · {{ tenant.deletion_scheduled_at|date:"M j, Y H:i" }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;">
+      <!-- Change Plan -->
+      <form id="plan-change-form" method="post" action="{% url 'platform_admin:tenant_change_plan' pk=tenant.pk %}">
+        {% csrf_token %}
+        <select name="plan" style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius);color:var(--fg-2);font-size:12px;">
+          <option value="starter" {% if tenant.plan == 'starter' %}selected{% endif %}>Starter</option>
+          <option value="professional" {% if tenant.plan == 'professional' %}selected{% endif %}>Professional</option>
+          <option value="enterprise" {% if tenant.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm" style="margin-left:4px;">Change Plan</button>
+      </form>
+
+      <!-- Reset Password -->
+      <form method="post" action="{% url 'platform_admin:tenant_reset_password' pk=tenant.pk %}"
+            data-confirm="Reset the MSP Owner password for {{ tenant.name }}? The new temporary password will be shown once."
+            data-confirm-title="Reset Owner Password"
+            data-confirm-btn="Reset Password"
+            data-confirm-danger>
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm">Reset Owner Password</button>
+      </form>
+
+      <!-- Suspend / Reactivate -->
+      {% if tenant.status != 'suspended' %}
+      <form method="post" action="{% url 'platform_admin:tenant_deactivate' pk=tenant.pk %}"
+            data-confirm="Suspend {{ tenant.name }}? All users will lose access immediately."
+            data-confirm-title="Suspend Tenant"
+            data-confirm-btn="Suspend"
+            data-confirm-danger>
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm">Suspend Tenant</button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'platform_admin:tenant_reactivate' pk=tenant.pk %}"
+            data-confirm="Reactivate {{ tenant.name }}?"
+            data-confirm-title="Reactivate Tenant"
+            data-confirm-btn="Reactivate">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success btn-sm">Reactivate</button>
+      </form>
+      {% endif %}
+
+      <!-- Delete Tenant -->
+      <button type="button" class="btn btn-sm"
+              style="background:#1a0505;color:#f87171;border:1px solid #7f1d1d;"
+              onclick="document.getElementById('delete-tenant-modal').style.display='flex'">
+        Delete Tenant
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Tenant Modal -->
+<div id="delete-tenant-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid #7f1d1d;width:100%;max-width:440px;padding:32px;position:relative;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:36px;height:36px;background:#7f1d1d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="#f87171" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#f87171;">Permanently Delete Tenant</div>
+        <div style="font-size:12px;color:var(--fg-4);margin-top:2px;">This action cannot be undone</div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--fg-3);margin-bottom:8px;line-height:1.6;">
+      You are about to permanently delete <strong style="color:#f87171;">{{ tenant.name }}</strong>
+      and all associated data including users, tickets, and organizations.
+    </p>
+    <div style="background:#1a0505;border:1px solid #7f1d1d;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#f87171;">
+      ⚠ This will delete {{ users|length }} user(s), {{ orgs|length }} organization(s), and {{ ticket_counts.total }} ticket(s).
+    </div>
+
+    <form method="post" action="{% url 'platform_admin:tenant_delete' pk=tenant.pk %}">
+      {% csrf_token %}
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--fg-2);margin-bottom:6px;">
+        Enter your admin password to confirm
+      </label>
+      <input type="password" name="confirm_password" required autofocus
+             placeholder="Your password"
+             style="width:100%;padding:9px 12px;background:var(--bg-input);border:1px solid #7f1d1d;color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:16px;outline:none;">
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button"
+                onclick="document.getElementById('delete-tenant-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">
+          Cancel
+        </button>
+        <button type="submit"
+                style="padding:7px 16px;background:#7f1d1d;color:#f87171;border:1px solid #7f1d1d;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+          Permanently Delete
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('delete-tenant-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+</script>
+
+<!-- Subscription Edit Modal -->
+<div id="sub-edit-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid var(--border-subtle);width:100%;max-width:480px;padding:32px;position:relative;">
+    <div style="font-size:16px;font-weight:700;color:var(--fg-1);margin-bottom:20px;">Edit Subscription</div>
+    <form method="post" action="{% url 'platform_admin:tenant_update_subscription' pk=tenant.pk %}">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>Plan</label>
+          <select name="plan">
+            <option value="starter" {% if tenant.plan == 'starter' %}selected{% endif %}>Starter</option>
+            <option value="professional" {% if tenant.plan == 'professional' %}selected{% endif %}>Professional</option>
+            <option value="enterprise" {% if tenant.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Status</label>
+          <select name="status">
+            <option value="active" {% if tenant.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="trial" {% if tenant.status == 'trial' %}selected{% endif %}>Trial</option>
+            <option value="suspended" {% if tenant.status == 'suspended' %}selected{% endif %}>Suspended</option>
+            <option value="cancelled" {% if tenant.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Billing Status</label>
+          <select name="billing_status">
+            <option value="paid" {% if tenant.billing_status == 'paid' %}selected{% endif %}>Paid</option>
+            <option value="past_due" {% if tenant.billing_status == 'past_due' %}selected{% endif %}>Past Due</option>
+            <option value="trial" {% if tenant.billing_status == 'trial' %}selected{% endif %}>Trial</option>
+            <option value="cancelled" {% if tenant.billing_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Trial End Date</label>
+          <input type="date" name="trial_ends_at" value="{{ tenant.trial_ends_at|date:'Y-m-d' }}">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Renewal Date</label>
+          <input type="date" name="renewal_date" value="{{ tenant.renewal_date|date:'Y-m-d' }}">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>Admin Password <span style="color:var(--fg-4);font-weight:400;">(required to save)</span></label>
+        <input type="password" name="confirm_password" required placeholder="Your password">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('sub-edit-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  document.getElementById('sub-edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+</script>
+
+<!-- Tab Navigation -->
+<div class="tab-nav" data-tab-container>
+  <a href="#overview" class="tab-btn" data-tab-target="overview">Overview</a>
+  <a href="#subscription" class="tab-btn" data-tab-target="subscription">Subscription</a>
+  <a href="#organizations" class="tab-btn" data-tab-target="organizations">Organizations <span class="badge-count">{{ orgs|length }}</span></a>
+  <a href="#users" class="tab-btn" data-tab-target="users">Users <span class="badge-count">{{ users|length }}</span></a>
+  <a href="#tickets" class="tab-btn" data-tab-target="tickets">Tickets</a>
+  <a href="#branding" class="tab-btn" data-tab-target="branding">Branding</a>
+  <a href="#activity" class="tab-btn" data-tab-target="activity">Activity</a>
+</div>
+
+<!-- Tab: Overview -->
+<div id="overview" class="tab-panel">
+  <div class="detail-grid">
+    <div class="detail-tile">
+      <div class="detail-tile-label">Status</div>
+      <div class="detail-tile-value"><span class="pill pill-{{ tenant.status }}">{{ tenant.get_status_display }}</span></div>
+    </div>
+    <div class="detail-tile">
+      <div class="detail-tile-label">Owner</div>
+      <div class="detail-tile-value" style="font-size:13px;">{% if owner %}{{ owner.email }}{% else %}<span class="text-muted">None</span>{% endif %}</div>
+    </div>
+    <div class="detail-tile">
+      <div class="detail-tile-label">MSP Users</div>
+      <div class="detail-tile-value">{{ users|length }}</div>
+    </div>
+    <div class="detail-tile">
+      <div class="detail-tile-label">Organizations</div>
+      <div class="detail-tile-value">{{ orgs|length }}</div>
+    </div>
+    <div class="detail-tile">
+      <div class="detail-tile-label">Total Tickets</div>
+      <div class="detail-tile-value">{{ ticket_counts.total|default:0 }}</div>
+      <div class="detail-tile-sub">{{ ticket_counts.open|default:0 }} open &bull; {{ ticket_counts.solved|default:0 }} solved</div>
+    </div>
+  </div>
+
+  {% if ticket_counts.total %}
+  <div class="panel" style="max-width:500px;">
+    <div class="panel-title" style="margin-bottom:12px;">Ticket Usage</div>
+    <div class="usage-bar-wrap">
+      <div class="usage-bar-header">
+        <span class="usage-bar-label">Open Tickets</span>
+        <span class="usage-bar-value">{{ ticket_counts.open|default:0 }} / {{ ticket_counts.total|default:0 }}</span>
+      </div>
+      <div class="usage-bar">
+        {% if ticket_counts.total %}
+        <div class="usage-bar-fill {% if ticket_counts.open > ticket_counts.total|add:'-5' %}warn{% else %}ok{% endif %}"
+             style="width:{% widthratio ticket_counts.open ticket_counts.total 100 %}%"></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Tab: Subscription -->
+<div id="subscription" class="tab-panel">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+    <div class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="panel-title">Subscription Details</div>
+        <button type="button" class="btn btn-secondary btn-sm"
+                onclick="document.getElementById('sub-edit-modal').style.display='flex'">
+          Edit
+        </button>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Plan</span>
+        <span class="info-val"><span class="plan-badge plan-{{ tenant.plan }}">{{ tenant.get_plan_display }}</span></span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Status</span>
+        <span class="info-val"><span class="pill pill-{{ tenant.status }}">{{ tenant.get_status_display }}</span></span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Billing Status</span>
+        <span class="info-val">
+          <span class="pill pill-{% if tenant.billing_status == 'paid' %}active{% elif tenant.billing_status == 'past_due' %}suspended{% elif tenant.billing_status == 'trial' %}trial{% else %}cancelled{% endif %}">
+            {{ tenant.get_billing_status_display }}
+          </span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Trial End Date</span>
+        <span class="info-val">{% if tenant.trial_ends_at %}{{ tenant.trial_ends_at|date:"M j, Y" }}{% else %}<span class="text-muted">—</span>{% endif %}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-key">Renewal Date</span>
+        <span class="info-val">{% if tenant.renewal_date %}{{ tenant.renewal_date|date:"M j, Y" }}{% else %}<span class="text-muted">—</span>{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:14px;">Usage Limits</div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-header">
+          <span class="usage-bar-label">Organizations</span>
+          <span class="usage-bar-value">{{ orgs|length }}{% if tenant.max_organizations %} / {{ tenant.max_organizations }}{% else %} / Unlimited{% endif %}</span>
+        </div>
+        <div class="usage-bar">
+          {% if tenant.max_organizations %}
+          <div class="usage-bar-fill" style="width:{% widthratio orgs|length tenant.max_organizations 100 %}%"></div>
+          {% else %}
+          <div class="usage-bar-fill ok" style="width:100%"></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-header">
+          <span class="usage-bar-label">Users</span>
+          <span class="usage-bar-value">{{ users|length }}{% if tenant.max_users %} / {{ tenant.max_users }}{% else %} / Unlimited{% endif %}</span>
+        </div>
+        <div class="usage-bar">
+          {% if tenant.max_users %}
+          <div class="usage-bar-fill" style="width:{% widthratio users|length tenant.max_users 100 %}%"></div>
+          {% else %}
+          <div class="usage-bar-fill ok" style="width:100%"></div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar-header">
+          <span class="usage-bar-label">Tickets</span>
+          <span class="usage-bar-value">{{ ticket_counts.total|default:0 }}{% if tenant.max_tickets %} / {{ tenant.max_tickets }}{% else %} / Unlimited{% endif %}</span>
+        </div>
+        <div class="usage-bar">
+          {% if tenant.max_tickets and ticket_counts.total %}
+          <div class="usage-bar-fill" style="width:{% widthratio ticket_counts.total tenant.max_tickets 100 %}%"></div>
+          {% else %}
+          <div class="usage-bar-fill ok" style="width:10%"></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Organizations -->
+<div id="organizations" class="tab-panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Organization</th>
+          <th>Domain</th>
+          <th>Contact</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for org in orgs %}
+        <tr>
+          <td>
+            <div style="font-weight:600;color:var(--fg-1);">{{ org.name }}</div>
+          </td>
+          <td class="text-mono text-muted">{{ org.domain|default:"—" }}</td>
+          <td class="text-muted text-sm">{{ org.contact_email|default:"—" }}</td>
+          <td>
+            <span class="pill {% if org.is_active %}pill-active{% else %}pill-disabled{% endif %}">{% if org.is_active %}Active{% else %}Inactive{% endif %}</span>
+          </td>
+          <td class="text-muted text-sm">{{ org.created_at|date:"M j, Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="table-empty">No organizations yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tab: Users -->
+<div id="users" class="tab-panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Joined</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div style="font-weight:600;color:var(--fg-1);">{{ u.full_name|default:u.email }}</div>
+          </td>
+          <td class="text-muted">{{ u.email }}</td>
+          <td>
+            {% if u.role == 'msp_owner' %}
+              <span class="role-badge role-mspowner">MSP Owner</span>
+            {% elif u.role == 'client_owner' or u.role == 'vip_manager' or u.role == 'end_user' %}
+              <span class="role-badge role-clientowner">Client{% if u.client_org %} [{{ u.client_org.name }}]{% endif %}</span>
+            {% else %}
+              <span class="role-badge role-{{ u.role|cut:'_' }}">{{ u.get_role_display }}</span>
+            {% endif %}
+          </td>
+          <td class="text-muted text-sm">{{ u.date_joined|date:"M j, Y" }}</td>
+          <td>
+            <span class="pill {% if u.is_active %}pill-active{% else %}pill-disabled{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="table-empty">No users.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tab: Tickets -->
+<div id="tickets" class="tab-panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Ref</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr>
+          <td class="text-mono" style="color:var(--fg-3);">{{ ticket.ticket_ref }}</td>
+          <td>
+            <span style="color:var(--fg-1);">{{ ticket.subject|truncatechars:60 }}</span>
+          </td>
+          <td>
+            <span class="pill pill-{% if ticket.status == 'open' or ticket.status == 'pending' or ticket.status == 'in_progress' %}trial{% elif ticket.status == 'solved' or ticket.status == 'closed' %}active{% else %}disabled{% endif %}">
+              {{ ticket.get_status_display }}
+            </span>
+          </td>
+          <td class="text-muted text-sm">{{ ticket.get_priority_display }}</td>
+          <td class="text-muted text-sm">{{ ticket.created_at|date:"M j, Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="table-empty">No tickets.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tab: Branding -->
+<div id="branding" class="tab-panel">
+  <form method="post" action="{% url 'platform_admin:tenant_update_branding' pk=tenant.pk %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;align-items:start;margin-bottom:16px;max-width:560px;">
+
+      <!-- ── MateDesk Logo ── -->
+      <div class="panel">
+        <div class="panel-header" style="margin-bottom:14px;">
+          <div>
+            <div class="panel-title">MateDesk Topbar Logo</div>
+            <div class="panel-subtitle">Icon and wordmark size in the MateDesk agent dashboard.</div>
+          </div>
+        </div>
+
+        <!-- Presets -->
+        <div style="margin-bottom:14px;">
+          <div class="nav-section-label" style="padding:0 0 8px;">Quick Presets</div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-secondary btn-sm branding-preset" data-app="md" data-icon="24" data-font="22" data-lh="0">Small</button>
+            <button type="button" class="btn btn-secondary btn-sm branding-preset" data-app="md" data-icon="32" data-font="30" data-lh="0">Default</button>
+            <button type="button" class="btn btn-secondary btn-sm branding-preset" data-app="md" data-icon="40" data-font="38" data-lh="0">Large</button>
+          </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div style="margin-bottom:14px;">
+          <div class="nav-section-label" style="padding:0 0 8px;">Preview</div>
+          <div style="height:52px;background:var(--bg-page);border:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;padding:0 14px;overflow:hidden;">
+            <div id="md-preview-icon" style="width:32px;height:32px;background:#1F4ED8;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:width 0.15s,height 0.15s;">
+              <svg id="md-preview-svg" viewBox="0 0 24 24" fill="none" width="20" height="20">
+                <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8-2.5h-4.5z" fill="#fff"/>
+                <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" stroke-width="1.5" fill="none"/>
+              </svg>
+            </div>
+            <span id="md-preview-text" style="font-family:'HemiHead','Inter',sans-serif;font-size:30px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--fg-1);white-space:nowrap;line-height:1;transition:font-size 0.15s;">MateDesk<span style="color:#3b6dff;">Pro</span></span>
+          </div>
+        </div>
+
+        <!-- Custom Inputs -->
+        <div>
+          <div class="nav-section-label" style="padding:0 0 8px;">Custom</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div class="field" style="margin-bottom:0;">
+              <label>Icon Size <span class="text-muted">(px)</span></label>
+              <input type="number" name="md_icon_size" id="md-icon-size" value="{{ branding.md_icon_size }}" min="16" max="64" />
+              <div class="field-hint">px (16–64)</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>Font Size <span class="text-muted">(px)</span></label>
+              <input type="number" name="md_font_size" id="md-font-size" value="{{ branding.md_font_size }}" min="10" max="80" />
+              <div class="field-hint">px (10–80)</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>Line Height</label>
+              <input type="number" name="md_line_height" id="md-line-height" value="{{ branding.md_line_height }}" min="0" max="120" />
+              <div class="field-hint">px (0 = auto)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Wordmark -->
+        <div style="margin-top:14px;">
+          <div class="nav-section-label" style="padding:0 0 8px;">Custom Wordmark Text</div>
+          <input type="text" name="md_custom_text" id="md-custom-text"
+                 value="{{ branding.md_custom_text }}"
+                 placeholder="Leave blank for default (MATEDESK)"
+                 maxlength="80"
+                 style="font-family:'HemiHead','Inter',sans-serif;text-transform:uppercase;letter-spacing:0.04em;width:100%;box-sizing:border-box;" />
+          <div class="field-hint">HemiHead font · displayed uppercase · blank = default wordmark</div>
+        </div>
+
+        <!-- Custom Icon Upload -->
+        <div style="margin-top:14px;">
+          <div class="nav-section-label" style="padding:0 0 8px;">Custom Icon</div>
+          {% if branding.md_logo_url %}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:40px;height:40px;background:#1F4ED8;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <img src="{{ branding.md_logo_url }}" width="40" height="40" style="object-fit:contain;" alt="Current MateDesk icon" />
+            </div>
+            <span style="font-size:11px;color:var(--fg-3);">Current icon — upload a new file to replace</span>
+          </div>
+          {% endif %}
+          <input type="file" name="branding_md_logo" accept=".svg,.png,.jpg,.jpeg,.webp"
+                 style="font-size:12px;color:var(--fg-2);width:100%;" />
+          <div class="field-hint">SVG or PNG · Square · Min 200 × 200 px recommended</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Info notice -->
+    <div style="background:var(--accent-blue-tint);border:1px solid rgba(59,109,255,0.2);padding:12px 16px;font-size:12.5px;color:var(--fg-3);margin-bottom:16px;">
+      <strong style="color:var(--fg-2);">Platform Admin Only —</strong>
+      Changes take effect for all tenant users on next page load.
+      Custom logo uploads and brand colors are available on the Enterprise plan.
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Branding</button>
+  </form>
+</div>
+
+<!-- Tab: Activity -->
+<div id="activity" class="tab-panel">
+  {% if logs %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Actor</th>
+          <th>Action</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-mono text-sm text-muted">{{ log.created_at|date:"M j, Y H:i" }}</td>
+          <td class="text-muted">{{ log.actor_email|default:"System" }}</td>
+          <td>{{ log.get_action_display }}</td>
+          <td class="text-mono text-sm text-muted">{{ log.ip_address|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-state-icon">🔒</div>
+      <div class="empty-state-text">No admin activity for this tenant yet.</div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+<!-- Temp Password Result Modal -->
+<div id="temp-pw-modal"
+     style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);">
+  <div style="background:#0d1117;border:1px solid var(--border-subtle);width:100%;max-width:480px;padding:36px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:#22c55e;flex-shrink:0;">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div style="font-size:16px;font-weight:700;color:var(--fg-1);">Password Reset Successful</div>
+    </div>
+    <p style="font-size:13px;color:var(--fg-4);margin-bottom:20px;">
+      Temporary password for <strong id="tpm-email" style="color:var(--fg-2);"></strong>.
+      Share this securely — it will only be shown once.
+    </p>
+    <div style="background:#111827;border:1px solid var(--border-subtle);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:11px;color:var(--fg-4);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Temporary Password</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code id="tpm-password" style="font-size:17px;font-family:monospace;color:#f0f6ff;letter-spacing:0.04em;flex:1;word-break:break-all;"></code>
+        <button type="button" onclick="copyTempPw()" id="tpm-copy-btn"
+                class="btn btn-secondary btn-sm" style="flex-shrink:0;">Copy</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button type="button" onclick="document.getElementById('temp-pw-modal').style.display='none'"
+              class="btn btn-primary btn-sm">Done — I've noted this password</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+{% if temp_pw %}
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('tpm-email').textContent = '{{ temp_pw.email|escapejs }}';
+  document.getElementById('tpm-password').textContent = '{{ temp_pw.password|escapejs }}';
+  document.getElementById('temp-pw-modal').style.display = 'flex';
+});
+{% endif %}
+function copyTempPw() {
+  var pw = document.getElementById('tpm-password').textContent;
+  navigator.clipboard.writeText(pw).then(function() {
+    var btn = document.getElementById('tpm-copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  }).catch(function() {
+    var el = document.createElement('textarea');
+    el.value = pw;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    var btn = document.getElementById('tpm-copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  });
+}
+(function () {
+  function updatePreview(app) {
+    var iconSize = parseInt(document.getElementById(app + '-icon-size').value,   10) || 32;
+    var fontSize = parseInt(document.getElementById(app + '-font-size').value,   10) || 30;
+    var lineH    = parseInt(document.getElementById(app + '-line-height').value, 10) || 0;
+
+    var iconEl = document.getElementById(app + '-preview-icon');
+    var svgEl  = document.getElementById(app + '-preview-svg');
+    var txtEl  = document.getElementById(app + '-preview-text');
+
+    if (iconEl) { iconEl.style.width = iconSize + 'px'; iconEl.style.height = iconSize + 'px'; }
+    if (svgEl)  {
+      var inner = Math.round(iconSize * (app === 'md' ? 0.625 : 1));
+      svgEl.setAttribute('width',  inner);
+      svgEl.setAttribute('height', inner);
+    }
+    if (txtEl) {
+      txtEl.style.fontSize   = fontSize + 'px';
+      txtEl.style.lineHeight = lineH > 0 ? lineH + 'px' : '1';
+    }
+  }
+
+  function updateCustomText(app) {
+    var input = document.getElementById(app + '-custom-text');
+    var txtEl = document.getElementById(app + '-preview-text');
+    if (!input || !txtEl) return;
+    var val = input.value.trim();
+    txtEl.innerHTML = val || 'MateDesk<span style="color:#3b6dff;">Pro</span>';
+  }
+
+  // Preset buttons
+  document.querySelectorAll('.branding-preset').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var app = btn.dataset.app;
+      document.getElementById(app + '-icon-size').value   = btn.dataset.icon;
+      document.getElementById(app + '-font-size').value   = btn.dataset.font;
+      document.getElementById(app + '-line-height').value = btn.dataset.lh;
+      updatePreview(app);
+    });
+  });
+
+  // Live update on input change
+  ['md'].forEach(function (app) {
+    ['icon-size', 'font-size', 'line-height'].forEach(function (field) {
+      var el = document.getElementById(app + '-' + field);
+      if (el) el.addEventListener('input', function () { updatePreview(app); });
+    });
+    var customTextEl = document.getElementById(app + '-custom-text');
+    if (customTextEl) customTextEl.addEventListener('input', function () { updateCustomText(app); });
+  });
+
+  // Init on load
+  updatePreview('md');
+  updateCustomText('md');
+})();
+</script>
+{% endblock %}

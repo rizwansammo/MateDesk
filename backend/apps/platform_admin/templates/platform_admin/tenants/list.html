@@ -1,0 +1,263 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}All Tenants{% endblock %}
+{% block breadcrumb %}All Tenants{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">All Tenants</div>
+    <div class="page-subtitle">Manage MSP tenant accounts on the MateDesk platform.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'platform_admin:tenant_create' %}" class="btn btn-primary">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+        <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      Create MSP Tenant
+    </a>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <form method="get" action="" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;">
+    <div class="search-wrap">
+      <svg class="search-icon" width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+        <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" class="search-input" placeholder="Search tenants..."
+             value="{{ search }}">
+    </div>
+
+    <div class="filter-chips">
+      <a href="?{% if plan_filter %}plan={{ plan_filter }}{% endif %}" class="filter-chip {% if not status_filter %}active{% endif %}">All</a>
+      <a href="?status=active{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="filter-chip {% if status_filter == 'active' %}active{% endif %}">Active</a>
+      <a href="?status=trial{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="filter-chip {% if status_filter == 'trial' %}active{% endif %}">Trial</a>
+      <a href="?status=suspended{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="filter-chip {% if status_filter == 'suspended' %}active{% endif %}">Suspended</a>
+      <a href="?status=cancelled{% if plan_filter %}&plan={{ plan_filter }}{% endif %}{% if search %}&q={{ search }}{% endif %}" class="filter-chip {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+    </div>
+
+    <select name="plan" class="filter-select" onchange="this.form.submit()">
+      <option value="">All Plans</option>
+      <option value="starter" {% if plan_filter == 'starter' %}selected{% endif %}>Starter</option>
+      <option value="professional" {% if plan_filter == 'professional' %}selected{% endif %}>Professional</option>
+      <option value="enterprise" {% if plan_filter == 'enterprise' %}selected{% endif %}>Enterprise</option>
+    </select>
+
+    {% if search or status_filter or plan_filter %}
+    <a href="{% url 'platform_admin:tenants_list' %}" class="btn btn-ghost btn-sm">Clear Filters</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>Plan</th>
+        <th>Status</th>
+        <th>Orgs</th>
+        <th>Users</th>
+        <th>Tickets</th>
+        <th>Trial / Renewal</th>
+        <th>Owner</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tenants %}
+      <tr>
+        <td>
+          <div class="t-name-wrap">
+            <div class="t-avatar">{{ t.name|slice:":2"|upper }}</div>
+            <div>
+              <a href="{% url 'platform_admin:tenant_detail' pk=t.pk %}" class="t-name" style="text-decoration:none;color:var(--fg-1);">{{ t.name }}</a>
+              <span class="t-slug">{{ t.slug }}</span>
+            </div>
+          </div>
+        </td>
+        <td><span class="plan-badge plan-{{ t.plan }}">{{ t.get_plan_display }}</span></td>
+        <td>
+          <span class="pill pill-{{ t.status }}">{{ t.get_status_display }}</span>
+          {% if t.deletion_scheduled_at %}
+          <button type="button"
+                  style="margin-left:4px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;font-size:10px;font-weight:600;padding:2px 7px;cursor:pointer;border-radius:3px;"
+                  onclick="openCancelDeleteModal('{{ t.pk }}','{{ t.name|escapejs }}')">
+            Pending Deletion
+          </button>
+          {% endif %}
+        </td>
+        <td class="text-muted">{{ t.org_count }}</td>
+        <td class="text-muted">{{ t.user_count }}</td>
+        <td class="text-muted">{{ t.ticket_count }}</td>
+        <td class="text-muted text-sm">
+          {% if t.trial_ends_at %}{{ t.trial_ends_at|date:"M j, Y" }}
+          {% elif t.renewal_date %}{{ t.renewal_date|date:"M j, Y" }}
+          {% else %}—{% endif %}
+        </td>
+        <td class="text-muted text-sm">
+          {% for uid, owner in owners.items %}
+            {% if uid == t.id %}{{ owner.full_name|default:owner.email }} [{{ owner.email }}]{% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          <div class="flex gap-8">
+            <a href="{% url 'platform_admin:tenant_detail' pk=t.pk %}" class="btn btn-secondary btn-sm">View</a>
+            {% if t.status != 'suspended' or t.deletion_scheduled_at %}
+            <form method="post" action="{% url 'platform_admin:tenant_deactivate' pk=t.pk %}"
+                  class="inline-form"
+                  data-confirm="Suspend {{ t.name }}? They will lose access immediately."
+                  data-confirm-title="Suspend Tenant"
+                  data-confirm-btn="Suspend"
+                  data-confirm-danger>
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm"
+                      {% if t.deletion_scheduled_at %}disabled title="Pending deletion"{% endif %}>
+                Suspend
+              </button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'platform_admin:tenant_reactivate' pk=t.pk %}"
+                  class="inline-form"
+                  data-confirm="Reactivate {{ t.name }}?"
+                  data-confirm-title="Reactivate Tenant"
+                  data-confirm-btn="Reactivate">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-sm"
+                      {% if t.deletion_scheduled_at %}disabled title="Cancel pending deletion first"{% endif %}>
+                Reactivate
+              </button>
+            </form>
+            {% endif %}
+            {% if not t.deletion_scheduled_at %}
+            <button type="button" class="btn btn-sm"
+                    style="background:#1a0505;color:#f87171;border:1px solid #7f1d1d;"
+                    onclick="openScheduleDeleteModal('{{ t.pk }}','{{ t.name|escapejs }}')">
+              Delete
+            </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="10" class="table-empty">No tenants found matching your filters.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Schedule Delete Modal -->
+<div id="schedule-delete-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid #7f1d1d;width:100%;max-width:440px;padding:32px;position:relative;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:36px;height:36px;background:#7f1d1d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="#f87171" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#f87171;">Schedule Tenant Deletion</div>
+        <div style="font-size:12px;color:var(--fg-4);margin-top:2px;">24-hour pending deletion</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--fg-3);margin-bottom:8px;line-height:1.6;">
+      You are scheduling <strong id="sd-tenant-name" style="color:#f87171;"></strong> for deletion.
+      The tenant will be <strong>immediately suspended</strong> and permanently deleted after <strong>24 hours</strong>.
+    </p>
+    <div style="background:#1a0505;border:1px solid #7f1d1d;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#f87171;">
+      ⚠ You can undo this within 24 hours by clicking "Pending Deletion" in the status column.
+    </div>
+    <form id="sd-form" method="post" action="">
+      {% csrf_token %}
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--fg-2);margin-bottom:6px;">
+        Enter your admin password to confirm
+      </label>
+      <input type="password" name="confirm_password" required
+             placeholder="Your password"
+             style="width:100%;padding:9px 12px;background:var(--bg-input);border:1px solid #7f1d1d;color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:16px;outline:none;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('schedule-delete-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">Cancel</button>
+        <button type="submit"
+                style="padding:7px 16px;background:#7f1d1d;color:#f87171;border:1px solid #7f1d1d;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+          Schedule Deletion
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Cancel Delete Modal -->
+<div id="cancel-delete-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid rgba(245,158,11,0.4);width:100%;max-width:440px;padding:32px;position:relative;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:36px;height:36px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="18" height="18" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fbbf24;">Undo Pending Deletion</div>
+        <div style="font-size:12px;color:var(--fg-4);margin-top:2px;">Reactivate tenant and cancel deletion</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--fg-3);margin-bottom:20px;line-height:1.6;">
+      Cancel the scheduled deletion of <strong id="cd-tenant-name" style="color:#fbbf24;"></strong>?
+      The tenant will be reactivated and deletion will not proceed.
+    </p>
+    <form id="cd-form" method="post" action="">
+      {% csrf_token %}
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--fg-2);margin-bottom:6px;">
+        Enter your admin password to confirm
+      </label>
+      <input type="password" name="confirm_password" required
+             placeholder="Your password"
+             style="width:100%;padding:9px 12px;background:var(--bg-input);border:1px solid rgba(245,158,11,0.4);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:16px;outline:none;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('cancel-delete-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">Close</button>
+        <button type="submit"
+                style="padding:7px 16px;background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.5);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+          Cancel Deletion
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function openScheduleDeleteModal(pk, name) {
+  document.getElementById('sd-tenant-name').textContent = name;
+  document.getElementById('sd-form').action = '/platform-admin/tenants/' + pk + '/schedule-delete/';
+  var m = document.getElementById('schedule-delete-modal');
+  m.style.display = 'flex';
+  m.querySelector('input[type=password]').value = '';
+  setTimeout(function(){ m.querySelector('input[type=password]').focus(); }, 50);
+}
+function openCancelDeleteModal(pk, name) {
+  document.getElementById('cd-tenant-name').textContent = name;
+  document.getElementById('cd-form').action = '/platform-admin/tenants/' + pk + '/cancel-delete/';
+  var m = document.getElementById('cancel-delete-modal');
+  m.style.display = 'flex';
+  m.querySelector('input[type=password]').value = '';
+  setTimeout(function(){ m.querySelector('input[type=password]').focus(); }, 50);
+}
+document.getElementById('schedule-delete-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+document.getElementById('cancel-delete-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+{% endblock %}
+
+{% endblock %}

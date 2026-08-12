@@ -1,0 +1,264 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Platform Admin Accounts{% endblock %}
+{% block breadcrumb %}Platform Admins{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Platform Admin Accounts</div>
+    <div class="page-subtitle">Users with full access to the MateDesk Platform Admin panel.</div>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('create-admin-form').style.display=document.getElementById('create-admin-form').style.display==='none'?'block':'none'">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+        <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      Create Admin
+    </button>
+  </div>
+</div>
+
+<!-- Create Admin Inline Form -->
+<div id="create-admin-form" style="display:none;margin-bottom:20px;">
+  <div class="panel">
+    <div class="panel-title" style="margin-bottom:16px;">New Platform Admin Account</div>
+    <form method="post" action="{% url 'platform_admin:admin_create' %}">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:flex-end;">
+        <div class="field" style="margin-bottom:0;">
+          <label>First Name</label>
+          <input type="text" name="first_name" placeholder="John" required>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Last Name</label>
+          <input type="text" name="last_name" placeholder="Smith">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Email Address</label>
+          <input type="email" name="email" placeholder="admin@netamate.com" required>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Strong password" required minlength="8">
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Warning -->
+<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--accent-yellow);">
+  <strong>Warning:</strong> Platform Admin accounts have unrestricted access to all tenant data. Only grant this to authorized NetaMate staff.
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Admin</th>
+        <th>Email</th>
+        <th>Joined</th>
+        <th>Last Login</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for admin in admins %}
+      <tr>
+        <td>
+          <div class="flex flex-center gap-8">
+            <div class="user-avatar">{{ admin.first_name|slice:":1"|upper }}</div>
+            <div>
+              <div style="font-weight:600;color:var(--fg-1);">{{ admin.full_name|default:admin.email }}</div>
+              <span class="role-badge role-platform">Platform Admin</span>
+            </div>
+          </div>
+        </td>
+        <td class="text-muted">{{ admin.email }}</td>
+        <td class="text-muted text-sm">{{ admin.date_joined|date:"M j, Y" }}</td>
+        <td class="text-muted text-sm">{{ admin.last_login|date:"M j, Y H:i"|default:"Never" }}</td>
+        <td>
+          <span class="pill {% if admin.is_active %}pill-active{% else %}pill-disabled{% endif %}">
+            {% if admin.is_active %}Active{% else %}Deactivated{% endif %}
+          </span>
+        </td>
+        <td>
+          <div class="flex gap-8">
+            <button type="button" class="btn btn-secondary btn-sm"
+                    onclick="openAdminEdit('{{ admin.pk }}','{{ admin.first_name|escapejs }}','{{ admin.last_name|escapejs }}','{{ admin.email|escapejs }}')">
+              Edit
+            </button>
+            {% if admin.pk != request.platform_admin.pk %}
+            <button type="button" class="btn btn-secondary btn-sm"
+                    onclick="openAdminResetPw('{{ admin.pk }}','{{ admin.email|escapejs }}')">
+              Reset PW
+            </button>
+            {% endif %}
+            {% if admin.is_active and admin.pk != request.platform_admin.pk %}
+            <form method="post" action="{% url 'platform_admin:admin_deactivate' pk=admin.pk %}"
+                  class="inline-form"
+                  data-confirm="Deactivate admin account {{ admin.email }}? They will immediately lose all platform access."
+                  data-confirm-title="Deactivate Admin"
+                  data-confirm-btn="Deactivate"
+                  data-confirm-danger>
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+            </form>
+            {% elif admin.pk == request.platform_admin.pk %}
+            <span class="text-muted text-sm">(You)</span>
+            {% else %}
+            <span class="text-muted text-sm">Deactivated</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="table-empty">No platform admin accounts found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Admin Edit Modal -->
+<div id="admin-edit-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid var(--border-subtle);width:100%;max-width:440px;padding:32px;">
+    <div style="font-size:16px;font-weight:700;color:var(--fg-1);margin-bottom:20px;">Edit Admin Account</div>
+    <form id="ae-form" method="post" action="">
+      {% csrf_token %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>First Name</label>
+          <input type="text" name="first_name" id="ae-first" placeholder="John">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Last Name</label>
+          <input type="text" name="last_name" id="ae-last" placeholder="Smith">
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>Email Address</label>
+        <input type="email" name="email" id="ae-email" required>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+        <button type="button" onclick="document.getElementById('admin-edit-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Reset Password Modal -->
+<div id="admin-resetpw-modal"
+     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);">
+  <div style="background:#0d1117;border:1px solid var(--border-subtle);width:100%;max-width:440px;padding:32px;">
+    <div style="font-size:16px;font-weight:700;color:var(--fg-1);margin-bottom:6px;">Reset Admin Password</div>
+    <p style="font-size:13px;color:var(--fg-4);margin-bottom:20px;">
+      Reset password for <strong id="rp-admin-email" style="color:var(--fg-2);"></strong>.
+      A one-time temporary password will be generated and shown once.
+    </p>
+    <form id="rp-form" method="post" action="">
+      {% csrf_token %}
+      <div class="field">
+        <label>Your Admin Password <span style="color:var(--fg-4);font-weight:400;">(to verify)</span></label>
+        <input type="password" name="confirm_password" required placeholder="Your password">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button type="button" onclick="document.getElementById('admin-resetpw-modal').style.display='none'"
+                class="btn btn-secondary btn-sm">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Generate Temp Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Temp Password Result Modal -->
+<div id="temp-pw-modal"
+     style="display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);">
+  <div style="background:#0d1117;border:1px solid var(--border-subtle);width:100%;max-width:480px;padding:36px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="color:#22c55e;flex-shrink:0;">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div style="font-size:16px;font-weight:700;color:var(--fg-1);">Password Reset Successful</div>
+    </div>
+    <p style="font-size:13px;color:var(--fg-4);margin-bottom:20px;">
+      Temporary password for <strong id="tpm-email" style="color:var(--fg-2);"></strong>.
+      Share this securely — it will only be shown once.
+    </p>
+    <div style="background:#111827;border:1px solid var(--border-subtle);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;">
+      <div style="font-size:11px;color:var(--fg-4);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">Temporary Password</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <code id="tpm-password" style="font-size:17px;font-family:monospace;color:#f0f6ff;letter-spacing:0.04em;flex:1;word-break:break-all;"></code>
+        <button type="button" onclick="copyTempPw()" id="tpm-copy-btn"
+                class="btn btn-secondary btn-sm" style="flex-shrink:0;">Copy</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button type="button" onclick="document.getElementById('temp-pw-modal').style.display='none'"
+              class="btn btn-primary btn-sm">Done — I've noted this password</button>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+{% if temp_pw %}
+window.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('tpm-email').textContent = '{{ temp_pw.email|escapejs }}';
+  document.getElementById('tpm-password').textContent = '{{ temp_pw.password|escapejs }}';
+  document.getElementById('temp-pw-modal').style.display = 'flex';
+});
+{% endif %}
+function copyTempPw() {
+  var pw = document.getElementById('tpm-password').textContent;
+  navigator.clipboard.writeText(pw).then(function() {
+    var btn = document.getElementById('tpm-copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  }).catch(function() {
+    var el = document.createElement('textarea');
+    el.value = pw;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    var btn = document.getElementById('tpm-copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+  });
+}
+function openAdminEdit(pk, firstName, lastName, email) {
+  document.getElementById('ae-first').value = firstName;
+  document.getElementById('ae-last').value = lastName;
+  document.getElementById('ae-email').value = email;
+  document.getElementById('ae-form').action = '/platform-admin/accounts/admins/' + pk + '/update/';
+  var m = document.getElementById('admin-edit-modal');
+  m.style.display = 'flex';
+}
+function openAdminResetPw(pk, email) {
+  document.getElementById('rp-admin-email').textContent = email;
+  document.getElementById('rp-form').action = '/platform-admin/accounts/admins/' + pk + '/reset-password/';
+  document.getElementById('rp-form').querySelector('input[type=password]').value = '';
+  var m = document.getElementById('admin-resetpw-modal');
+  m.style.display = 'flex';
+  setTimeout(function(){ m.querySelector('input[type=password]').focus(); }, 50);
+}
+document.getElementById('admin-edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+document.getElementById('admin-resetpw-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+</script>
+{% endblock %}
+
+{% endblock %}

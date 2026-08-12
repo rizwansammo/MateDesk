@@ -1,0 +1,550 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Platform Settings{% endblock %}
+{% block breadcrumb %}Platform Settings{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Platform Settings</div>
+    <div class="page-subtitle">Global configuration for the MateDesk platform.</div>
+  </div>
+</div>
+
+<div class="settings-layout">
+
+  <!-- ── Settings Nav ── -->
+  <nav class="settings-nav">
+
+    <a href="#" class="settings-nav-item active" data-settings-section="general">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="1.5" y="1.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <rect x="9.5" y="1.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <rect x="1.5" y="9.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <rect x="9.5" y="9.5" width="5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+      </svg>
+      General
+    </a>
+
+    <a href="#" class="settings-nav-item" data-settings-section="security">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1.5L2 4v4c0 3.5 2.5 6 6 7.5C14 14 14 11.5 14 8V4L8 1.5z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Security Policy
+    </a>
+
+    <a href="#" class="settings-nav-item" data-settings-section="email">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+      </svg>
+      Email Config
+    </a>
+
+    <a href="#" class="settings-nav-item" data-settings-section="features">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="2" fill="currentColor" opacity="0.7"/>
+        <path d="M8 2v2M8 12v2M2 8h2M12 8h2M3.8 3.8l1.4 1.4M10.8 10.8l1.4 1.4M3.8 12.2l1.4-1.4M10.8 5.2l1.4-1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      Feature Toggles
+    </a>
+
+  </nav>
+
+  <!-- ── Settings Content ── -->
+  <div class="settings-content-area">
+
+    <!-- ══════════ GENERAL ══════════ -->
+    <div id="settings-general" class="settings-section">
+
+      <!-- Platform Identity — editable form -->
+      <div class="sc-grid sc-full" style="grid-template-columns:1fr;">
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Platform Identity</div>
+              <div class="sc-head-desc">Core platform name, company, and URL configuration.</div>
+            </div>
+            <span class="sc-head-badge on">Active</span>
+          </div>
+          <div class="sc-body">
+            <form method="post" action="{% url 'platform_admin:settings_update' %}">
+              {% csrf_token %}
+              <div class="sc-kv-grid" style="row-gap:14px;">
+                <div>
+                  <div class="sc-kv-key">Platform Name</div>
+                  <input type="text" name="platform_name" value="{{ ps.platform_name }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Company Name</div>
+                  <input type="text" name="company_name" value="{{ ps.company_name }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Version</div>
+                  <input type="text" name="version" value="{{ ps.version }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Platform URL</div>
+                  <input type="text" name="platform_url" value="{{ ps.platform_url }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Admin Panel URL</div>
+                  <input type="text" name="admin_panel_url" value="{{ ps.admin_panel_url }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Environment</div>
+                  <input type="text" name="environment" value="{{ ps.environment }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Operator</div>
+                  <input type="text" name="operator" value="{{ ps.operator }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Support Email</div>
+                  <input type="email" name="support_email" value="{{ ps.support_email }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Status</div>
+                  <input type="text" name="status_text" value="{{ ps.status_text }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Build</div>
+                  <input type="text" name="build_info" value="{{ ps.build_info }}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+              </div>
+              <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+              </div>
+              {% if ps.updated_by and ps.updated_at %}
+              <div style="font-size:11px;color:var(--fg-4);margin-top:10px;text-align:right;">
+                Last updated by {{ ps.updated_by.full_name|default:ps.updated_by.email }} · {{ ps.updated_at|date:"M j, Y H:i" }}
+              </div>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /general -->
+
+    <!-- ══════════ SECURITY ══════════ -->
+    <div id="settings-security" class="settings-section" style="display:none;">
+
+      <div class="sc-grid sc-grid--3">
+
+        <!-- 2FA card -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <circle cx="8" cy="10.5" r="1" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Two-Factor Auth</div>
+              <div class="sc-head-desc">Require 2FA for all admins.</div>
+            </div>
+            <span class="sc-head-badge off">Off</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">Enforce 2FA</div>
+                <div class="sc-toggle-hint">All platform admin accounts must use two-factor authentication before accessing the panel.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session card -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M8 4.5v4l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Session Timeout</div>
+              <div class="sc-head-desc">Auto-logout on inactivity.</div>
+            </div>
+            <span class="sc-head-badge on">On</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">4-Hour Inactivity Timeout</div>
+                <div class="sc-toggle-hint">Automatically log out admin sessions after 4 hours of inactivity.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- IP Allowlist card -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M8 3c0 0 3 2.5 3 5s-3 5-3 5-3-2.5-3-5 3-5 3-5z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <path d="M1.5 8h13" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">IP Allowlist</div>
+              <div class="sc-head-desc">Restrict access by IP range.</div>
+            </div>
+            <span class="sc-head-badge off">Off</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">Enable IP Allowlist</div>
+                <div class="sc-toggle-hint">Restrict platform admin access to specific IP address ranges only.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sc-notice yellow">
+        Security policy enforcement is coming in a future release. Current toggle states are informational only.
+      </div>
+
+    </div><!-- /security -->
+
+    <!-- ══════════ EMAIL ══════════ -->
+    <div id="settings-email" class="settings-section" style="display:none;">
+
+      <div class="sc-grid">
+
+        <!-- Sender config -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M1.5 5.5l6.5 4 6.5-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Sender Configuration</div>
+              <div class="sc-head-desc">From name and reply-to address.</div>
+            </div>
+          </div>
+          <div class="sc-body">
+            <div class="sc-field">
+              <div class="sc-field-label">From Name</div>
+              <span class="sc-field-val">MateDesk Platform</span>
+            </div>
+            <div class="sc-field">
+              <div class="sc-field-label">From Address</div>
+              <span class="sc-field-val">no-reply@matedesk.app</span>
+            </div>
+            <div class="sc-field">
+              <div class="sc-field-label">Reply-To</div>
+              <span class="sc-field-val">support@netamate.com</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SMTP card — Platform Admin outbound mail (for 2FA OTP emails) -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <rect x="1" y="3" width="14" height="10" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M4 7h3M4 9.5h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+                <circle cx="12" cy="8.25" r="1.5" fill="currentColor" opacity="0.5"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Platform Admin SMTP</div>
+              <div class="sc-head-desc">Used for admin 2FA OTP emails.</div>
+            </div>
+            {% if ps.admin_smtp_host and ps.admin_smtp_from_email %}
+            <span class="sc-head-badge on">Configured</span>
+            {% else %}
+            <span class="sc-head-badge off">Not set</span>
+            {% endif %}
+          </div>
+          <div class="sc-body">
+            <form method="post" action="{% url 'platform_admin:settings_update' %}">
+              {% csrf_token %}
+              <!-- preserve other settings -->
+              <input type="hidden" name="platform_name"   value="{{ ps.platform_name }}">
+              <input type="hidden" name="company_name"    value="{{ ps.company_name }}">
+              <input type="hidden" name="version"         value="{{ ps.version }}">
+              <input type="hidden" name="platform_url"    value="{{ ps.platform_url }}">
+              <input type="hidden" name="admin_panel_url" value="{{ ps.admin_panel_url }}">
+              <input type="hidden" name="environment"     value="{{ ps.environment }}">
+              <input type="hidden" name="operator"        value="{{ ps.operator }}">
+              <input type="hidden" name="support_email"   value="{{ ps.support_email }}">
+              <input type="hidden" name="status_text"     value="{{ ps.status_text }}">
+              <input type="hidden" name="build_info"      value="{{ ps.build_info }}">
+              <input type="hidden" name="email_poll_interval" value="{{ ps.email_poll_interval }}">
+              <div class="sc-kv-grid" style="row-gap:12px;">
+                <div>
+                  <div class="sc-kv-key">SMTP Host</div>
+                  <input type="text" name="admin_smtp_host" value="{{ ps.admin_smtp_host }}"
+                         placeholder="smtp.gmail.com"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">SMTP Port</div>
+                  <input type="number" name="admin_smtp_port" value="{{ ps.admin_smtp_port }}"
+                         placeholder="587"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Username</div>
+                  <input type="text" name="admin_smtp_username" value="{{ ps.admin_smtp_username }}"
+                         placeholder="you@gmail.com"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">Password {% if ps.admin_smtp_password %}<span style="font-weight:400;color:var(--fg-4)">(leave blank to keep)</span>{% endif %}</div>
+                  <input type="password" name="admin_smtp_password" value=""
+                         placeholder="{% if ps.admin_smtp_password %}••••••••{% else %}App password / SMTP password{% endif %}"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">From Email</div>
+                  <input type="email" name="admin_smtp_from_email" value="{{ ps.admin_smtp_from_email }}"
+                         placeholder="no-reply@yourdomain.com"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+                <div>
+                  <div class="sc-kv-key">From Name</div>
+                  <input type="text" name="admin_smtp_from_name" value="{{ ps.admin_smtp_from_name }}"
+                         placeholder="MateDesk Admin"
+                         style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
+                </div>
+              </div>
+              <div style="margin-top:14px;display:flex;align-items:center;gap:14px;">
+                <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--fg-2);">
+                  <input type="checkbox" name="admin_smtp_use_tls" {% if ps.admin_smtp_use_tls %}checked{% endif %}
+                         style="accent-color:var(--accent-blue);">
+                  Use STARTTLS (port 587)
+                </label>
+                <div style="flex:1;"></div>
+                <button type="submit" class="btn btn-primary btn-sm">Save SMTP</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Email Ingestion Polling -->
+      <div class="sc-card" style="margin-top:0;">
+        <div class="sc-head">
+          <div class="sc-head-icon">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M8 4.5v4l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="sc-head-text">
+            <div class="sc-head-title">Email Ingestion Polling</div>
+            <div class="sc-head-desc">How often Celery checks tenant mailboxes for new emails.</div>
+          </div>
+          <span class="sc-head-badge on">Active</span>
+        </div>
+        <div class="sc-body">
+          <form method="post" action="{% url 'platform_admin:settings_update' %}">
+            {% csrf_token %}
+            <!-- hidden fields to keep other settings unchanged -->
+            <input type="hidden" name="platform_name"   value="{{ ps.platform_name }}">
+            <input type="hidden" name="company_name"    value="{{ ps.company_name }}">
+            <input type="hidden" name="version"         value="{{ ps.version }}">
+            <input type="hidden" name="platform_url"    value="{{ ps.platform_url }}">
+            <input type="hidden" name="admin_panel_url" value="{{ ps.admin_panel_url }}">
+            <input type="hidden" name="environment"     value="{{ ps.environment }}">
+            <input type="hidden" name="operator"        value="{{ ps.operator }}">
+            <input type="hidden" name="support_email"   value="{{ ps.support_email }}">
+            <input type="hidden" name="status_text"     value="{{ ps.status_text }}">
+            <input type="hidden" name="build_info"      value="{{ ps.build_info }}">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="sc-kv-key" style="white-space:nowrap;margin:0;">Poll Interval</div>
+              <select name="email_poll_interval"
+                      style="flex:1;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;outline:none;">
+                <option value="30"  {% if ps.email_poll_interval == 30  %}selected{% endif %}>30 seconds</option>
+                <option value="60"  {% if ps.email_poll_interval == 60  %}selected{% endif %}>1 minute</option>
+                <option value="120" {% if ps.email_poll_interval == 120 %}selected{% endif %}>2 minutes</option>
+                <option value="300" {% if ps.email_poll_interval == 300 %}selected{% endif %}>5 minutes</option>
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">Save</button>
+            </div>
+            <div style="font-size:11px;color:var(--fg-4);margin-top:8px;">
+              Celery Beat triggers the task every 30 s; this interval controls the minimum gap between polls <em>per tenant</em>.
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="sc-notice muted">
+        Platform Admin SMTP is used for 2FA OTP emails sent during login. Tenant outbound mail is configured separately per tenant in their email settings.
+      </div>
+
+    </div><!-- /email -->
+
+    <!-- ══════════ FEATURES ══════════ -->
+    <div id="settings-features" class="settings-section" style="display:none;">
+
+      <div class="sc-grid">
+
+        <!-- MateDesk Helpdesk -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8-2.5h-4.5z" fill="currentColor" opacity="0.3"/>
+                <rect x="1.5" y="3.5" width="13" height="9" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M5 7.5h6M5 10h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">MateDesk Helpdesk</div>
+              <div class="sc-head-desc">Core ticket management for all tenants.</div>
+            </div>
+            <span class="sc-head-badge core">Core</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">Helpdesk Module</div>
+                <div class="sc-toggle-hint">Cannot be disabled — this is the core module all tenant plans depend on.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox" checked disabled>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Tenant Registration -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+                <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">New Tenant Registration</div>
+              <div class="sc-head-desc">Allow self-registration via public site.</div>
+            </div>
+            <span class="sc-head-badge off">Off</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">Self-Registration</div>
+                <div class="sc-toggle-hint">Allow new MSP tenants to register independently through the public-facing signup flow.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Maintenance Mode -->
+        <div class="sc-card">
+          <div class="sc-head">
+            <div class="sc-head-icon">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                <path d="M13.5 2.5l-1.5 1.5-2-2 1.5-1.5a3 3 0 012 2z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <path d="M10 4l-7.5 7.5a1 1 0 000 1.5l.5.5a1 1 0 001.5 0L12 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+              </svg>
+            </div>
+            <div class="sc-head-text">
+              <div class="sc-head-title">Maintenance Mode</div>
+              <div class="sc-head-desc">Show maintenance page to tenant users.</div>
+            </div>
+            <span class="sc-head-badge off">Off</span>
+          </div>
+          <div class="sc-body">
+            <div class="sc-toggle">
+              <div>
+                <div class="sc-toggle-label">Platform Maintenance</div>
+                <div class="sc-toggle-hint">Show a maintenance page to all tenant users. Platform admins will still have full access.</div>
+              </div>
+              <label class="toggle-switch" style="flex-shrink:0;">
+                <input type="checkbox">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="sc-notice muted">
+        Feature toggle persistence is coming in a future release.
+      </div>
+
+    </div><!-- /features -->
+
+  </div><!-- .settings-content-area -->
+
+</div><!-- .settings-layout -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var navItems = document.querySelectorAll('[data-settings-section]');
+  navItems.forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      e.preventDefault();
+      var section = item.getAttribute('data-settings-section');
+      navItems.forEach(function (n) { n.classList.remove('active'); });
+      item.classList.add('active');
+      document.querySelectorAll('.settings-section').forEach(function (s) {
+        s.style.display = 'none';
+      });
+      var target = document.getElementById('settings-' + section);
+      if (target) target.style.display = '';
+    });
+  });
+});
+</script>
+{% endblock %}

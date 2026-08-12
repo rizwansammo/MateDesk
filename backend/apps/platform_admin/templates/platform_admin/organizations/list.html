@@ -1,0 +1,58 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}All Organizations{% endblock %}
+{% block breadcrumb %}All Organizations{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">All Organizations</div>
+    <div class="page-subtitle">Client organizations across all MSP tenants.</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Organization</th>
+        <th>Tenant</th>
+        <th>Domain</th>
+        <th>Users</th>
+        <th>Tickets</th>
+        <th>Status</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for org in orgs %}
+      <tr>
+        <td>
+          <div style="font-weight:600;color:var(--fg-1);">{{ org.name }}</div>
+          {% if org.contact_email %}
+          <div class="text-sm text-muted">{{ org.contact_email }}</div>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'platform_admin:tenant_detail' pk=org.tenant.pk %}">{{ org.tenant.name }}</a>
+          <span class="t-slug">{{ org.tenant.slug }}</span>
+        </td>
+        <td class="text-mono text-muted">{{ org.domain|default:"—" }}</td>
+        <td class="text-muted">{{ org.user_count }}</td>
+        <td class="text-muted">{{ org.ticket_count }}</td>
+        <td>
+          <span class="pill {% if org.is_active %}pill-active{% else %}pill-disabled{% endif %}">
+            {% if org.is_active %}Active{% else %}Inactive{% endif %}
+          </span>
+        </td>
+        <td class="text-muted text-sm">{{ org.created_at|date:"M j, Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="table-empty">No organizations found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+# ── Python / Django ─────────────────────────────────────────────────────
+backend/.venv/
+backend/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+*.sqlite3
+*.db
+backend/.env
+backend/staticfiles/
+backend/media/
+
+# ── Node / Next.js ──────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+frontend/.turbo/
+*.tsbuildinfo
+
+# ── Environment files ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# ── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────────────────────
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ── Logs ─────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ── Build artifacts ──────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+agents/**/target/
+
+# ── SSH / deployment keys ────────────────────────────────────────────────
+deployment/deploy_key
+deployment/vps_key.pem
+*.pem

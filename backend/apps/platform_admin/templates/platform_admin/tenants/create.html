@@ -1,0 +1,149 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Create MSP Tenant{% endblock %}
+{% block breadcrumb %}Create Tenant{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Create MSP Tenant</div>
+    <div class="page-subtitle">Provision a new MSP company on the MateDesk platform.</div>
+  </div>
+  <div class="page-actions">
+    <a href="{% url 'platform_admin:tenants_list' %}" class="btn btn-secondary">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Back to Tenants
+    </a>
+  </div>
+</div>
+
+{% if errors %}
+<div class="error-list">
+  <ul>
+    {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<form method="post" action="">
+  {% csrf_token %}
+
+  <div class="form-grid">
+
+    <!-- Left Column -->
+    <div>
+      <div class="panel">
+        <div class="form-section-title">MSP Company Details</div>
+
+        <div class="field">
+          <label for="id-name">Company Name <span style="color:var(--accent-red)">*</span></label>
+          <input type="text" id="id-name" name="name" placeholder="Acme IT Solutions"
+                 value="{{ post.name|default:'' }}" required>
+        </div>
+
+        <div class="field">
+          <label for="id-slug">Tenant Slug <span style="color:var(--accent-red)">*</span></label>
+          <input type="text" id="id-slug" name="slug" placeholder="acme-it"
+                 value="{{ post.slug|default:'' }}"
+                 pattern="[a-z0-9\-]+" required>
+          <div class="field-hint">Lowercase letters, numbers, hyphens only. Used as subdomain: <code>slug.matedesk.app</code></div>
+        </div>
+
+        <div class="field">
+          <label for="id-plan">Plan</label>
+          <select id="id-plan" name="plan">
+            <option value="starter" {% if post.plan == 'starter' or not post %}selected{% endif %}>Starter</option>
+            <option value="professional" {% if post.plan == 'professional' %}selected{% endif %}>Professional</option>
+            <option value="enterprise" {% if post.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="id-status">Initial Status</label>
+          <select id="id-status" name="status">
+            <option value="trial" {% if post.status == 'trial' or not post %}selected{% endif %}>Trial</option>
+            <option value="active" {% if post.status == 'active' %}selected{% endif %}>Active</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="id-trial">Trial End Date</label>
+          <input type="date" id="id-trial" name="trial_ends_at"
+                 value="{{ post.trial_ends_at|default:'' }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+      <div class="panel">
+        <div class="form-section-title">MSP Owner Account</div>
+
+        <div class="field">
+          <label for="id-owner-name">Owner Full Name</label>
+          <input type="text" id="id-owner-name" name="owner_name" placeholder="John Smith"
+                 value="{{ post.owner_name|default:'' }}">
+        </div>
+
+        <div class="field">
+          <label for="id-owner-email">Owner Email <span style="color:var(--accent-red)">*</span></label>
+          <input type="email" id="id-owner-email" name="owner_email" placeholder="john@acme-it.com"
+                 value="{{ post.owner_email|default:'' }}" required>
+          <div class="field-hint">A temporary password will be generated and displayed after creation.</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px;">
+        <div class="form-section-title">Usage Limits <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--fg-4);">(optional)</span></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="field">
+            <label>Max Organizations</label>
+            <input type="number" name="max_organizations" placeholder="Unlimited"
+                   value="{{ post.max_organizations|default:'' }}" min="1">
+          </div>
+          <div class="field">
+            <label>Max Users</label>
+            <input type="number" name="max_users" placeholder="Unlimited"
+                   value="{{ post.max_users|default:'' }}" min="1">
+          </div>
+          <div class="field">
+            <label>Max Tickets</label>
+            <input type="number" name="max_tickets" placeholder="Unlimited"
+                   value="{{ post.max_tickets|default:'' }}" min="1">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Feature Toggles -->
+  <div class="panel" style="margin-top:14px;">
+    <div class="form-section-title">Feature Toggles</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Enable MateDesk Helpdesk</div>
+        <div class="toggle-hint">Ticket management system for MSP technicians and clients.</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" name="matedesk_enabled" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+    <a href="{% url 'platform_admin:tenants_list' %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M10 5l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Create MSP Tenant
+    </button>
+  </div>
+
+</form>
+
+{% endblock %}

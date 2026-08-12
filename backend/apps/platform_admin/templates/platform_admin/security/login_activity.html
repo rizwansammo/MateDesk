@@ -1,0 +1,54 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Login Activity{% endblock %}
+{% block breadcrumb %}Login Activity{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Login Activity</div>
+    <div class="page-subtitle">Platform admin authentication events — logins, failed attempts, and logouts.</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Email</th>
+        <th>Event</th>
+        <th>IP Address</th>
+        <th>Session</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td class="text-mono text-sm text-muted">{{ log.created_at|date:"M j, Y H:i:s" }}</td>
+        <td class="text-muted">{{ log.actor_email|default:"Unknown" }}</td>
+        <td>
+          {% if log.action == 'admin_login' %}
+          <span class="pill pill-active">Login Success</span>
+          {% elif log.action == 'admin_login_failed' %}
+          <span class="pill pill-suspended">Login Failed</span>
+          {% elif log.action == 'admin_logout' %}
+          <span class="pill pill-disabled">Logout</span>
+          {% else %}
+          <span class="pill pill-trial">{{ log.get_action_display }}</span>
+          {% endif %}
+        </td>
+        <td class="text-mono text-sm text-muted">{{ log.ip_address|default:"—" }}</td>
+        <td class="text-muted text-sm">
+          {% if log.action == 'admin_login' %}Active session started{% elif log.action == 'admin_logout' %}Session ended{% else %}—{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="table-empty">No login activity recorded.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

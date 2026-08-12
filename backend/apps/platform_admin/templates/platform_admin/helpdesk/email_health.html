@@ -1,0 +1,57 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Email Health{% endblock %}
+{% block breadcrumb %}Email Health{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Email Health</div>
+    <div class="page-subtitle">IMAP / SMTP configuration status for all tenant email integrations.</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>IMAP Host</th>
+        <th>IMAP Status</th>
+        <th>SMTP Status</th>
+        <th>Auth Method</th>
+        <th>Last Polled</th>
+        <th>Emails Processed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in email_settings %}
+      <tr>
+        <td>
+          <a href="{% url 'platform_admin:tenant_detail' pk=s.tenant.pk %}">{{ s.tenant.name }}</a>
+          <span class="t-slug">{{ s.tenant.slug }}</span>
+        </td>
+        <td class="text-mono text-sm text-muted">{{ s.imap_host|default:"—" }}</td>
+        <td>
+          <span class="pill {% if s.imap_enabled %}pill-enabled{% else %}pill-disabled{% endif %}">
+            {% if s.imap_enabled %}Enabled{% else %}Disabled{% endif %}
+          </span>
+        </td>
+        <td>
+          <span class="pill {% if s.smtp_enabled %}pill-enabled{% else %}pill-disabled{% endif %}">
+            {% if s.smtp_enabled %}Enabled{% else %}Disabled{% endif %}
+          </span>
+        </td>
+        <td class="text-sm text-muted">{{ s.get_auth_method_display }}</td>
+        <td class="text-mono text-sm text-muted">{{ s.last_polled_at|date:"M j H:i"|default:"Never" }}</td>
+        <td class="text-muted">{{ s.emails_processed }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="table-empty">No email settings configured.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

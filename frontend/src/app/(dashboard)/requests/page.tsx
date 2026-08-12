@@ -19,28 +19,33 @@ import { ApiError } from '@/lib/api';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
+// Colours come from the semantic accent tokens in globals.css, which carry a
+// per-theme pair. These maps previously hardcoded 400-level hex on a 15% tint of
+// the same hue — fine on near-black, 1.4-2.1:1 on near-white, so the whole queue
+// was untriageable in light mode.
+
 const SLA_CFG: Record<SLAStatus, { label: string; color: string; bg: string }> = {
-  not_applied: { label: '—',        color: 'var(--text-5)',             bg: 'transparent'               },
-  on_track:    { label: 'On Track', color: '#34d399',                   bg: 'rgba(52,211,153,0.12)'     },
-  due_soon:    { label: 'Due Soon', color: '#fbbf24',                   bg: 'rgba(251,191,36,0.12)'     },
-  breached:    { label: 'Breached', color: '#f87171',                   bg: 'rgba(239,68,68,0.12)'      },
-  completed:   { label: 'Met',      color: '#60a5fa',                   bg: 'rgba(59,130,246,0.12)'     },
+  not_applied: { label: '—',        color: 'var(--text-3)',           bg: 'transparent'            },
+  on_track:    { label: 'On Track', color: 'var(--accent-ok-fg)',     bg: 'var(--accent-ok-bg)'    },
+  due_soon:    { label: 'Due Soon', color: 'var(--accent-warn-fg)',   bg: 'var(--accent-warn-bg)'  },
+  breached:    { label: 'Breached', color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)'},
+  completed:   { label: 'Met',      color: 'var(--accent-info-fg)',   bg: 'var(--accent-info-bg)'  },
 };
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  open:                 { label: 'Open',               color: '#60a5fa', bg: 'rgba(59,130,246,0.15)'  },
-  pending:              { label: 'Pending',             color: '#818cf8', bg: 'rgba(99,102,241,0.15)'  },
-  in_progress:          { label: 'In Progress',         color: '#fbbf24', bg: 'rgba(245,158,11,0.15)'  },
-  waiting_on_customer:  { label: 'Waiting on Customer', color: '#f97316', bg: 'rgba(249,115,22,0.15)'  },
-  solved:               { label: 'Resolved',            color: '#34d399', bg: 'rgba(16,185,129,0.15)'  },
-  closed:               { label: 'Closed',              color: '#9ca3af', bg: 'rgba(107,114,128,0.15)' },
+  open:                { label: 'Open',                color: 'var(--accent-info-fg)',    bg: 'var(--accent-info-bg)'    },
+  pending:             { label: 'Pending',              color: 'var(--accent-indigo-fg)',  bg: 'var(--accent-indigo-bg)'  },
+  in_progress:         { label: 'In Progress',          color: 'var(--accent-warn-fg)',    bg: 'var(--accent-warn-bg)'    },
+  waiting_on_customer: { label: 'Waiting on Customer',  color: 'var(--accent-orange-fg)',  bg: 'var(--accent-orange-bg)'  },
+  solved:              { label: 'Resolved',             color: 'var(--accent-ok-fg)',      bg: 'var(--accent-ok-bg)'      },
+  closed:              { label: 'Closed',               color: 'var(--accent-neutral-fg)', bg: 'var(--accent-neutral-bg)' },
 };
 
 const PRIORITY_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  low:      { label: 'Low',      color: '#4ade80', bg: 'rgba(34,197,94,0.15)'  },
-  normal:   { label: 'Medium',   color: '#60a5fa', bg: 'rgba(59,130,246,0.15)' },
-  high:     { label: 'High',     color: '#fbbf24', bg: 'rgba(245,158,11,0.15)' },
-  critical: { label: 'Critical', color: '#f87171', bg: 'rgba(239,68,68,0.15)'  },
+  low:      { label: 'Low',      color: 'var(--accent-ok-fg)',     bg: 'var(--accent-ok-bg)'     },
+  normal:   { label: 'Medium',   color: 'var(--accent-info-fg)',   bg: 'var(--accent-info-bg)'   },
+  high:     { label: 'High',     color: 'var(--accent-warn-fg)',   bg: 'var(--accent-warn-bg)'   },
+  critical: { label: 'Critical', color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)' },
 };
 
 const VIEW_OPTIONS = [

@@ -11,7 +11,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { name
   return (
     <div className="chart-tooltip">
       <span style={{ color: d.payload.color }}>{d.name}: </span>
-      <span style={{ color: '#e2e8f0' }}>{d.value}</span>
+      <span style={{ color: 'var(--text-1)' }}>{d.value}</span>
     </div>
   );
 }
@@ -48,17 +48,17 @@ export function PriorityDonutChart({ data }: Props) {
           <div key={d.name} className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
-              <span style={{ fontSize: 12, color: '#a0aec0' }}>{d.name}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{d.name}</span>
             </div>
-            <span className="font-semibold tabular-nums" style={{ fontSize: 12, color: '#e2e8f0' }}>{d.value}</span>
+            <span className="font-semibold tabular-nums" style={{ fontSize: 12, color: 'var(--text-1)' }}>{d.value}</span>
           </div>
         ))}
         <div
           className="flex items-center justify-between gap-6 mt-1 pt-2"
-          style={{ borderTop: '1px solid #2a2f3d' }}
+          style={{ borderTop: '1px solid var(--border-md)' }}
         >
-          <span style={{ fontSize: 11, color: '#475569' }}>Total</span>
-          <span className="font-bold tabular-nums" style={{ fontSize: 12, color: '#e2e8f0' }}>{total}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Total</span>
+          <span className="font-bold tabular-nums" style={{ fontSize: 12, color: 'var(--text-1)' }}>{total}</span>
         </div>
       </div>
     </div>

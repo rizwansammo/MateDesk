@@ -1263,8 +1263,8 @@ export default function TicketDetailPage() {
                         onClick={() => setReplyType('public_reply')}
                         className="flex items-center gap-1.5 px-3 py-1.5 font-medium"
                         style={replyType === 'public_reply'
-                          ? { background: 'rgba(37,99,235,0.18)', color: '#ffffff', fontSize: 13, borderRight: isMSP ? '1px solid var(--border-md)' : 'none' }
-                          : { background: 'transparent', color: 'var(--text-4)', fontSize: 13, borderRight: isMSP ? '1px solid var(--border-md)' : 'none' }}
+                          ? { background: 'var(--accent-info-bg)', color: 'var(--accent-info-fg)', fontSize: 13, fontWeight: 600, borderRight: isMSP ? '1px solid var(--border-md)' : 'none' }
+                          : { background: 'transparent', color: 'var(--text-3)', fontSize: 13, borderRight: isMSP ? '1px solid var(--border-md)' : 'none' }}
                       >
                         <MessageSquare size={12} /> Public Reply
                       </button>
@@ -1273,8 +1273,8 @@ export default function TicketDetailPage() {
                           onClick={() => setReplyType('internal_note')}
                           className="flex items-center gap-1.5 px-3 py-1.5 font-medium"
                           style={replyType === 'internal_note'
-                            ? { background: 'rgba(245,158,11,0.13)', color: '#ffffff', fontSize: 13 }
-                            : { background: 'transparent', color: 'var(--text-4)', fontSize: 13 }}
+                            ? { background: 'var(--accent-warn-bg)', color: 'var(--accent-warn-fg)', fontSize: 13, fontWeight: 600 }
+                            : { background: 'transparent', color: 'var(--text-3)', fontSize: 13 }}
                         >
                           <Lock size={12} /> Internal Note
                         </button>
@@ -1289,9 +1289,9 @@ export default function TicketDetailPage() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 5,
                         height: 30, padding: '0 10px',
-                        background: replyImages.length > 0 ? 'rgba(99,102,241,0.1)' : 'var(--bg-elevated)',
-                        border: `1px solid ${replyImages.length > 0 ? 'rgba(99,102,241,0.35)' : 'var(--border-subtle)'}`,
-                        color: replyImages.length > 0 ? '#ffffff' : 'var(--text-2)',
+                        background: replyImages.length > 0 ? 'var(--accent-indigo-bg)' : 'var(--bg-elevated)',
+                        border: `1px solid ${replyImages.length > 0 ? 'var(--accent-indigo-fg)' : 'var(--border-subtle)'}`,
+                        color: replyImages.length > 0 ? 'var(--accent-indigo-fg)' : 'var(--text-2)',
                         fontSize: 13, cursor: 'pointer', fontWeight: 500,
                       }}
                       onMouseEnter={e => { if (replyImages.length < 5) (e.currentTarget as HTMLElement).style.borderColor = '#6366f1'; }}
@@ -1985,10 +1985,10 @@ export default function TicketDetailPage() {
               <CardHeader title="Merge / Absorb" />
               <div style={{ padding: '10px 14px 14px 14px' }}>
                 <div style={{ fontSize: 11, color: 'var(--text-1)', marginBottom: 3, lineHeight: 1.65 }}>
-                  <span style={{ fontWeight: 600, color: '#ffffff' }}>Merge</span> — this ticket is a duplicate; close it into another.
+                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Merge</span> — this ticket is a duplicate; close it into another.
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-1)', marginBottom: 14, lineHeight: 1.65 }}>
-                  <span style={{ fontWeight: 600, color: '#ffffff' }}>Absorb</span> — this is the primary; pull a duplicate into it.
+                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Absorb</span> — this is the primary; pull a duplicate into it.
                 </div>
 
                 {ticket.merge_info?.status === 'secondary' ? (

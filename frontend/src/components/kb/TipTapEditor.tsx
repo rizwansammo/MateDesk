@@ -261,6 +261,7 @@ export default function TipTapEditor({ content, onChange, readOnly = false }: an
         .kb-search-hit-active { background: rgba(249,115,22,0.75); color: #fff; }
         .ProseMirror pre { background:#0d1117; color:#e6edf3; padding:12px 14px; border-radius:6px; overflow-x:auto; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:13px; line-height:1.5; }
         .ProseMirror pre code { background:none; color:inherit; padding:0; font-size:inherit; }
+        /* Dark theme — One Dark, sits on the #0d1117 block above. */
         .hljs-comment,.hljs-quote{color:#7f848e;font-style:italic}
         .hljs-keyword,.hljs-selector-tag,.hljs-built_in,.hljs-name,.hljs-tag{color:#c678dd}
         .hljs-string,.hljs-attr,.hljs-template-tag,.hljs-addition,.hljs-meta-string{color:#98c379}
@@ -271,6 +272,47 @@ export default function TipTapEditor({ content, onChange, readOnly = false }: an
         .hljs-deletion{color:#e06c75}
         .hljs-emphasis{font-style:italic}
         .hljs-strong{font-weight:700}
+
+        /* Light theme — GitHub-light derived.
+         *
+         * Required because globals.css flips .ProseMirror pre to a #f1f5f9 background
+         * in light mode (its [data-theme="light"] .ProseMirror pre rule outranks the
+         * .ProseMirror pre rule above), while these token colours were chosen for
+         * #0d1117. On the pale ground every One Dark colour failed AA — strings were
+         * the worst at 1.8:1 — so code snippets were effectively unreadable.
+         * All values below clear 4.5:1 on #f1f5f9. */
+        [data-theme="light"] .ProseMirror pre code { color:#1f2328; }
+        [data-theme="light"] .hljs-comment,
+        [data-theme="light"] .hljs-quote{color:#57606a}
+        [data-theme="light"] .hljs-keyword,
+        [data-theme="light"] .hljs-selector-tag,
+        [data-theme="light"] .hljs-built_in,
+        [data-theme="light"] .hljs-name,
+        [data-theme="light"] .hljs-tag{color:#cf222e}
+        [data-theme="light"] .hljs-string,
+        [data-theme="light"] .hljs-attr,
+        [data-theme="light"] .hljs-template-tag,
+        [data-theme="light"] .hljs-addition,
+        [data-theme="light"] .hljs-meta-string{color:#0a3069}
+        [data-theme="light"] .hljs-number,
+        [data-theme="light"] .hljs-literal,
+        [data-theme="light"] .hljs-type,
+        [data-theme="light"] .hljs-params,
+        [data-theme="light"] .hljs-meta,
+        [data-theme="light"] .hljs-link{color:#0550ae}
+        [data-theme="light"] .hljs-title,
+        [data-theme="light"] .hljs-class .hljs-title,
+        [data-theme="light"] .hljs-function .hljs-title{color:#6639ba}
+        [data-theme="light"] .hljs-attribute,
+        [data-theme="light"] .hljs-variable,
+        [data-theme="light"] .hljs-template-variable{color:#953800}
+        [data-theme="light"] .hljs-symbol,
+        [data-theme="light"] .hljs-bullet,
+        [data-theme="light"] .hljs-subst,
+        [data-theme="light"] .hljs-section,
+        [data-theme="light"] .hljs-selector-id,
+        [data-theme="light"] .hljs-selector-class{color:#116329}
+        [data-theme="light"] .hljs-deletion{color:#cf222e}
       `}</style>
       <input
         ref={fileInputRef}

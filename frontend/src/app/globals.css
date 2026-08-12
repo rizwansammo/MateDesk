@@ -78,6 +78,25 @@
     --text-5:    var(--text-3);
     --text-pale: var(--text-3);
 
+    /* Semantic accents — status, priority and SLA badges.
+     *
+     * Each is a pair: -fg is the text colour, -bg the tint behind it. These exist
+     * because 400-level accent text on a 15%-alpha tint of the same hue reads well
+     * on near-black and collapses to 1.4-2.2:1 on near-white — so the same literal
+     * cannot serve both themes. Components previously hardcoded these per file,
+     * which is why badges were unreadable in light mode.
+     *
+     * Light values are taken from the [data-theme="light"] .badge-* rules that
+     * already existed in this file but which the app never used.
+     */
+    --accent-info-fg:    #60a5fa;  --accent-info-bg:    rgba(59,130,246,0.15);
+    --accent-ok-fg:      #34d399;  --accent-ok-bg:      rgba(16,185,129,0.15);
+    --accent-warn-fg:    #fbbf24;  --accent-warn-bg:    rgba(245,158,11,0.15);
+    --accent-danger-fg:  #f87171;  --accent-danger-bg:  rgba(239,68,68,0.15);
+    --accent-indigo-fg:  #818cf8;  --accent-indigo-bg:  rgba(99,102,241,0.15);
+    --accent-orange-fg:  #f97316;  --accent-orange-bg:  rgba(249,115,22,0.15);
+    --accent-neutral-fg: #9ca3af;  --accent-neutral-bg: rgba(107,114,128,0.15);
+
     /* Scrollbar */
     --scrollbar-bg:    #0f1117;
     --scrollbar-thumb: #2a2f3d;
@@ -133,6 +152,16 @@
     --text-4:    #5b6675;   /* decorative; ~5.5:1 on --bg-base */
     --text-5:    var(--text-3);
     --text-pale: var(--text-3);
+
+    /* Semantic accents — darker foregrounds and lighter tints for a pale ground.
+     * All clear 4.5:1 against --bg-card / --bg-base. */
+    --accent-info-fg:    #1d4ed8;  --accent-info-bg:    rgba(37,99,235,0.10);
+    --accent-ok-fg:      #047857;  --accent-ok-bg:      rgba(5,150,105,0.10);
+    --accent-warn-fg:    #92400e;  --accent-warn-bg:    rgba(180,83,9,0.10);
+    --accent-danger-fg:  #991b1b;  --accent-danger-bg:  rgba(185,28,28,0.10);
+    --accent-indigo-fg:  #4338ca;  --accent-indigo-bg:  rgba(79,70,229,0.10);
+    --accent-orange-fg:  #9a3412;  --accent-orange-bg:  rgba(194,65,12,0.10);
+    --accent-neutral-fg: #374151;  --accent-neutral-bg: rgba(107,114,128,0.10);
 
     --scrollbar-bg:    #e2e8f0;
     --scrollbar-thumb: #94a3b8;

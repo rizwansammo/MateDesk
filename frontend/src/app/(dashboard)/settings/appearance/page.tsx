@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Monitor, ZoomIn, ZoomOut, RotateCcw, List, ChevronLeft } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Monitor, ZoomIn, ZoomOut, RotateCcw, List, ChevronLeft, Sun, Moon } from 'lucide-react';
 
 // ── Zoom config ───────────────────────────────────────────────────────────────
 
@@ -57,10 +58,17 @@ function readPerPage(): number {
 export default function AppearancePage() {
   const router = useRouter();
 
+  const { resolvedTheme, setTheme } = useTheme();
+
   const [zoom, setZoomState]       = useState<ZoomLevel>(100);
   const [perPage, setPerPageState] = useState(25);
   const [customInput, setCustomInput] = useState('');
   const [customMode, setCustomMode]   = useState(false);
+  // The server cannot know the stored theme, so the toggle must not render its
+  // active state until the client has mounted — otherwise the markup differs
+  // between server and client and React reports a hydration mismatch.
+  const [mounted, setMounted]         = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const z = readZoom();
@@ -119,6 +127,51 @@ export default function AppearancePage() {
               <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>
                 Zoom and layout preferences are saved locally and only affect your browser.
               </p>
+            </div>
+          </div>
+
+          {/* ── Theme card ────────────────────────────────────────────── */}
+          <div className="panel p-6 mb-4 space-y-4">
+            <div className="flex items-center gap-3">
+              {mounted && resolvedTheme === 'light'
+                ? <Sun  size={15} style={{ color: 'var(--accent-warn-fg)', flexShrink: 0 }} />
+                : <Moon size={15} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />}
+              <div>
+                <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>Theme</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+                  Applies immediately and is remembered on this browser.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { value: 'dark',  label: 'Dark',  Icon: Moon },
+                { value: 'light', label: 'Light', Icon: Sun  },
+              ] as const).map(({ value, label, Icon }) => {
+                // Before mount, resolvedTheme is undefined — render every option
+                // inactive rather than guessing, so server and client agree.
+                const active = mounted && resolvedTheme === value;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => setTheme(value)}
+                    aria-pressed={active}
+                    className="flex items-center gap-2 px-3 py-1.5 text-2xs font-medium transition-all"
+                    style={active ? {
+                      background: 'var(--accent-info-bg)',
+                      color: 'var(--accent-info-fg)',
+                      border: '1px solid var(--accent-info-fg)',
+                    } : {
+                      background: 'var(--bg-card)',
+                      color: 'var(--text-3)',
+                      border: '1px solid var(--bg-elevated)',
+                    }}
+                  >
+                    <Icon size={12} /> {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

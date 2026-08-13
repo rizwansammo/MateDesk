@@ -103,7 +103,16 @@ export const metadata: Metadata = {
 // Storage key "theme" is next-themes' default; enableSystem is false, so the
 // stored value is only ever "light" or "dark". Anything else falls through to
 // the :root dark defaults, which is the correct fallback.
-const THEME_BOOT = `(function(){try{if(localStorage.getItem('theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();`;
+//
+// Zoom is restored here too. It was previously applied only by the Appearance
+// page's mount effect, so a user who set 125% got it back on client-side
+// navigation but lost it on every hard reload — the setting appeared not to
+// stick. Applying it pre-paint also avoids a visible reflow.
+const THEME_BOOT = `(function(){try{
+if(localStorage.getItem('theme')==='light'){document.documentElement.setAttribute('data-theme','light');}
+var z=parseInt(localStorage.getItem('matedesk_zoom')||'100',10);
+if(z>=75&&z<=125&&z!==100){document.documentElement.style.zoom=(z/100).toString();}
+}catch(e){}})();`;
 
 // ── Pre-hydration splash CSS ──────────────────────────────────────────────────
 // Injected directly into <head> so it's available before any JS runs.

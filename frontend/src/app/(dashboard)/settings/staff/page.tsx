@@ -49,9 +49,9 @@ export default function StaffMembersPage() {
   const agents   = staff.filter(s => s.role === 'msp_agent');
 
   const groups = [
-    { label: 'Owners',   color: '#60a5fa', members: owners   },
-    { label: 'Managers', color: '#818cf8', members: managers },
-    { label: 'Agents',   color: '#34d399', members: agents   },
+    { label: 'Owners',   color: 'var(--accent-info-fg)', members: owners   },
+    { label: 'Managers', color: 'var(--accent-indigo-fg)', members: managers },
+    { label: 'Agents',   color: 'var(--accent-ok-fg)', members: agents   },
   ].filter(g => g.members.length > 0);
 
   const [showModal,   setShowModal]   = useState(false);
@@ -123,7 +123,7 @@ export default function StaffMembersPage() {
 
           <div className="flex items-center gap-3 mb-6">
             <div style={{ width: 40, height: 40, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Users size={18} style={{ color: '#60a5fa' }} />
+              <Users size={18} style={{ color: 'var(--accent-info-fg)' }} />
             </div>
             <div>
               <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Staff Members</h1>
@@ -133,12 +133,12 @@ export default function StaffMembersPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : staff.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Users size={32} style={{ color: 'var(--border-md)' }} />
-              <p style={{ fontSize: 13, color: 'var(--text-5)' }}>No staff members found.</p>
+              <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No staff members found.</p>
             </div>
           ) : (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
@@ -146,10 +146,10 @@ export default function StaffMembersPage() {
               {/* Summary */}
               <div className="flex" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                 {[
-                  { label: 'Total Staff', value: staff.length,   color: '#60a5fa' },
-                  { label: 'Owners',      value: owners.length,   color: '#60a5fa' },
-                  { label: 'Managers',    value: managers.length, color: '#818cf8' },
-                  { label: 'Agents',      value: agents.length,   color: '#34d399' },
+                  { label: 'Total Staff', value: staff.length,   color: 'var(--accent-info-fg)' },
+                  { label: 'Owners',      value: owners.length,   color: 'var(--accent-info-fg)' },
+                  { label: 'Managers',    value: managers.length, color: 'var(--accent-indigo-fg)' },
+                  { label: 'Agents',      value: agents.length,   color: 'var(--accent-ok-fg)' },
                 ].map(s => (
                   <div
                     key={s.label}
@@ -206,7 +206,7 @@ export default function StaffMembersPage() {
                             </span>
                           </td>
                           <td>
-                            <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: '#34d399' }}>
+                            <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: 'var(--accent-ok-fg)' }}>
                               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block' }} />
                               Active
                             </span>
@@ -287,7 +287,7 @@ export default function StaffMembersPage() {
             </div>
 
             {formError && (
-              <div className="flex items-center gap-2 mb-4" style={{ padding: '8px 12px', fontSize: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
+              <div className="flex items-center gap-2 mb-4" style={{ padding: '8px 12px', fontSize: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--accent-danger-fg)' }}>
                 <AlertCircle size={12} style={{ flexShrink: 0 }} /> {formError}
               </div>
             )}

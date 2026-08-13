@@ -21,26 +21,26 @@ const MONO: React.CSSProperties = {
 };
 
 const ROLE_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  msp_owner:    { label: 'MSP Owner',    color: '#f87171', bg: 'rgba(239,68,68,0.12)'   },
-  msp_manager:  { label: 'MSP Manager',  color: '#fbbf24', bg: 'rgba(245,158,11,0.12)'  },
-  msp_agent:    { label: 'MSP Agent',    color: '#60a5fa', bg: 'rgba(59,130,246,0.12)'  },
-  client_owner: { label: 'Client Owner', color: '#a78bfa', bg: 'rgba(139,92,246,0.12)'  },
-  end_user:     { label: 'End User',     color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' },
+  msp_owner:    { label: 'MSP Owner',    color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)'   },
+  msp_manager:  { label: 'MSP Manager',  color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)'  },
+  msp_agent:    { label: 'MSP Agent',    color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)'  },
+  client_owner: { label: 'Client Owner', color: 'var(--accent-violet-fg)', bg: 'var(--accent-violet-bg)'  },
+  end_user:     { label: 'End User',     color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' },
 };
 
 const STATUS_CFG: Record<string, { label: string; color: string }> = {
-  open:        { label: 'Open',        color: '#60a5fa' },
-  pending:     { label: 'Pending',     color: '#818cf8' },
-  in_progress: { label: 'In Progress', color: '#fbbf24' },
-  solved:      { label: 'Resolved',    color: '#34d399' },
-  closed:      { label: 'Closed',      color: '#64748b' },
+  open:        { label: 'Open',        color: 'var(--accent-info-fg)' },
+  pending:     { label: 'Pending',     color: 'var(--accent-indigo-fg)' },
+  in_progress: { label: 'In Progress', color: 'var(--accent-warn-fg)' },
+  solved:      { label: 'Resolved',    color: 'var(--accent-ok-fg)' },
+  closed:      { label: 'Closed',      color: 'var(--text-3)' },
 };
 
 const PRIORITY_CFG: Record<string, { label: string; color: string }> = {
-  low:      { label: 'Low',      color: '#4ade80' },
-  normal:   { label: 'Normal',   color: '#60a5fa' },
-  high:     { label: 'High',     color: '#fbbf24' },
-  critical: { label: 'Critical', color: '#f87171' },
+  low:      { label: 'Low',      color: 'var(--accent-ok-fg)' },
+  normal:   { label: 'Normal',   color: 'var(--accent-info-fg)' },
+  high:     { label: 'High',     color: 'var(--accent-warn-fg)' },
+  critical: { label: 'Critical', color: 'var(--accent-danger-fg)' },
 };
 
 const MSP_ROLE_OPTIONS = [
@@ -76,12 +76,12 @@ function SectionHeader({ title }: { title: string }) {
 function Field({ label, value, icon: Icon }: { label: string; value?: string | null; icon?: React.ElementType }) {
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-      {Icon && <Icon size={14} style={{ color: 'var(--text-5)', marginTop: 3, flexShrink: 0 }} />}
+      {Icon && <Icon size={14} style={{ color: 'var(--text-3)', marginTop: 3, flexShrink: 0 }} />}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>
           {label}
         </div>
-        <div style={{ ...MONO, fontSize: 13, fontWeight: 600, color: value ? 'var(--text-0)' : 'var(--text-5)' }}>
+        <div style={{ ...MONO, fontSize: 13, fontWeight: 600, color: value ? 'var(--text-0)' : 'var(--text-3)' }}>
           {value || '—'}
         </div>
       </div>
@@ -220,7 +220,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#2563eb' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
         <p style={{ fontSize: 13, color: 'var(--text-4)' }}>Loading profile…</p>
       </div>
     );
@@ -244,7 +244,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
 
   const avatarColor = getAvatarColor(user.full_name);
   const initials    = getInitials(user.full_name);
-  const roleCfg     = ROLE_CFG[user.role] ?? { label: user.role, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+  const roleCfg     = ROLE_CFG[user.role] ?? { label: user.role, color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
   const memberDate  = user.date_joined
     ? new Date(user.date_joined).toLocaleDateString('en-US', { dateStyle: 'medium' })
     : null;
@@ -287,7 +287,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               color: 'var(--text-3)', background: 'transparent', border: '1px solid var(--border-md)',
               padding: '4px 10px', cursor: 'pointer',
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-5)'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-3)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}
           >
             <Key size={11} /> Change Password
@@ -303,7 +303,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             className="flex items-center gap-1.5"
             style={{
               ...MONO, fontSize: 11, fontWeight: 600, marginRight: 6,
-              color: '#818cf8', background: 'rgba(99,102,241,0.12)',
+              color: 'var(--accent-indigo-fg)', background: 'rgba(99,102,241,0.12)',
               border: '1px solid rgba(99,102,241,0.3)',
               padding: '4px 10px', cursor: 'pointer',
             }}
@@ -319,7 +319,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
           className="flex items-center gap-1.5"
           style={{
             ...MONO, fontSize: 11, fontWeight: 600,
-            color: '#93c5fd', background: 'rgba(37,99,235,0.12)',
+            color: 'var(--accent-info-fg)', background: 'rgba(37,99,235,0.12)',
             border: '1px solid rgba(37,99,235,0.3)',
             padding: '4px 10px', cursor: 'pointer',
           }}
@@ -354,7 +354,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
                     {roleCfg.label}
                   </span>
                   {isStaff
-                    ? <span className="flex items-center gap-1" style={{ fontSize: 11, color: '#34d399' }}><ShieldCheck size={12} /> MSP Staff</span>
+                    ? <span className="flex items-center gap-1" style={{ fontSize: 11, color: 'var(--accent-ok-fg)' }}><ShieldCheck size={12} /> MSP Staff</span>
                     : user.org_name && (
                         <span className="flex items-center gap-1" style={{ fontSize: 11, color: 'var(--text-3)' }}>
                           <Building2 size={12} /> {user.org_name}
@@ -364,8 +364,8 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
                   <span style={{ fontSize: 11, color: user.is_active ? '#34d399' : '#f87171' }}>
                     ● {user.is_active ? 'Active' : 'Inactive'}
                   </span>
-                  <span className="flex items-center gap-1" style={{ fontSize: 11, color: isOnline ? '#22c55e' : 'var(--text-5)' }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#22c55e' : 'var(--text-5)', display: 'inline-block' }} />
+                  <span className="flex items-center gap-1" style={{ fontSize: 11, color: isOnline ? '#22c55e' : 'var(--text-3)' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#22c55e' : 'var(--text-3)', display: 'inline-block' }} />
                     {isOnline ? 'Online' : 'Offline'}
                   </span>
                 </div>
@@ -406,13 +406,13 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
               <SectionHeader title={isStaff ? 'Recent Assigned Tickets' : 'Recent Tickets'} />
               {recentTickets.length === 0 ? (
-                <div style={{ padding: '24px 20px', fontSize: 12, color: 'var(--text-5)' }}>Loading…</div>
+                <div style={{ padding: '24px 20px', fontSize: 12, color: 'var(--text-3)' }}>Loading…</div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       {['Ref', 'Subject', 'Status', 'Priority', 'Created'].map(h => (
-                        <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                        <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                           {h}
                         </th>
                       ))}
@@ -420,15 +420,15 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
                   </thead>
                   <tbody>
                     {recentTickets.map((t, i) => {
-                      const st = STATUS_CFG[t.status]   ?? { label: t.status,   color: '#94a3b8' };
-                      const pr = PRIORITY_CFG[t.priority] ?? { label: t.priority, color: '#94a3b8' };
+                      const st = STATUS_CFG[t.status]   ?? { label: t.status,   color: 'var(--text-3)' };
+                      const pr = PRIORITY_CFG[t.priority] ?? { label: t.priority, color: 'var(--text-3)' };
                       return (
                         <tr key={t.id} style={{ borderBottom: i < recentTickets.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer' }}
                           onClick={() => router.push(`/requests/${t.ref}`)}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                           <td style={{ padding: '10px 16px' }}>
-                            <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: '#60a5fa' }}>{t.ref}</span>
+                            <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: 'var(--accent-info-fg)' }}>{t.ref}</span>
                           </td>
                           <td style={{ padding: '10px 16px', maxWidth: 260 }}>
                             <span style={{ fontSize: 13, color: 'var(--text-0)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.subject}</span>
@@ -478,7 +478,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', height: 46, flexShrink: 0, borderBottom: '1px solid var(--border-md)' }}>
-              <Edit2 size={13} style={{ color: '#60a5fa' }} />
+              <Edit2 size={13} style={{ color: 'var(--accent-info-fg)' }} />
               <span style={{ ...MONO, fontSize: 13, fontWeight: 700, color: 'var(--text-0)', flex: 1 }}>Edit Profile</span>
               <span style={{ ...MONO, fontSize: 11, color: roleCfg.color, background: roleCfg.bg, padding: '2px 8px' }}>{user.full_name}</span>
               <button onClick={() => setEditOpen(false)}
@@ -491,7 +491,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {apiError && (
-                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 12px', fontSize: 12, color: '#f87171' }}>
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 12px', fontSize: 12, color: 'var(--accent-danger-fg)' }}>
                   {apiError}
                 </div>
               )}
@@ -500,7 +500,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {(['first_name', 'last_name'] as const).map(f => (
                   <div key={f}>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>
                       {f === 'first_name' ? 'First Name' : 'Last Name'}
                     </label>
                     <input style={INPUT} value={form[f]} onChange={e => setField(f, e.target.value)}
@@ -513,13 +513,13 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               {/* Email / Phone */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Email</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Email</label>
                   <input style={INPUT} type="email" value={form.email} onChange={e => setField('email', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Phone</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Phone</label>
                   <input style={INPUT} value={form.phone} onChange={e => setField('phone', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
@@ -529,13 +529,13 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               {/* Job Title / Department */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Job Title</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Job Title</label>
                   <input style={INPUT} value={form.job_title} onChange={e => setField('job_title', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Department</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Department</label>
                   <input style={INPUT} value={form.department} onChange={e => setField('department', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
@@ -545,13 +545,13 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               {/* Employee ID / Reports To */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Employee ID</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Employee ID</label>
                   <input style={INPUT} value={form.employee_id} onChange={e => setField('employee_id', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Reports To</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Reports To</label>
                   <input style={INPUT} value={form.reports_to} onChange={e => setField('reports_to', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }} />
@@ -560,7 +560,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
 
               {/* Business Impact */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Business Impact</label>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Business Impact</label>
                 <input style={INPUT} value={form.business_impact} onChange={e => setField('business_impact', e.target.value)}
                   placeholder="e.g. High — production system down"
                   onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
@@ -571,7 +571,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               {!selfEditOnly && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Role</label>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Role</label>
                     <select style={SELECT} value={form.role} onChange={e => setField('role', e.target.value)}
                       onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                       onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }}>
@@ -582,7 +582,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Status</label>
+                    <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Status</label>
                     <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
                       {[true, false].map(val => (
                         <button key={String(val)} onClick={() => setField('is_active', val)} style={{
@@ -602,7 +602,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               {/* Organization (client users only, non-self-edit) */}
               {!selfEditOnly && !['msp_owner', 'msp_manager', 'msp_agent'].includes(form.role) && (
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Organization</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>Organization</label>
                   <select style={SELECT} value={form.client_org_id} onChange={e => setField('client_org_id', e.target.value)}
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e  => { e.currentTarget.style.borderColor = 'var(--border-md)'; }}>
@@ -616,7 +616,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, padding: '12px 18px', borderTop: '1px solid var(--border-md)' }}>
               <button onClick={() => setEditOpen(false)}
                 style={{ ...MONO, fontSize: 12, padding: '7px 16px', cursor: 'pointer', color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border-md)' }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-5)'; }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-3)'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}>
                 Cancel
               </button>
@@ -645,7 +645,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             zIndex: 300, display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', height: 46, flexShrink: 0, borderBottom: '1px solid var(--border-md)' }}>
-              <Key size={13} style={{ color: '#60a5fa' }} />
+              <Key size={13} style={{ color: 'var(--accent-info-fg)' }} />
               <span style={{ ...MONO, fontSize: 13, fontWeight: 700, color: 'var(--text-0)', flex: 1 }}>Change Password</span>
               <button onClick={() => { setPwOpen(false); setPwError(''); setPwSaved(false); }}
                 style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-4)', background: 'transparent', border: 'none', cursor: 'pointer' }}
@@ -656,18 +656,18 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
             </div>
             <form onSubmit={handlePasswordChange} style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
               {pwSaved && (
-                <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', padding: '8px 12px', fontSize: 12, color: '#34d399' }}>
+                <div style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', padding: '8px 12px', fontSize: 12, color: 'var(--accent-ok-fg)' }}>
                   Password updated.
                 </div>
               )}
               {pwError && (
-                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 12px', fontSize: 12, color: '#f87171' }}>
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '8px 12px', fontSize: 12, color: 'var(--accent-danger-fg)' }}>
                   {pwError}
                 </div>
               )}
               {(['current', 'newPw', 'confirm'] as const).map(f => (
                 <div key={f}>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5 }}>
                     {f === 'current' ? 'Current Password' : f === 'newPw' ? 'New Password' : 'Confirm New Password'}
                   </label>
                   <input style={INPUT} type="password" value={pwForm[f]}
@@ -680,7 +680,7 @@ export function UserProfileView({ userId, backLabel, backHref, isSelf, selfEditO
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 4 }}>
                 <button type="button" onClick={() => { setPwOpen(false); setPwError(''); setPwSaved(false); }}
                   style={{ ...MONO, fontSize: 12, padding: '7px 16px', cursor: 'pointer', color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border-md)' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-5)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.borderColor = 'var(--text-3)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border-md)'; }}>
                   Cancel
                 </button>

@@ -138,11 +138,11 @@ export function AgentSupportPanel({ onClose }: Props) {
           onClick={() => { fetchQueue(); fetchHistory(0); }}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', display: 'flex', padding: '4px 6px',
+            color: 'var(--text-3)', display: 'flex', padding: '4px 6px',
           }}
           title="Refresh"
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <RefreshCw size={13} style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
         </button>
@@ -150,10 +150,10 @@ export function AgentSupportPanel({ onClose }: Props) {
           onClick={onClose}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', display: 'flex', padding: '4px 6px',
+            color: 'var(--text-3)', display: 'flex', padding: '4px 6px',
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <X size={14} />
         </button>
@@ -215,7 +215,7 @@ export function AgentSupportPanel({ onClose }: Props) {
             {queue.length === 0 && !loadingQ && (
               <div style={{
                 padding: '32px 16px', textAlign: 'center',
-                color: 'var(--text-5)', fontSize: 12,
+                color: 'var(--text-3)', fontSize: 12,
               }}>
                 No active sessions.
               </div>
@@ -244,7 +244,7 @@ export function AgentSupportPanel({ onClose }: Props) {
                     </span>
                   </div>
                   <div style={{
-                    fontSize: 10, color: 'var(--text-5)',
+                    fontSize: 10, color: 'var(--text-3)',
                     fontFamily: 'var(--font-mono)', marginBottom: 2, letterSpacing: '0.04em',
                   }}>
                     {sess.session_number}
@@ -254,7 +254,7 @@ export function AgentSupportPanel({ onClose }: Props) {
                       Assigned: {sess.agent_info.full_name}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: 'var(--text-5)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
                     {timeAgo(sess.created_at)}
                   </div>
                 </div>
@@ -304,7 +304,7 @@ export function AgentSupportPanel({ onClose }: Props) {
                         fontSize:     12,
                         cursor:       'pointer',
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-5)'; }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-3)'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
                     >
                       <ExternalLink size={11} /> Open
@@ -322,7 +322,7 @@ export function AgentSupportPanel({ onClose }: Props) {
             {history.length === 0 && !loadingH && (
               <div style={{
                 padding: '32px 16px', textAlign: 'center',
-                color: 'var(--text-5)', fontSize: 12,
+                color: 'var(--text-3)', fontSize: 12,
               }}>
                 No session history yet.
               </div>
@@ -347,12 +347,12 @@ export function AgentSupportPanel({ onClose }: Props) {
                   <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-1)', flex: 1 }}>
                     {sess.user_info.full_name || sess.user_info.email}
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-5)', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>
                     {sess.ended_at ? timeAgo(sess.ended_at) : '—'}
                   </span>
                 </div>
                 <div style={{
-                  fontSize: 10, color: 'var(--text-5)',
+                  fontSize: 10, color: 'var(--text-3)',
                   fontFamily: 'var(--font-mono)', marginBottom: 2, letterSpacing: '0.04em',
                 }}>
                   {sess.session_number}
@@ -364,7 +364,7 @@ export function AgentSupportPanel({ onClose }: Props) {
                     </span>
                   )}
                   <span style={{
-                    fontSize: 10, color: '#818cf8', fontWeight: 600,
+                    fontSize: 10, color: 'var(--accent-indigo-fg)', fontWeight: 600,
                     letterSpacing: '0.03em',
                   }}>
                     {loadingHistory === sess.id ? 'Loading…' : 'View →'}

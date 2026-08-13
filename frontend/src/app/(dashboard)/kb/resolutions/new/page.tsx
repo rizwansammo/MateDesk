@@ -73,7 +73,7 @@ export default function KBNewArticlePage() {
               border: '1px solid rgba(167,139,250,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <BookOpen size={18} style={{ color: '#a78bfa' }} />
+              <BookOpen size={18} style={{ color: 'var(--accent-violet-fg)' }} />
             </div>
             <div>
               <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>New Resolution Article</h1>
@@ -162,7 +162,7 @@ export default function KBNewArticlePage() {
                   padding: '10px 14px', fontSize: 12,
                   background: 'rgba(239,68,68,0.08)',
                   border: '1px solid rgba(239,68,68,0.2)',
-                  color: '#f87171',
+                  color: 'var(--accent-danger-fg)',
                 }}>
                   <AlertCircle size={13} style={{ flexShrink: 0 }} />
                   {error}

@@ -30,8 +30,8 @@ interface OrgEntry {
 const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' };
 
 const ROLE_CFG: Record<string, { label: string; color: string }> = {
-  client_owner: { label: 'Owner',    color: '#a78bfa' },
-  end_user:     { label: 'End User', color: '#64748b' },
+  client_owner: { label: 'Owner',    color: 'var(--accent-violet-fg)' },
+  end_user:     { label: 'End User', color: 'var(--text-3)' },
 };
 
 export default function ClientsPage() {
@@ -89,13 +89,13 @@ export default function ClientsPage() {
           Clients
         </span>
         {!loading && (
-          <span style={{ ...MONO, fontSize: 11, color: 'var(--text-5)' }}>
+          <span style={{ ...MONO, fontSize: 11, color: 'var(--text-3)' }}>
             {orgs.length} org{orgs.length !== 1 ? 's' : ''} · {totalUsers} user{totalUsers !== 1 ? 's' : ''}
           </span>
         )}
         <div style={{ flex: 1 }} />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Search size={13} style={{ position: 'absolute', left: 8, color: 'var(--text-5)', pointerEvents: 'none' }} />
+          <Search size={13} style={{ position: 'absolute', left: 8, color: 'var(--text-3)', pointerEvents: 'none' }} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -114,12 +114,12 @@ export default function ClientsPage() {
       {/* Body */}
       <div className="flex-1 overflow-y-auto" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {loading && (
-          <div style={{ color: 'var(--text-5)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
             Loading…
           </div>
         )}
         {!loading && filtered.length === 0 && (
-          <div style={{ color: 'var(--text-5)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
             {query ? 'No results.' : 'No client organisations found.'}
           </div>
         )}
@@ -148,7 +148,7 @@ export default function ClientsPage() {
                 <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--text-0)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {org.name}
                 </span>
-                <span style={{ ...MONO, fontSize: 11, color: 'var(--text-5)', flexShrink: 0, marginRight: 6 }}>
+                <span style={{ ...MONO, fontSize: 11, color: 'var(--text-3)', flexShrink: 0, marginRight: 6 }}>
                   {org.user_count} user{org.user_count !== 1 ? 's' : ''}
                 </span>
                 {isOpen
@@ -161,13 +161,13 @@ export default function ClientsPage() {
               {isOpen && (
                 <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
                   {org._filtered.length === 0 && (
-                    <div style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text-5)' }}>
+                    <div style={{ padding: '10px 16px', fontSize: 12, color: 'var(--text-3)' }}>
                       No users
                     </div>
                   )}
                   {org._filtered.map((user) => {
                     const isOnline    = onlineUsers.has(user.id) || user.online;
-                    const roleCfg     = ROLE_CFG[user.role] ?? { label: user.role, color: '#64748b' };
+                    const roleCfg     = ROLE_CFG[user.role] ?? { label: user.role, color: 'var(--text-3)' };
                     const avatarColor = getAvatarColor(user.full_name);
 
                     return (
@@ -195,7 +195,7 @@ export default function ClientsPage() {
                           <span style={{
                             position: 'absolute', bottom: 1, right: 1,
                             width: 8, height: 8, borderRadius: '50%',
-                            background: isOnline ? '#22c55e' : 'var(--text-5)',
+                            background: isOnline ? '#22c55e' : 'var(--text-3)',
                             border: '1.5px solid var(--bg-card)',
                           }} />
                         </div>
@@ -205,7 +205,7 @@ export default function ClientsPage() {
                           <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-0)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {user.full_name}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {user.email}
                           </div>
                         </div>
@@ -240,7 +240,7 @@ export default function ClientsPage() {
                           style={{
                             background: 'rgba(99,102,241,0.1)',
                             border: '1px solid rgba(99,102,241,0.25)',
-                            cursor: 'pointer', color: '#818cf8',
+                            cursor: 'pointer', color: 'var(--accent-indigo-fg)',
                             padding: '4px 8px', display: 'flex',
                             alignItems: 'center', gap: 4,
                             fontSize: 11, fontWeight: 600,

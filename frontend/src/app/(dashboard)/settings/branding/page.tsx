@@ -42,7 +42,7 @@ export default function BrandingPage() {
               background: 'rgba(37,99,235,0.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Lock size={22} style={{ color: '#60a5fa' }} />
+              <Lock size={22} style={{ color: 'var(--accent-info-fg)' }} />
             </div>
 
             <div>

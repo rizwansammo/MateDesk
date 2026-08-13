@@ -9,9 +9,9 @@ import type { OrgRateEntry, RateMode } from '@/types/billing';
 const CURRENCIES = ['USD','GBP','EUR','CAD','AUD','NZD','SGD','AED','INR','PKR'];
 
 const STATUS_CFG = {
-  hourly:     { label: 'By Hour',   color: '#818cf8', bg: 'rgba(99,102,241,0.12)' },
-  per_ticket: { label: 'By Ticket', color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
-  not_set:    { label: 'Not Set',   color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+  hourly:     { label: 'By Hour',   color: 'var(--accent-indigo-fg)', bg: 'var(--accent-indigo-bg)' },
+  per_ticket: { label: 'By Ticket', color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
+  not_set:    { label: 'Not Set',   color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
 };
 
 // ── Rate Editor Panel ─────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ function RatePanel({ entry, onClose }: { entry: OrgRateEntry; onClose: () => voi
           {mode === 'hourly' ? (
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 8 }}>
-                Hourly Rate <span style={{ color: 'var(--text-5)', fontWeight: 400 }}>({cur})</span>
+                Hourly Rate <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>({cur})</span>
               </div>
               <input
                 type="number"
@@ -139,14 +139,14 @@ function RatePanel({ entry, onClose }: { entry: OrgRateEntry; onClose: () => voi
                 onFocus={focusIn}
                 onBlur={focusOut}
               />
-              <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 5 }}>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 5 }}>
                 Charged per hour based on time logs recorded on each ticket.
               </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)' }}>
-                Rates per Ticket Level <span style={{ color: 'var(--text-5)', fontWeight: 400 }}>({cur})</span>
+                Rates per Ticket Level <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>({cur})</span>
               </div>
               {([['l1', l1, setL1, '#60a5fa'], ['l2', l2, setL2, '#a78bfa'], ['l3', l3, setL3, '#f87171']] as [string, string, (v: string) => void, string][]).map(([lvl, val, setter, col]) => (
                 <div key={lvl} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -170,7 +170,7 @@ function RatePanel({ entry, onClose }: { entry: OrgRateEntry; onClose: () => voi
                   />
                 </div>
               ))}
-              <p style={{ fontSize: 11, color: 'var(--text-5)' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-3)' }}>
                 Applied to solved / closed tickets in the invoice period.
               </p>
             </div>
@@ -228,7 +228,7 @@ export default function BillingRatesPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <Building2 size={14} style={{ color: '#f59e0b' }} />
+        <Building2 size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Client Rates</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— billing rate per organization</span>
         {!isLoading && total > 0 && (
@@ -242,7 +242,7 @@ export default function BillingRatesPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : entries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-4)', fontSize: 13 }}>
@@ -292,7 +292,7 @@ export default function BillingRatesPage() {
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 13, color: entry.rate ? 'var(--text-2)' : 'var(--text-5)' }}>
+                    <div style={{ fontSize: 13, color: entry.rate ? 'var(--text-2)' : 'var(--text-3)' }}>
                       {entry.rate ? entry.rate.currency : '—'}
                     </div>
 

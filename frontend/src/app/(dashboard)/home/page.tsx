@@ -51,7 +51,7 @@ function StatCard({ label, value, color, icon: Icon }: { label: string; value: n
       </div>
       <div className="min-w-0">
         <div style={{ fontFamily: 'var(--font-hemi)', fontSize: 32, lineHeight: 1, color }}>{value}</div>
-        <div className="truncate" style={{ fontSize: 11, color: 'var(--text-pale)', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600, marginTop: 4 }}>{label}</div>
+        <div className="truncate" style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600, marginTop: 4 }}>{label}</div>
       </div>
     </div>
   );
@@ -101,7 +101,7 @@ function NewAnnouncementModal({ onClose }: { onClose: () => void }) {
         boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--border-panel)', background: 'var(--bg-surface)' }}>
-          <Megaphone size={14} style={{ color: '#f59e0b' }} />
+          <Megaphone size={14} style={{ color: 'var(--accent-warn-fg)' }} />
           <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: 'var(--text-0)' }}>New Announcement</span>
           <button onClick={onClose} style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-4)' }}
             onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-0)'; e.currentTarget.style.background = 'var(--border-panel)'; }}
@@ -110,7 +110,7 @@ function NewAnnouncementModal({ onClose }: { onClose: () => void }) {
         </div>
         <form onSubmit={submit} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {error && (
-            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', fontSize: 12, color: '#f87171' }}>
+            <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', fontSize: 12, color: 'var(--accent-danger-fg)' }}>
               {error}
             </div>
           )}
@@ -149,11 +149,11 @@ function NewAnnouncementModal({ onClose }: { onClose: () => void }) {
                   <label key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)' }}>
                     <input type="checkbox" checked={selectedIds.includes(a.id)} onChange={() => toggleAgent(a.id)} style={{ accentColor: '#f59e0b' }} />
                     <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{a.full_name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--text-5)', marginLeft: 'auto' }}>{a.role}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 'auto' }}>{a.role}</span>
                   </label>
                 ))}
                 {agents.length === 0 && (
-                  <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-5)' }}>No agents found.</div>
+                  <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-3)' }}>No agents found.</div>
                 )}
               </div>
             )}
@@ -206,13 +206,13 @@ export default function HomePage() {
   const displayName = user?.full_name || 'there';
 
   const statCards = [
-    { label: 'Need Clarification', value: stats?.pending       ?? 0, color: '#fb923c', icon: AlertTriangle },
-    { label: 'Requests Overdue',   value: stats?.overdue       ?? 0, color: '#f87171', icon: Clock         },
-    { label: 'Due Today',          value: stats?.due_today     ?? 0, color: '#fbbf24', icon: Calendar      },
-    { label: 'Pending',            value: stats?.pending       ?? 0, color: '#60a5fa', icon: Inbox         },
-    { label: 'Total Open',         value: stats?.total_open    ?? 0, color: '#818cf8', icon: Activity      },
-    { label: 'Unassigned',         value: stats?.unassigned    ?? 0, color: '#94a3b8', icon: Users         },
-    { label: 'Resolved Today',     value: stats?.solved_today  ?? 0, color: '#34d399', icon: CheckCircle   },
+    { label: 'Need Clarification', value: stats?.pending       ?? 0, color: 'var(--accent-orange-fg)', icon: AlertTriangle },
+    { label: 'Requests Overdue',   value: stats?.overdue       ?? 0, color: 'var(--accent-danger-fg)', icon: Clock         },
+    { label: 'Due Today',          value: stats?.due_today     ?? 0, color: 'var(--accent-warn-fg)', icon: Calendar      },
+    { label: 'Pending',            value: stats?.pending       ?? 0, color: 'var(--accent-info-fg)', icon: Inbox         },
+    { label: 'Total Open',         value: stats?.total_open    ?? 0, color: 'var(--accent-indigo-fg)', icon: Activity      },
+    { label: 'Unassigned',         value: stats?.unassigned    ?? 0, color: 'var(--text-3)', icon: Users         },
+    { label: 'Resolved Today',     value: stats?.solved_today  ?? 0, color: 'var(--accent-ok-fg)', icon: CheckCircle   },
     { label: 'Waiting Client',     value: stats?.waiting_client ?? 0, color: '#22d3ee', icon: Mail         },
   ];
 
@@ -243,9 +243,9 @@ export default function HomePage() {
         <div className="flex items-center gap-1.5">
           <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#34d399' }} />
           <span className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>
-            Welcome back, <span style={{ color: '#60a5fa' }}>{displayName}</span>
+            Welcome back, <span style={{ color: 'var(--accent-info-fg)' }}>{displayName}</span>
           </span>
-          <span style={{ color: 'var(--text-pale)', margin: '0 4px' }}>·</span>
+          <span style={{ color: 'var(--text-3)', margin: '0 4px' }}>·</span>
           <span style={{ fontSize: 11, color: 'var(--text-4)' }}>{today}</span>
         </div>
         <div className="ml-auto">
@@ -284,7 +284,7 @@ export default function HomePage() {
                 <Activity size={11} /> Recent Tickets
               </span>
               <div className="flex items-center gap-2">
-                <span style={{ fontSize: 10, color: 'var(--text-5)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', padding: '1px 6px' }}>last 24h</span>
+                <span style={{ fontSize: 10, color: 'var(--text-3)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', padding: '1px 6px' }}>last 24h</span>
                 <button className="btn-ghost gap-1" style={{ fontSize: 11 }} onClick={() => router.push('/requests')}>
                   View all <ChevronRight size={11} />
                 </button>
@@ -294,7 +294,7 @@ export default function HomePage() {
               {recentTickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-2" style={{ height: '100%', padding: '0 16px' }}>
                   <Activity size={20} style={{ color: 'var(--border-md)' }} />
-                  <p style={{ fontSize: 12, color: 'var(--text-5)' }}>No tickets in the last 24 hours</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No tickets in the last 24 hours</p>
                   <button className="btn-primary gap-1 mt-1" style={{ fontSize: 11, height: 28 }} onClick={() => router.push('/requests/new')}>
                     <Plus size={12} /> Create ticket
                   </button>
@@ -310,12 +310,12 @@ export default function HomePage() {
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       onClick={() => router.push(`/requests/${t.ref}`)}
                     >
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#60a5fa', flexShrink: 0 }}>{t.ref}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--accent-info-fg)', flexShrink: 0 }}>{t.ref}</span>
                       <span className="flex-1 truncate" style={{ color: 'var(--text-2)' }}>{t.subject}</span>
                       <span style={{ fontSize: 10, color: STATUS_COLORS[t.status] ?? '#94a3b8', background: (STATUS_COLORS[t.status] ?? '#94a3b8') + '18', padding: '2px 6px', flexShrink: 0 }}>
                         {t.status.replace('_', ' ')}
                       </span>
-                      <span style={{ fontSize: 10, color: 'var(--text-5)', flexShrink: 0 }}>{timeAgo(t.created_at)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-3)', flexShrink: 0 }}>{timeAgo(t.created_at)}</span>
                     </div>
                   ))}
                 </div>
@@ -330,9 +330,9 @@ export default function HomePage() {
           >
             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
               <span className="panel-title flex items-center gap-1.5">
-                <BookOpen size={11} style={{ color: '#a78bfa' }} /> My Note
+                <BookOpen size={11} style={{ color: 'var(--accent-violet-fg)' }} /> My Note
               </span>
-              <span style={{ fontSize: 10, color: 'var(--text-5)' }}>
+              <span style={{ fontSize: 10, color: 'var(--text-3)' }}>
                 {todos.filter(t => !t.completed).length > 0 ? `${todos.filter(t => !t.completed).length} pending` : ''}
               </span>
             </div>
@@ -361,7 +361,7 @@ export default function HomePage() {
                   background: todoInput.trim() ? 'rgba(167,139,250,0.12)' : 'transparent',
                   border: `1px solid ${todoInput.trim() ? 'rgba(167,139,250,0.35)' : 'var(--border-md)'}`,
                   cursor: todoInput.trim() ? 'pointer' : 'default',
-                  color: todoInput.trim() ? '#a78bfa' : 'var(--text-5)', flexShrink: 0,
+                  color: todoInput.trim() ? '#a78bfa' : 'var(--text-3)', flexShrink: 0,
                 }}
               >
                 {createTodo.isPending ? <Loader2 size={11} className="animate-spin" /> : <Plus size={13} />}
@@ -372,12 +372,12 @@ export default function HomePage() {
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               {todosLoading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
-                  <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-5)' }} />
+                  <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-3)' }} />
                 </div>
               ) : todos.length === 0 ? (
                 <div className="flex items-center gap-2 px-4 py-4">
                   <BookOpen size={14} style={{ color: 'var(--border-md)' }} />
-                  <span style={{ fontSize: 12, color: 'var(--text-5)' }}>Your personal notes appear here</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Your personal notes appear here</span>
                 </div>
               ) : (
                 todos.map(todo => (
@@ -399,8 +399,8 @@ export default function HomePage() {
           >
             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
               <span className="panel-title flex items-center gap-1.5">
-                <AlertTriangle size={11} style={{ color: '#f87171' }} />
-                <span style={{ color: '#f87171' }}>My Overdue</span>
+                <AlertTriangle size={11} style={{ color: 'var(--accent-danger-fg)' }} />
+                <span style={{ color: 'var(--accent-danger-fg)' }}>My Overdue</span>
               </span>
               <button className="btn-ghost gap-1" style={{ fontSize: 11 }} onClick={() => router.push('/requests')}>
                 View all <ChevronRight size={11} />
@@ -409,8 +409,8 @@ export default function HomePage() {
             <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
               {overdueTickets.length === 0 ? (
                 <div className="flex items-center gap-2 px-4" style={{ height: '100%' }}>
-                  <CheckCircle size={14} style={{ color: '#34d399', flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: '#34d399' }}>No overdue tickets — great work!</span>
+                  <CheckCircle size={14} style={{ color: 'var(--accent-ok-fg)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: 'var(--accent-ok-fg)' }}>No overdue tickets — great work!</span>
                 </div>
               ) : (
                 overdueTickets.map(t => {
@@ -425,8 +425,8 @@ export default function HomePage() {
                       onClick={() => router.push(`/requests/${t.ref}`)}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, color: '#f87171', flexShrink: 0 }}>{t.ref}</span>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: '#f87171', background: 'rgba(248,113,113,0.12)', padding: '1px 5px', flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, color: 'var(--accent-danger-fg)', flexShrink: 0 }}>{t.ref}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent-danger-fg)', background: 'rgba(248,113,113,0.12)', padding: '1px 5px', flexShrink: 0 }}>
                           {daysOver}d overdue
                         </span>
                         <span style={{ fontSize: 10, color: PRIORITY_COLORS[t.priority] ?? '#94a3b8', flexShrink: 0, marginLeft: 'auto' }}>{t.priority}</span>
@@ -446,7 +446,7 @@ export default function HomePage() {
           <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span className="panel-title flex items-center gap-1.5">
-                <Megaphone size={11} style={{ color: '#f59e0b' }} /> Announcement Board
+                <Megaphone size={11} style={{ color: 'var(--accent-warn-fg)' }} /> Announcement Board
               </span>
               {isOwnerOrManager && (
                 <button className="btn-ghost gap-1" style={{ fontSize: 11 }} onClick={() => setAnnModal(true)}>
@@ -458,7 +458,7 @@ export default function HomePage() {
             {announcements.length === 0 ? (
               <div className="flex items-center gap-3 px-4 py-5">
                 <Megaphone size={16} style={{ color: 'var(--border-md)', flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: 'var(--text-5)' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
                   {isOwnerOrManager ? 'No announcements yet. Click "New Announcement" to post one.' : 'No announcements for you.'}
                 </span>
               </div>
@@ -479,9 +479,9 @@ export default function HomePage() {
                         <button
                           onClick={() => deleteAnn.mutate(ann.id)}
                           title="Delete"
-                          style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-5)', flexShrink: 0 }}
+                          style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', flexShrink: 0 }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                         >
                           <Trash2 size={11} />
                         </button>
@@ -489,8 +489,8 @@ export default function HomePage() {
                     </div>
                     <p style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.65, margin: 0, flex: 1, whiteSpace: 'pre-wrap' }}>{ann.body}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      <span style={{ fontSize: 10, color: 'var(--text-5)' }}>{ann.created_by}</span>
-                      <span style={{ fontSize: 10, color: 'var(--text-5)', marginLeft: 'auto' }}>{fmtDate(ann.created_at)}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-3)' }}>{ann.created_by}</span>
+                      <span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 'auto' }}>{fmtDate(ann.created_at)}</span>
                       <span style={{
                         fontSize: 9, fontWeight: 700, padding: '1px 5px',
                         background: ann.recipient_mode === 'all' ? 'rgba(245,158,11,0.12)' : 'rgba(167,139,250,0.12)',
@@ -536,7 +536,7 @@ function TodoRow({ todo, onToggle, onDelete }: { todo: AgentTodo; onToggle: () =
         style={{ accentColor: '#a78bfa', flexShrink: 0, cursor: 'pointer', width: 14, height: 14 }}
       />
       <span style={{
-        flex: 1, fontSize: 12, color: todo.completed ? 'var(--text-5)' : 'var(--text-2)', lineHeight: 1.4,
+        flex: 1, fontSize: 12, color: todo.completed ? 'var(--text-3)' : 'var(--text-2)', lineHeight: 1.4,
         textDecoration: todo.completed ? 'line-through' : 'none',
       }}>
         {todo.text}

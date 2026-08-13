@@ -62,10 +62,10 @@ function getSlotIndex(dt: Date): number {
 
 function eventColor(ev: CalendarEvent, now: Date) {
   if (ev.status === 'completed')
-    return { accent: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.35)', text: '#a7f3d0' };
+    return { accent: '#34d399', bg: 'var(--accent-ok-bg)', border: 'rgba(52,211,153,0.35)', text: 'var(--accent-ok-fg)' };
   if (new Date(ev.event_dt) < now)
-    return { accent: '#f87171', bg: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.35)', text: '#fca5a5' };
-  return { accent: '#fbbf24', bg: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.35)', text: '#fde68a' };
+    return { accent: '#f87171', bg: 'var(--accent-danger-bg)', border: 'rgba(248,113,113,0.35)', text: 'var(--accent-danger-fg)' };
+  return { accent: '#fbbf24', bg: 'var(--accent-warn-bg)', border: 'rgba(251,191,36,0.35)', text: 'var(--accent-warn-fg)' };
 }
 
 // ── MiniCalendar ──────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ function MiniCalendar({ weekStart, onChange }: MiniCalProps) {
       {/* DOW labels */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 2 }}>
         {['M','T','W','T','F','S','S'].map((l, i) => (
-          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-5)', padding: '2px 0' }}>{l}</div>
+          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', padding: '2px 0' }}>{l}</div>
         ))}
       </div>
 
@@ -291,7 +291,7 @@ function EventDetailPopup({ event, onClose, onComplete }: DetailProps) {
           )}
           {event.assigned_agents.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: 'var(--text-5)' }}>Assigned:</span>
+              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Assigned:</span>
               {event.assigned_agents.map(a => (
                 <span
                   key={a.id}
@@ -307,7 +307,7 @@ function EventDetailPopup({ event, onClose, onComplete }: DetailProps) {
             </div>
           )}
           {event.linked_ticket_ref && (
-            <div style={{ fontSize: 12, color: '#818cf8' }}>
+            <div style={{ fontSize: 12, color: 'var(--accent-indigo-fg)' }}>
               Linked: <b>#{event.linked_ticket_ref}</b>
               {event.linked_ticket_subject && (
                 <span style={{ color: 'var(--text-4)' }}> — {event.linked_ticket_subject}</span>
@@ -430,7 +430,7 @@ export default function CalendarPage() {
           onClick={goToday}
           style={{
             padding: '7px 12px', fontSize: 12, fontWeight: 600,
-            background: 'rgba(37,99,235,0.1)', color: '#60a5fa',
+            background: 'rgba(37,99,235,0.1)', color: 'var(--accent-info-fg)',
             border: '1px solid rgba(37,99,235,0.25)', borderRadius: 0, cursor: 'pointer',
             width: '100%',
           }}
@@ -451,13 +451,13 @@ export default function CalendarPage() {
 
         {/* Legend */}
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-5)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
             STATUS
           </div>
           {[
-            { color: '#fbbf24', label: 'Pending' },
-            { color: '#f87171', label: 'Overdue' },
-            { color: '#34d399', label: 'Completed' },
+            { color: 'var(--accent-warn-fg)', label: 'Pending' },
+            { color: 'var(--accent-danger-fg)', label: 'Overdue' },
+            { color: 'var(--accent-ok-fg)', label: 'Completed' },
           ].map(({ color, label }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <div style={{ width: 10, height: 10, borderRadius: 2, background: color, flexShrink: 0 }} />
@@ -472,7 +472,7 @@ export default function CalendarPage() {
           if (!weekEvs.length) return null;
           return (
             <div style={{ marginTop: 'auto' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-5)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
                 THIS WEEK
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
@@ -541,7 +541,7 @@ export default function CalendarPage() {
                   background: isToday ? 'rgba(37,99,235,0.05)' : 'transparent',
                 }}
               >
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#f1f5f9', letterSpacing: '0.06em', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-0)', letterSpacing: '0.06em', marginBottom: 4 }}>
                   {DAY_NAMES[i]}
                 </div>
                 <div
@@ -606,7 +606,7 @@ export default function CalendarPage() {
                   }}
                 >
                   {isHour && (
-                    <span style={{ fontSize: 11, color: '#cbd5e1', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-2)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {slotLabel(slot)}
                     </span>
                   )}

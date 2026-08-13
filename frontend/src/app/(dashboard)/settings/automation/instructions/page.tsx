@@ -10,16 +10,16 @@ const CODE: React.CSSProperties = {
   border: '1px solid var(--border-md)',
   padding: '14px 16px',
   fontSize: 12,
-  color: '#e2e8f0',
+  color: 'var(--text-1)',
   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
   lineHeight: 1.7,
   whiteSpace: 'pre',
   overflowX: 'auto',
 };
 
-const BADGE_FIELD:  React.CSSProperties = { fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.12)', padding: '1px 6px', fontFamily: 'monospace' };
-const BADGE_OP:     React.CSSProperties = { fontSize: 11, color: '#a78bfa', background: 'rgba(167,139,250,0.12)', padding: '1px 6px', fontFamily: 'monospace' };
-const BADGE_ACTION: React.CSSProperties = { fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)',  padding: '1px 6px', fontFamily: 'monospace' };
+const BADGE_FIELD:  React.CSSProperties = { fontSize: 11, color: 'var(--accent-info-fg)', background: 'rgba(96,165,250,0.12)', padding: '1px 6px', fontFamily: 'monospace' };
+const BADGE_OP:     React.CSSProperties = { fontSize: 11, color: 'var(--accent-violet-fg)', background: 'rgba(167,139,250,0.12)', padding: '1px 6px', fontFamily: 'monospace' };
+const BADGE_ACTION: React.CSSProperties = { fontSize: 11, color: 'var(--accent-ok-fg)', background: 'rgba(52,211,153,0.12)',  padding: '1px 6px', fontFamily: 'monospace' };
 
 const TH: React.CSSProperties = { padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: 'var(--text-4)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid var(--border-md)', background: 'var(--bg-surface)' };
 const TD: React.CSSProperties = { padding: '9px 12px', fontSize: 12, color: 'var(--text-2)', borderBottom: '1px solid var(--border-subtle)', verticalAlign: 'top' };
@@ -41,7 +41,7 @@ function Section({ icon: Icon, color, title, children }: { icon: React.ElementTy
 function Note({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', gap: 10, padding: '11px 14px', background: 'rgba(37,99,235,0.07)', border: '1px solid rgba(37,99,235,0.2)', marginBottom: 16 }}>
-      <Lightbulb size={14} style={{ color: '#60a5fa', flexShrink: 0, marginTop: 1 }} />
+      <Lightbulb size={14} style={{ color: 'var(--accent-info-fg)', flexShrink: 0, marginTop: 1 }} />
       <p style={{ margin: 0, fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>{children}</p>
     </div>
   );
@@ -68,7 +68,7 @@ export default function AutomationInstructionsPage() {
       {/* Page header */}
       <div style={{ flexShrink: 0, padding: '16px 32px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
-          <BookOpen size={16} style={{ color: '#f59e0b' }} />
+          <BookOpen size={16} style={{ color: 'var(--accent-warn-fg)' }} />
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-1)' }}>Custom Rules — Instructions</div>
@@ -92,9 +92,9 @@ export default function AutomationInstructionsPage() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
               {[
-                { label: '1. Trigger', desc: 'When to check the rule — ticket created, updated, or a reply added.', color: '#34d399' },
-                { label: '2. Conditions', desc: 'IF this is true — filters so the rule only fires on matching tickets.', color: '#60a5fa' },
-                { label: '3. Actions', desc: 'THEN do this — assign agent, set priority, add tag, note, and more.', color: '#f59e0b' },
+                { label: '1. Trigger', desc: 'When to check the rule — ticket created, updated, or a reply added.', color: 'var(--accent-ok-fg)' },
+                { label: '2. Conditions', desc: 'IF this is true — filters so the rule only fires on matching tickets.', color: 'var(--accent-info-fg)' },
+                { label: '3. Actions', desc: 'THEN do this — assign agent, set priority, add tag, note, and more.', color: 'var(--accent-warn-fg)' },
               ].map(item => (
                 <div key={item.label} style={{ padding: 14, background: 'var(--bg-surface)', border: '1px solid var(--border-md)' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: item.color, marginBottom: 6 }}>{item.label}</div>
@@ -122,17 +122,17 @@ export default function AutomationInstructionsPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td style={TD}><span style={{ fontSize: 11, color: '#34d399', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', fontWeight: 700 }}>Ticket Created</span></td>
+                  <td style={TD}><span style={{ fontSize: 11, color: 'var(--accent-ok-fg)', background: 'rgba(52,211,153,0.12)', padding: '2px 8px', fontWeight: 700 }}>Ticket Created</span></td>
                   <td style={TD}>A new ticket is submitted (by email, portal, or agent)</td>
                   <td style={TD}>Auto-routing, priority assignment, initial tagging</td>
                 </tr>
                 <tr>
-                  <td style={TD}><span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.12)', padding: '2px 8px', fontWeight: 700 }}>Ticket Updated</span></td>
+                  <td style={TD}><span style={{ fontSize: 11, color: 'var(--accent-info-fg)', background: 'rgba(96,165,250,0.12)', padding: '2px 8px', fontWeight: 700 }}>Ticket Updated</span></td>
                   <td style={TD}>Any field on the ticket changes (status, priority, assignee, etc.)</td>
                   <td style={TD}>SLA escalations, status-based tagging, re-routing on priority change</td>
                 </tr>
                 <tr style={{ borderBottom: 'none' }}>
-                  <td style={{ ...TD, borderBottom: 'none' }}><span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', fontWeight: 700 }}>Reply Added</span></td>
+                  <td style={{ ...TD, borderBottom: 'none' }}><span style={{ fontSize: 11, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', fontWeight: 700 }}>Reply Added</span></td>
                   <td style={{ ...TD, borderBottom: 'none' }}>A new public reply or internal note is posted on the ticket</td>
                   <td style={{ ...TD, borderBottom: 'none' }}>Auto-reopen, customer follow-up detection, VIP alert on reply</td>
                 </tr>
@@ -385,13 +385,13 @@ Actions:
                   { order: 30, rule: 'Generic Tag Rule',           fires: false, stop: false, reason: 'Skipped — rule #20 stopped processing' },
                 ].map(row => (
                   <div key={row.order} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
-                    <span style={{ width: 28, color: 'var(--text-5)', flexShrink: 0 }}>#{row.order}</span>
-                    <span style={{ flex: 1, color: row.fires ? 'var(--text-1)' : 'var(--text-5)' }}>{row.rule}</span>
-                    <span style={{ fontSize: 11, padding: '1px 7px', color: row.fires ? '#34d399' : 'var(--text-5)', background: row.fires ? 'rgba(52,211,153,0.1)' : 'transparent', border: `1px solid ${row.fires ? 'rgba(52,211,153,0.3)' : 'var(--border-subtle)'}` }}>
+                    <span style={{ width: 28, color: 'var(--text-3)', flexShrink: 0 }}>#{row.order}</span>
+                    <span style={{ flex: 1, color: row.fires ? 'var(--text-1)' : 'var(--text-3)' }}>{row.rule}</span>
+                    <span style={{ fontSize: 11, padding: '1px 7px', color: row.fires ? '#34d399' : 'var(--text-3)', background: row.fires ? 'rgba(52,211,153,0.1)' : 'transparent', border: `1px solid ${row.fires ? 'rgba(52,211,153,0.3)' : 'var(--border-subtle)'}` }}>
                       {row.fires ? '✓ Fired' : '— Skipped'}
                     </span>
-                    {row.stop && <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 5px' }}>STOP</span>}
-                    <span style={{ fontSize: 11, color: 'var(--text-5)', maxWidth: 260 }}>{row.reason}</span>
+                    {row.stop && <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 5px' }}>STOP</span>}
+                    <span style={{ fontSize: 11, color: 'var(--text-3)', maxWidth: 260 }}>{row.reason}</span>
                   </div>
                 ))}
               </div>
@@ -399,7 +399,7 @@ Actions:
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ padding: 14, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#34d399', marginBottom: 6 }}>Best Practices</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-ok-fg)', marginBottom: 6 }}>Best Practices</div>
                 <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--text-3)', lineHeight: 1.8 }}>
                   <li>Use low Run Order numbers (1–5) for VIP or critical-priority rules</li>
                   <li>Use high Run Order numbers (90–99) for catch-all / default rules</li>
@@ -409,7 +409,7 @@ Actions:
                 </ul>
               </div>
               <div style={{ padding: 14, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f87171', marginBottom: 6 }}>Common Pitfalls</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-danger-fg)', marginBottom: 6 }}>Common Pitfalls</div>
                 <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: 'var(--text-3)', lineHeight: 1.8 }}>
                   <li>A rule with no conditions fires on <em>every</em> event — add conditions unless intentional</li>
                   <li>Ticket Updated fires often — be specific with conditions to avoid noise</li>

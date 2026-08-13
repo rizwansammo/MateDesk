@@ -153,7 +153,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
     if (!actionDef) return null;
 
     if (actionDef.valueType === 'none') {
-      return <span style={{ fontSize: 11, color: 'var(--text-5)', fontStyle: 'italic', flex: 1, padding: '0 8px' }}>No value needed</span>;
+      return <span style={{ fontSize: 11, color: 'var(--text-3)', fontStyle: 'italic', flex: 1, padding: '0 8px' }}>No value needed</span>;
     }
     if (actionDef.valueType === 'choice' && actionDef.choices) {
       return (
@@ -216,9 +216,9 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
 
   const XBtn = ({ onClick }: { onClick: () => void }) => (
     <button type="button" onClick={onClick}
-      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid var(--border-md)', color: 'var(--text-5)', cursor: 'pointer', flexShrink: 0 }}
+      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid var(--border-md)', color: 'var(--text-3)', cursor: 'pointer', flexShrink: 0 }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.borderColor = '#f87171'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
     >
       <X size={11} />
     </button>
@@ -264,7 +264,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', marginBottom: 5 }}>Run Order</label>
                 <input type="number" min={1} max={999} value={priorityOrder} onChange={e => setPriorityOrder(Number(e.target.value))} style={INP} onFocus={fi} onBlur={fo} />
-                <p style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 3 }}>Lower = runs first</p>
+                <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>Lower = runs first</p>
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
@@ -324,7 +324,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
             </div>
 
             {conditions.length === 0 && (
-              <p style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic', marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 10 }}>
                 No conditions — rule fires on every {TRIGGER_LABELS[trigger].toLowerCase()} event.
               </p>
             )}
@@ -371,7 +371,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
             <SectionHdr title="Actions (THEN)" />
 
             {actions.length === 0 && (
-              <p style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic', marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 10 }}>
                 Add at least one action to be executed when conditions match.
               </p>
             )}
@@ -400,7 +400,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
         {/* Footer */}
         <div style={{ flexShrink: 0, padding: '14px 20px', borderTop: '1px solid var(--border-md)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {error && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#f87171' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
               <AlertCircle size={12} /> {error}
             </div>
           )}
@@ -458,7 +458,7 @@ export default function AutomationRulesPage() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-4)'; }}>
           <ArrowLeft size={14} />
         </button>
-        <Zap size={14} style={{ color: '#f59e0b' }} />
+        <Zap size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Custom Rules</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— automated ticket workflows</span>
 
@@ -487,7 +487,7 @@ export default function AutomationRulesPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : rules.length === 0 ? (
           <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', padding: '60px 0' }}>
@@ -531,7 +531,7 @@ export default function AutomationRulesPage() {
 
               {rules.map((rule, i) => {
                 const isLast = i === rules.length - 1;
-                const tc     = TRIGGER_COLORS[rule.trigger] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' };
+                const tc     = TRIGGER_COLORS[rule.trigger] ?? { color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
                 return (
                   <div
                     key={rule.id}
@@ -544,10 +544,10 @@ export default function AutomationRulesPage() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>{rule.name}</div>
                       {rule.description && (
-                        <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 280 }}>{rule.description}</p>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 280 }}>{rule.description}</p>
                       )}
                       {rule.stop_processing && (
-                        <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 5px', marginTop: 3, display: 'inline-block' }}>Stop</span>
+                        <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 5px', marginTop: 3, display: 'inline-block' }}>Stop</span>
                       )}
                     </div>
 
@@ -559,7 +559,7 @@ export default function AutomationRulesPage() {
 
                     <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
                       {rule.conditions.length === 0
-                        ? <span style={{ color: 'var(--text-5)', fontStyle: 'italic' }}>Always</span>
+                        ? <span style={{ color: 'var(--text-3)', fontStyle: 'italic' }}>Always</span>
                         : `${rule.conditions.length} cond${rule.conditions.length !== 1 ? 's' : ''}`}
                     </div>
 

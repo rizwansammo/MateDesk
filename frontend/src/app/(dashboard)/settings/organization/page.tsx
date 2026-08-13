@@ -163,7 +163,7 @@ export default function OrganizationDetailsPage() {
                 background: 'rgba(37,99,235,0.15)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Building2 size={18} style={{ color: '#60a5fa' }} />
+                <Building2 size={18} style={{ color: 'var(--accent-info-fg)' }} />
               </div>
               <div>
                 <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Organization Details</h1>
@@ -192,7 +192,7 @@ export default function OrganizationDetailsPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)', padding: '24px 28px' }}>
@@ -210,14 +210,14 @@ export default function OrganizationDetailsPage() {
                     }
                     {isEditing && !isOwner && (
                       <div className={val} style={{ color: 'var(--text-3)', fontSize: 11 }}>
-                        {tenant?.name || '—'} <span style={{ color: 'var(--text-5)' }}>(Owner only)</span>
+                        {tenant?.name || '—'} <span style={{ color: 'var(--text-3)' }}>(Owner only)</span>
                       </div>
                     )}
                   </div>
                   <div>
                     <label className={lbl}>
                       Tenant Slug{' '}
-                      <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--text-5)' }}>(read-only)</span>
+                      <span style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--text-3)' }}>(read-only)</span>
                     </label>
                     <div className={val} style={{ color: 'var(--text-4)', fontFamily: 'monospace', fontSize: 12 }}>
                       {tenant?.slug || '—'}
@@ -293,7 +293,7 @@ export default function OrganizationDetailsPage() {
                     padding: '10px 14px', fontSize: 12,
                     background: 'rgba(239,68,68,0.08)',
                     border: '1px solid rgba(239,68,68,0.2)',
-                    color: '#f87171',
+                    color: 'var(--accent-danger-fg)',
                   }}>
                     <AlertCircle size={13} style={{ flexShrink: 0 }} />
                     {error}
@@ -331,7 +331,7 @@ export default function OrganizationDetailsPage() {
 
                 {/* Success banner (view mode) */}
                 {saved && !isEditing && (
-                  <div className="flex items-center gap-1.5" style={{ fontSize: 12, color: '#34d399' }}>
+                  <div className="flex items-center gap-1.5" style={{ fontSize: 12, color: 'var(--accent-ok-fg)' }}>
                     <CheckCircle size={13} /> Changes saved successfully
                   </div>
                 )}
@@ -346,7 +346,7 @@ export default function OrganizationDetailsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div style={{ width: 36, height: 36, background: 'rgba(124,58,237,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <UserCog size={16} style={{ color: '#a78bfa' }} />
+                    <UserCog size={16} style={{ color: 'var(--accent-violet-fg)' }} />
                   </div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Organization Owner</div>
@@ -370,7 +370,7 @@ export default function OrganizationDetailsPage() {
               </div>
 
               {transferDone && (
-                <div className="flex items-center gap-1.5 mt-3" style={{ fontSize: 12, color: '#34d399' }}>
+                <div className="flex items-center gap-1.5 mt-3" style={{ fontSize: 12, color: 'var(--accent-ok-fg)' }}>
                   <CheckCircle size={13} /> Ownership transferred successfully.
                 </div>
               )}
@@ -406,12 +406,12 @@ export default function OrganizationDetailsPage() {
                 ))}
               </select>
               {transferCandidates.length === 0 && (
-                <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 6 }}>No eligible staff members found.</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>No eligible staff members found.</p>
               )}
             </div>
 
             {transferError && (
-              <div className="flex items-center gap-2 mb-4" style={{ padding: '8px 12px', fontSize: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171' }}>
+              <div className="flex items-center gap-2 mb-4" style={{ padding: '8px 12px', fontSize: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--accent-danger-fg)' }}>
                 <AlertCircle size={12} style={{ flexShrink: 0 }} /> {transferError}
               </div>
             )}

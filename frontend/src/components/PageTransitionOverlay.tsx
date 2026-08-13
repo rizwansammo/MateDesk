@@ -74,7 +74,7 @@ export function PageTransitionOverlay() {
         position: 'fixed',
         inset: 0,
         zIndex: 9998,
-        background: '#0E1117',
+        background: 'var(--bg-base)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

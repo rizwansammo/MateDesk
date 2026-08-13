@@ -79,7 +79,7 @@ export default function VIPRulesPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <Star size={13} style={{ color: '#f59e0b' }} />
+        <Star size={13} style={{ color: 'var(--accent-warn-fg)' }} />
         <div>
           <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-1)' }}>VIP Rules</div>
           <div style={{ fontSize: '11px', color: 'var(--text-4)' }}>Notify staff when a VIP client submits a new ticket</div>
@@ -90,7 +90,7 @@ export default function VIPRulesPage() {
 
         {ruleLoading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : (
           <>
@@ -101,7 +101,7 @@ export default function VIPRulesPage() {
                 padding: '11px 16px', borderBottom: '1px solid var(--border-subtle)',
               }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Star size={12} style={{ color: '#f59e0b' }} /> VIP Alert Rule
+                  <Star size={12} style={{ color: 'var(--accent-warn-fg)' }} /> VIP Alert Rule
                 </span>
                 <button
                   onClick={handleToggleActive}
@@ -110,13 +110,13 @@ export default function VIPRulesPage() {
                 >
                   {rule?.is_active ? (
                     <>
-                      <ToggleRight size={22} style={{ color: '#22c55e' }} />
-                      <span style={{ color: '#22c55e', fontWeight: 600 }}>Active</span>
+                      <ToggleRight size={22} style={{ color: 'var(--accent-ok-fg)' }} />
+                      <span style={{ color: 'var(--accent-ok-fg)', fontWeight: 600 }}>Active</span>
                     </>
                   ) : (
                     <>
-                      <ToggleLeft size={22} style={{ color: 'var(--text-5)' }} />
-                      <span style={{ color: 'var(--text-5)' }}>Inactive</span>
+                      <ToggleLeft size={22} style={{ color: 'var(--text-3)' }} />
+                      <span style={{ color: 'var(--text-3)' }}>Inactive</span>
                     </>
                   )}
                 </button>
@@ -156,10 +156,10 @@ export default function VIPRulesPage() {
                   </button>
                 </div>
                 {emailError && (
-                  <div style={{ fontSize: 11, color: '#f87171', marginBottom: 8 }}>{emailError}</div>
+                  <div style={{ fontSize: 11, color: 'var(--accent-danger-fg)', marginBottom: 8 }}>{emailError}</div>
                 )}
                 {(rule?.notification_emails ?? []).length === 0 ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
                     No notification emails yet — add at least one to receive VIP alerts.
                   </div>
                 ) : (
@@ -170,14 +170,14 @@ export default function VIPRulesPage() {
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 5,
                           fontSize: 11, background: 'rgba(245,158,11,0.1)',
-                          border: '1px solid rgba(245,158,11,0.25)', color: '#fbbf24',
+                          border: '1px solid rgba(245,158,11,0.25)', color: 'var(--accent-warn-fg)',
                           padding: '3px 8px',
                         }}
                       >
                         {email}
                         <button
                           onClick={() => handleRemoveEmail(email)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fbbf24', display: 'flex', alignItems: 'center', padding: 0, opacity: 0.6 }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-warn-fg)', display: 'flex', alignItems: 'center', padding: 0, opacity: 0.6 }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
                         >
@@ -200,23 +200,23 @@ export default function VIPRulesPage() {
                   lineHeight: 1.6,
                 }}>
                   <div style={{ marginBottom: 6 }}>
-                    <span style={{ color: 'var(--text-5)' }}>Subject: </span>
-                    <span style={{ color: '#fbbf24' }}>[VIP] New ticket from {'{'}user.full_name{'}'}</span>
+                    <span style={{ color: 'var(--text-3)' }}>Subject: </span>
+                    <span style={{ color: 'var(--accent-warn-fg)' }}>[VIP] New ticket from {'{'}user.full_name{'}'}</span>
                   </div>
                   <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 10 }}>
                     <div>Hi,</div>
                     <div style={{ marginTop: 8 }}>
-                      VIP client <span style={{ color: '#60a5fa' }}>{'{'}user.full_name{'}'}</span>{' '}
-                      (<span style={{ color: '#60a5fa' }}>{'{'}user.email{'}'}</span>) at{' '}
-                      <span style={{ color: '#60a5fa' }}>{'{'}org_name{'}'}</span> has just submitted a new ticket:
+                      VIP client <span style={{ color: 'var(--accent-info-fg)' }}>{'{'}user.full_name{'}'}</span>{' '}
+                      (<span style={{ color: 'var(--accent-info-fg)' }}>{'{'}user.email{'}'}</span>) at{' '}
+                      <span style={{ color: 'var(--accent-info-fg)' }}>{'{'}org_name{'}'}</span> has just submitted a new ticket:
                     </div>
                     <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: '2px solid rgba(245,158,11,0.4)' }}>
-                      <div>Ticket: <span style={{ color: '#a78bfa' }}>#{'{'}ticket.id{'}'} — {'{'}ticket.subject{'}'}</span></div>
-                      <div>Priority: <span style={{ color: '#a78bfa' }}>{'{'}ticket.priority{'}'}</span></div>
-                      <div>Created: <span style={{ color: '#a78bfa' }}>{'{'}created_at{'}'}</span></div>
+                      <div>Ticket: <span style={{ color: 'var(--accent-violet-fg)' }}>#{'{'}ticket.id{'}'} — {'{'}ticket.subject{'}'}</span></div>
+                      <div>Priority: <span style={{ color: 'var(--accent-violet-fg)' }}>{'{'}ticket.priority{'}'}</span></div>
+                      <div>Created: <span style={{ color: 'var(--accent-violet-fg)' }}>{'{'}created_at{'}'}</span></div>
                     </div>
                     <div style={{ marginTop: 8 }}>Please ensure this ticket receives priority attention.</div>
-                    <div style={{ marginTop: 12, color: 'var(--text-5)' }}>— MateDesk SLA Monitor</div>
+                    <div style={{ marginTop: 12, color: 'var(--text-3)' }}>— MateDesk SLA Monitor</div>
                   </div>
                 </div>
               </div>
@@ -232,14 +232,14 @@ export default function VIPRulesPage() {
                   fontSize: 12, fontWeight: 600, color: 'var(--text-2)',
                   display: 'flex', alignItems: 'center', gap: 6,
                 }}>
-                  <Users size={12} style={{ color: '#60a5fa' }} /> Client Users
+                  <Users size={12} style={{ color: 'var(--accent-info-fg)' }} /> Client Users
                   {users && (
-                    <span style={{ fontSize: 11, color: 'var(--text-5)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
                       {users.length}
                     </span>
                   )}
                   {vipCount > 0 && (
-                    <span style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', padding: '1px 7px' }}>
+                    <span style={{ fontSize: 11, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', padding: '1px 7px' }}>
                       {vipCount} VIP
                     </span>
                   )}
@@ -261,10 +261,10 @@ export default function VIPRulesPage() {
 
               {usersLoading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
-                  <Loader2 size={20} className="animate-spin" style={{ color: '#2563eb' }} />
+                  <Loader2 size={20} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
                 </div>
               ) : filteredUsers.length === 0 ? (
-                <div style={{ padding: '32px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-5)' }}>
+                <div style={{ padding: '32px 0', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
                   {search ? 'No users match your search.' : 'No client users found.'}
                 </div>
               ) : (
@@ -297,7 +297,7 @@ export default function VIPRulesPage() {
                               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', display: 'flex', alignItems: 'center', gap: 5 }}>
                                 {user.full_name}
                                 {user.is_vip && (
-                                  <Star size={10} style={{ color: '#f59e0b', fill: '#f59e0b' }} />
+                                  <Star size={10} style={{ color: 'var(--accent-warn-fg)', fill: '#f59e0b' }} />
                                 )}
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text-4)' }}>{user.email}</div>
@@ -306,7 +306,7 @@ export default function VIPRulesPage() {
                         </td>
                         <td style={{ fontSize: 12, color: 'var(--text-3)' }}>{user.org_name ?? '—'}</td>
                         <td>
-                          <span style={{ fontSize: 11, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
+                          <span style={{ fontSize: 11, color: 'var(--accent-indigo-fg)', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
                             {user.role.replace(/_/g, ' ')}
                           </span>
                         </td>
@@ -325,7 +325,7 @@ export default function VIPRulesPage() {
                             <Star
                               size={15}
                               style={{
-                                color: user.is_vip ? '#f59e0b' : 'var(--text-5)',
+                                color: user.is_vip ? '#f59e0b' : 'var(--text-3)',
                                 fill: user.is_vip ? '#f59e0b' : 'none',
                                 transition: 'color 0.15s, fill 0.15s',
                               }}

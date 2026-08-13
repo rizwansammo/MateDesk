@@ -185,7 +185,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
   if (orgLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#2563eb' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
       </div>
     );
   }
@@ -193,7 +193,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
   if (!org) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <AlertCircle size={32} style={{ color: '#f87171' }} />
+        <AlertCircle size={32} style={{ color: 'var(--accent-danger-fg)' }} />
         <p style={{ fontSize: 14, color: 'var(--text-3)' }}>Organization not found.</p>
         <button onClick={() => router.push('/settings/organizations')} className="btn-primary" style={{ fontSize: 12 }}>
           Back to Organizations
@@ -243,7 +243,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
               </div>
               <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
                 {org.domain && (
-                  <span className="flex items-center gap-1.5" style={{ fontSize: 12, color: '#60a5fa' }}>
+                  <span className="flex items-center gap-1.5" style={{ fontSize: 12, color: 'var(--accent-info-fg)' }}>
                     <Globe size={12} /> {org.domain}
                   </span>
                 )}
@@ -269,7 +269,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                 </p>
               )}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-5)', flexShrink: 0 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>
               Since {new Date(org.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </div>
           </div>
@@ -285,7 +285,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
         {/* Organization Settings — timezone */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
           <div className="flex items-center gap-2 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-            <Clock size={13} style={{ color: '#fbbf24' }} />
+            <Clock size={13} style={{ color: 'var(--accent-warn-fg)' }} />
             <span className="panel-title">Organization Settings</span>
           </div>
 
@@ -300,7 +300,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                   style={{
                     width: '100%', height: 34, padding: '0 12px',
                     background: 'var(--bg-base)', border: `1px solid ${tzOpen ? '#2563eb' : 'var(--border-md)'}`,
-                    color: org.timezone ? 'var(--text-1)' : 'var(--text-5)',
+                    color: org.timezone ? 'var(--text-1)' : 'var(--text-3)',
                     fontSize: 13, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
                   }}
                 >
@@ -310,18 +310,18 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                       : 'Not set — click to choose'}
                   </span>
                   {org.timezone && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px', flexShrink: 0 }}>
                       {getTzAbbr(org.timezone)}
                     </span>
                   )}
                 </button>
               ) : (
-                <div style={{ fontSize: 13, color: org.timezone ? 'var(--text-1)' : 'var(--text-5)' }}>
+                <div style={{ fontSize: 13, color: org.timezone ? 'var(--text-1)' : 'var(--text-3)' }}>
                   {org.timezone
                     ? TIMEZONES.find(t => t.value === org.timezone)?.label ?? org.timezone
                     : '—'}
                   {org.timezone && (
-                    <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px' }}>
+                    <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px' }}>
                       {getTzAbbr(org.timezone)}
                     </span>
                   )}
@@ -353,7 +353,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                   </div>
                   <div style={{ overflowY: 'auto', flex: 1 }}>
                     {filteredTzs.length === 0 ? (
-                      <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-5)' }}>No results</div>
+                      <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-3)' }}>No results</div>
                     ) : filteredTzs.map(tz => (
                       <div
                         key={tz.value}
@@ -375,7 +375,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
             </div>
 
             {updateOrg.isPending && (
-              <Loader2 size={14} className="animate-spin" style={{ color: '#60a5fa', flexShrink: 0 }} />
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />
             )}
           </div>
         </div>
@@ -387,9 +387,9 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
             style={{ borderBottom: '1px solid var(--border-subtle)' }}
           >
             <span className="flex items-center gap-2 panel-title">
-              <Users size={13} style={{ color: '#60a5fa' }} /> Users
+              <Users size={13} style={{ color: 'var(--accent-info-fg)' }} /> Users
               {users && (
-                <span style={{ fontSize: 11, color: 'var(--text-5)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-3)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
                   {users.length}
                 </span>
               )}
@@ -409,10 +409,10 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
 
           {usersLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : !users || users.length === 0 ? (
-            <div className="py-12 text-center" style={{ fontSize: 13, color: 'var(--text-5)' }}>
+            <div className="py-12 text-center" style={{ fontSize: 13, color: 'var(--text-3)' }}>
               No users in this organization yet.
             </div>
           ) : (
@@ -453,13 +453,13 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                     </td>
                     <td style={{ color: 'var(--text-3)', fontSize: 12 }}>{user.email}</td>
                     <td>
-                      <span style={{ fontSize: 11, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
+                      <span style={{ fontSize: 11, color: 'var(--accent-indigo-fg)', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
                         {ROLE_LABELS[user.role] ?? user.role}
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-4)', fontSize: 12 }}>{user.department || '—'}</td>
-                    <td className="text-right" style={{ color: '#60a5fa', fontWeight: 600, fontSize: 13 }}>{user.total_tickets}</td>
-                    <td className="text-right" style={{ color: user.open_tickets > 0 ? '#f87171' : 'var(--text-5)', fontSize: 13 }}>{user.open_tickets}</td>
+                    <td className="text-right" style={{ color: 'var(--accent-info-fg)', fontWeight: 600, fontSize: 13 }}>{user.total_tickets}</td>
+                    <td className="text-right" style={{ color: user.open_tickets > 0 ? '#f87171' : 'var(--text-3)', fontSize: 13 }}>{user.open_tickets}</td>
                     <td style={{ color: 'var(--text-4)', fontSize: 12 }}>
                       {new Date(user.date_joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
@@ -474,7 +474,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                         <button
                           onClick={() => { setResetUserId(user.id); setResetUserName(user.full_name); }}
                           className="flex items-center gap-1.5"
-                          style={{ fontSize: 11, color: '#fbbf24', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', padding: '3px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ fontSize: 11, color: 'var(--accent-warn-fg)', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', padding: '3px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.15)'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(251,191,36,0.08)'; }}
                           title="Reset password"
@@ -495,24 +495,24 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
           <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
             <span className="flex items-center gap-2 panel-title">
-              <AtSign size={13} style={{ color: '#a78bfa' }} /> Known Email Senders
+              <AtSign size={13} style={{ color: 'var(--accent-violet-fg)' }} /> Known Email Senders
               {senders && (
-                <span style={{ fontSize: 11, color: 'var(--text-5)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-3)', background: 'var(--bg-elevated)', padding: '1px 6px' }}>
                   {senders.length}
                 </span>
               )}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--text-5)' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
               Email addresses permanently routed to this org
             </span>
           </div>
 
           {sendersLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 size={18} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={18} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : !senders || senders.length === 0 ? (
-            <div className="py-8 text-center" style={{ fontSize: 13, color: 'var(--text-5)' }}>
+            <div className="py-8 text-center" style={{ fontSize: 13, color: 'var(--text-3)' }}>
               No known senders yet — assign one from the Walk-In tickets list.
             </div>
           ) : (
@@ -528,7 +528,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
               <tbody>
                 {senders.map(s => (
                   <tr key={s.id}>
-                    <td style={{ color: '#a78bfa', fontSize: 12, fontFamily: 'monospace' }}>{s.email}</td>
+                    <td style={{ color: 'var(--accent-violet-fg)', fontSize: 12, fontFamily: 'monospace' }}>{s.email}</td>
                     <td style={{ color: 'var(--text-2)', fontSize: 13 }}>{s.name || '—'}</td>
                     <td style={{ color: 'var(--text-4)', fontSize: 12 }}>
                       {new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -560,7 +560,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-2)' }}>
                 <Clock size={13} style={{ color: '#38bdf8' }} /> Business Hours
               </span>
-              <span style={{ fontSize: 11, color: 'var(--text-5)' }}>Used by After-Hours SLA scope</span>
+              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Used by After-Hours SLA scope</span>
             </div>
 
             <div style={{ padding: '4px 0' }}>
@@ -596,7 +596,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                     </button>
 
                     {/* Day label */}
-                    <span style={{ width: 82, fontSize: 12, fontWeight: 600, color: day.enabled ? 'var(--text-2)' : 'var(--text-5)', flexShrink: 0 }}>
+                    <span style={{ width: 82, fontSize: 12, fontWeight: 600, color: day.enabled ? 'var(--text-2)' : 'var(--text-3)', flexShrink: 0 }}>
                       {label}
                     </span>
 
@@ -610,7 +610,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                           onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                           onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-md)'; }}
                         />
-                        <span style={{ fontSize: 11, color: 'var(--text-5)' }}>to</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-3)' }}>to</span>
                         <input
                           type="time"
                           value={day.end_time}
@@ -621,7 +621,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                         />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>Closed</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>Closed</span>
                     )}
                   </div>
                 );
@@ -631,7 +631,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
             {/* Save footer */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: '10px 20px', borderTop: '1px solid var(--border-subtle)' }}>
               {bhSaved && (
-                <span style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 11, color: 'var(--accent-ok-fg)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <CheckCircle size={11} /> Saved
                 </span>
               )}
@@ -716,7 +716,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
             <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
               {formError && (
-                <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: 12 }}>
+                <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--accent-danger-fg)', fontSize: 12 }}>
                   {formError}
                 </div>
               )}
@@ -801,7 +801,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                 />
               </div>
 
-              <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: -4 }}>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -4 }}>
                 A random password will be generated. You'll be shown the credentials after creation.
               </p>
             </div>
@@ -835,7 +835,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border-md)' }}>
               <span className="flex items-center gap-2" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)' }}>
-                <CheckCircle size={14} style={{ color: '#22c55e' }} />
+                <CheckCircle size={14} style={{ color: 'var(--accent-ok-fg)' }} />
                 Account Credentials
               </span>
               <button onClick={() => { setCredsPopup(null); setCopiedField(null); }} style={{ color: 'var(--text-4)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
@@ -847,7 +847,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
 
             {/* Body */}
             <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', fontSize: 12, color: '#4ade80', lineHeight: 1.5 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', fontSize: 12, color: 'var(--accent-ok-fg)', lineHeight: 1.5 }}>
                 Please copy and save these credentials now. The password will <strong>not</strong> be shown again.
               </div>
 
@@ -863,7 +863,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                     style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: copiedField === 'email' ? 'rgba(34,197,94,0.12)' : 'var(--bg-elevated)', border: `1px solid ${copiedField === 'email' ? 'rgba(34,197,94,0.3)' : 'var(--border-md)'}`, cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}
                     title="Copy email"
                   >
-                    {copiedField === 'email' ? <CheckCheck size={14} style={{ color: '#22c55e' }} /> : <Copy size={14} style={{ color: 'var(--text-3)' }} />}
+                    {copiedField === 'email' ? <CheckCheck size={14} style={{ color: 'var(--accent-ok-fg)' }} /> : <Copy size={14} style={{ color: 'var(--text-3)' }} />}
                   </button>
                 </div>
               </div>
@@ -872,7 +872,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
               <div>
                 <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--text-4)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 6 }}>Password</label>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1, height: 36, padding: '0 12px', background: 'var(--bg-base)', border: '1px solid var(--border-md)', display: 'flex', alignItems: 'center', fontSize: 13, color: '#fbbf24', fontFamily: 'var(--font-mono, monospace)', overflow: 'hidden', letterSpacing: '0.05em' }}>
+                  <div style={{ flex: 1, height: 36, padding: '0 12px', background: 'var(--bg-base)', border: '1px solid var(--border-md)', display: 'flex', alignItems: 'center', fontSize: 13, color: 'var(--accent-warn-fg)', fontFamily: 'var(--font-mono, monospace)', overflow: 'hidden', letterSpacing: '0.05em' }}>
                     {credsPopup.password}
                   </div>
                   <button
@@ -880,7 +880,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
                     style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', background: copiedField === 'password' ? 'rgba(34,197,94,0.12)' : 'var(--bg-elevated)', border: `1px solid ${copiedField === 'password' ? 'rgba(34,197,94,0.3)' : 'var(--border-md)'}`, cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}
                     title="Copy password"
                   >
-                    {copiedField === 'password' ? <CheckCheck size={14} style={{ color: '#22c55e' }} /> : <Copy size={14} style={{ color: 'var(--text-3)' }} />}
+                    {copiedField === 'password' ? <CheckCheck size={14} style={{ color: 'var(--accent-ok-fg)' }} /> : <Copy size={14} style={{ color: 'var(--text-3)' }} />}
                   </button>
                 </div>
               </div>
@@ -910,7 +910,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)', width: '100%', maxWidth: 400 }}>
             <div style={{ padding: '20px 20px 16px' }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <KeyRound size={15} style={{ color: '#fbbf24' }} />
+                <KeyRound size={15} style={{ color: 'var(--accent-warn-fg)' }} />
                 Reset Password?
               </p>
               <p style={{ fontSize: 13, color: 'var(--text-3)', lineHeight: 1.6 }}>

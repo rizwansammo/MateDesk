@@ -36,7 +36,7 @@ function IncomingCard({ session }: { session: IncomingSession }) {
           {session.userName}
         </span>
         <span style={{
-          fontSize: 10, color: 'var(--text-5)',
+          fontSize: 10, color: 'var(--text-3)',
           fontFamily: 'var(--font-mono)', letterSpacing: '0.03em',
         }}>
           {session.sessionNumber}
@@ -45,10 +45,10 @@ function IncomingCard({ session }: { session: IncomingSession }) {
           onClick={() => { dismissIncoming(session.id); dismissSupport(session.id); }}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', padding: '4px 4px 4px 8px', display: 'flex',
+            color: 'var(--text-3)', padding: '4px 4px 4px 8px', display: 'flex',
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-2)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
           title="Dismiss"
         >
           <X size={13} />
@@ -103,7 +103,7 @@ function IncomingCard({ session }: { session: IncomingSession }) {
             fontSize:     12,
             cursor:       'pointer',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-5)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           Dismiss

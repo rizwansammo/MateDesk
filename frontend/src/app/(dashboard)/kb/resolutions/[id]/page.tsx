@@ -14,13 +14,13 @@ import { useAuthStore } from '@/store/useAuthStore';
 const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace', fontVariantNumeric: 'tabular-nums' };
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  published: { label: 'Published', color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
-  draft:     { label: 'Draft',     color: '#fbbf24', bg: 'rgba(245,158,11,0.12)' },
+  published: { label: 'Published', color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
+  draft:     { label: 'Draft',     color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
 };
 
 const VIS_CFG: Record<string, { label: string; color: string }> = {
-  internal: { label: 'Internal', color: '#818cf8' },
-  public:   { label: 'Public',   color: '#60a5fa' },
+  internal: { label: 'Internal', color: 'var(--accent-indigo-fg)' },
+  public:   { label: 'Public',   color: 'var(--accent-info-fg)' },
 };
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -110,7 +110,7 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 size={26} className="animate-spin" style={{ color: '#2563eb' }} />
+        <Loader2 size={26} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
       </div>
     );
   }
@@ -118,9 +118,9 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
   if (isError || !article) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <AlertCircle size={28} style={{ color: '#f87171' }} />
+        <AlertCircle size={28} style={{ color: 'var(--accent-danger-fg)' }} />
         <p style={{ fontSize: 13, color: 'var(--text-4)' }}>Article not found.</p>
-        <button onClick={() => router.push('/kb/resolutions')} style={{ fontSize: 12, color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => router.push('/kb/resolutions')} style={{ fontSize: 12, color: 'var(--accent-info-fg)', background: 'none', border: 'none', cursor: 'pointer' }}>
           ← Back to Resolutions
         </button>
       </div>
@@ -161,7 +161,7 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
             </button>
             <button
               onClick={() => setDeleting(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#f87171', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', padding: '3px 10px', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: 'var(--accent-danger-fg)', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', padding: '3px 10px', cursor: 'pointer' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.06)'; }}
             >
@@ -217,8 +217,8 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
             {/* Content */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
               <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <BookOpen size={12} style={{ color: '#a78bfa' }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Content</span>
+                <BookOpen size={12} style={{ color: 'var(--accent-violet-fg)' }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-violet-fg)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Content</span>
               </div>
               {editing ? (
                 <textarea
@@ -238,7 +238,7 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
                       {article.content}
                     </div>
                   ) : (
-                    <div style={{ fontSize: 13, color: 'var(--text-5)', fontStyle: 'italic' }}>No content yet.</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-3)', fontStyle: 'italic' }}>No content yet.</div>
                   )}
                 </div>
               )}
@@ -247,24 +247,24 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
             {/* Linked Tickets */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
               <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Ticket size={12} style={{ color: '#60a5fa' }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                <Ticket size={12} style={{ color: 'var(--accent-info-fg)' }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-info-fg)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                   Linked Tickets
                 </span>
-                <span style={{ fontSize: 11, color: 'var(--text-5)', background: 'var(--bg-elevated)', padding: '1px 6px', marginLeft: 2 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-3)', background: 'var(--bg-elevated)', padding: '1px 6px', marginLeft: 2 }}>
                   {article.linked_tickets.length}
                 </span>
               </div>
 
               <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {article.linked_tickets.length === 0 ? (
-                  <p style={{ fontSize: 13, color: 'var(--text-5)' }}>No tickets linked yet.</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No tickets linked yet.</p>
                 ) : (
                   article.linked_tickets.map(t => (
                     <Link
                       key={t.id}
                       href={`/requests/${t.ref}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#60a5fa', fontWeight: 600, textDecoration: 'none', ...MONO }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--accent-info-fg)', fontWeight: 600, textDecoration: 'none', ...MONO }}
                       onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = '#93c5fd'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = '#60a5fa'; }}
                     >
@@ -296,7 +296,7 @@ export default function KBArticleDetailPage({ params }: { params: Promise<{ id: 
                       </button>
                     </div>
                     {linkError && (
-                      <p style={{ fontSize: 11, color: '#f87171', marginTop: 4 }}>{linkError}</p>
+                      <p style={{ fontSize: 11, color: 'var(--accent-danger-fg)', marginTop: 4 }}>{linkError}</p>
                     )}
                   </div>
                 )}

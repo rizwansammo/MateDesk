@@ -37,10 +37,10 @@ function groupByDay(notifications: ApiNotification[]) {
 
 function NotifIcon({ type }: { type: ApiNotification['notif_type'] }) {
   const s = { size: 14, style: { flexShrink: 0 } as React.CSSProperties };
-  if (type === 'new_ticket')  return <Ticket      {...s} style={{ ...s.style, color: '#60a5fa' }} />;
-  if (type === 'assigned')    return <UserCheck   {...s} style={{ ...s.style, color: '#34d399' }} />;
-  if (type === 'new_reply')   return <MessageSquare {...s} style={{ ...s.style, color: '#a78bfa' }} />;
-  return <Bell {...s} style={{ ...s.style, color: '#60a5fa' }} />;
+  if (type === 'new_ticket')  return <Ticket      {...s} style={{ ...s.style, color: 'var(--accent-info-fg)' }} />;
+  if (type === 'assigned')    return <UserCheck   {...s} style={{ ...s.style, color: 'var(--accent-ok-fg)' }} />;
+  if (type === 'new_reply')   return <MessageSquare {...s} style={{ ...s.style, color: 'var(--accent-violet-fg)' }} />;
+  return <Bell {...s} style={{ ...s.style, color: 'var(--accent-info-fg)' }} />;
 }
 
 export function NotificationDropdown({ notifications, unreadCount, onMarkRead, onMarkAllRead, onRefetch, onClose }: Props) {
@@ -86,7 +86,7 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
             borderBottom: '1px solid var(--border-panel)',
           }}
         >
-          <Bell size={14} style={{ color: '#6366f1', flexShrink: 0 }} />
+          <Bell size={14} style={{ color: 'var(--accent-indigo-fg)', flexShrink: 0 }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-0)', flex: 1 }}>
             Notifications
           </span>
@@ -131,7 +131,7 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
           {notifications.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10 }}>
               <Bell size={28} style={{ color: 'var(--border-panel)' }} />
-              <span style={{ fontSize: 13, color: 'var(--text-5)' }}>No notifications</span>
+              <span style={{ fontSize: 13, color: 'var(--text-3)' }}>No notifications</span>
             </div>
           ) : (
             groups.map(group => (
@@ -140,7 +140,7 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
                   style={{
                     padding: '8px 16px 6px',
                     fontSize: 10, fontWeight: 700,
-                    color: 'var(--text-5)', letterSpacing: '0.08em',
+                    color: 'var(--text-3)', letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     borderBottom: '1px solid #111527',
                   }}
@@ -176,12 +176,12 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
                         >
                           {notif.message}
                         </span>
-                        <span style={{ fontSize: 11, color: 'var(--text-5)', flexShrink: 0, marginTop: 1 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0, marginTop: 1 }}>
                           {formatRelativeTime(notif.created_at)}
                         </span>
                       </div>
                       {notif.ticket_ref && (
-                        <span style={{ fontSize: 12, color: 'var(--text-5)', marginTop: 2, display: 'block' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2, display: 'block' }}>
                           {notif.ticket_ref}
                         </span>
                       )}
@@ -208,7 +208,7 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
               onClick={onMarkAllRead}
               style={{
                 width: '100%', padding: '8px',
-                fontSize: 12, color: '#6366f1',
+                fontSize: 12, color: 'var(--accent-indigo-fg)',
                 background: 'rgba(99,102,241,0.08)',
                 border: '1px solid rgba(99,102,241,0.2)',
                 cursor: 'pointer',

@@ -265,7 +265,7 @@ export default function KBDocumentationPage() {
                     value={modalState.inputValue}
                     onChange={e => setModalState({ ...modalState, inputValue: e.target.value })}
                   />
-                  {modalState.type === 'move' && <div style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 8 }}>Tip: You can also easily move files by dragging and dropping them into folders.</div>}
+                  {modalState.type === 'move' && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>Tip: You can also easily move files by dragging and dropping them into folders.</div>}
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
@@ -281,7 +281,7 @@ export default function KBDocumentationPage() {
 
       <div className="flex flex-col h-full overflow-hidden bg-[var(--bg-deep)]">
         <div className="secondary-bar">
-        <BookOpen size={13} style={{ color: '#a78bfa' }} />
+        <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Knowledge Base</span>
         <span style={{ color: 'var(--border-md)' }}>·</span>
         <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Documentation</span>

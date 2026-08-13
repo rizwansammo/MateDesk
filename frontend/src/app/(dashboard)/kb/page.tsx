@@ -57,7 +57,7 @@ export default function KBLandingPage() {
 
       {/* Secondary bar */}
       <div className="secondary-bar">
-        <BookOpen size={13} style={{ color: '#a78bfa' }} />
+        <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Knowledge Base</span>
       </div>
 
@@ -70,7 +70,7 @@ export default function KBLandingPage() {
             className="flex items-center justify-center mb-4"
             style={{ width: 56, height: 56, background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.25)', margin: '0 auto 16px' }}
           >
-            <BookOpen size={24} style={{ color: '#a78bfa' }} />
+            <BookOpen size={24} style={{ color: 'var(--accent-violet-fg)' }} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-0)', marginBottom: 8 }}>
             Knowledge Base
@@ -124,7 +124,7 @@ export default function KBLandingPage() {
               >
                 {/* Coming soon badge */}
                 {card.disabled && (
-                  <div style={{ position: 'absolute', top: 14, right: 14, fontSize: 9, fontWeight: 700, color: 'var(--text-5)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 7px', letterSpacing: '0.1em' }}>
+                  <div style={{ position: 'absolute', top: 14, right: 14, fontSize: 9, fontWeight: 700, color: 'var(--text-3)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 7px', letterSpacing: '0.1em' }}>
                     COMING SOON
                   </div>
                 )}

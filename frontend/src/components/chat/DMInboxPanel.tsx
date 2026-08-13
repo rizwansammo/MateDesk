@@ -76,7 +76,7 @@ export function DMInboxPanel({ onClose }: Props) {
         borderBottom: '1px solid var(--border-md)',
         flexShrink:   0,
       }}>
-        <MessageCircle size={13} style={{ color: '#6366f1' }} />
+        <MessageCircle size={13} style={{ color: 'var(--accent-indigo-fg)' }} />
         <span style={{
           flex: 1, fontWeight: 700, fontSize: 12,
           color: 'var(--text-0)', textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -87,11 +87,11 @@ export function DMInboxPanel({ onClose }: Props) {
           onClick={fetchInbox}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', display: 'flex', padding: '4px 6px',
+            color: 'var(--text-3)', display: 'flex', padding: '4px 6px',
           }}
           title="Refresh"
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <RefreshCw size={13} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
         </button>
@@ -99,10 +99,10 @@ export function DMInboxPanel({ onClose }: Props) {
           onClick={onClose}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', display: 'flex', padding: '4px 6px',
+            color: 'var(--text-3)', display: 'flex', padding: '4px 6px',
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <X size={14} />
         </button>
@@ -113,7 +113,7 @@ export function DMInboxPanel({ onClose }: Props) {
         {convos.length === 0 && !loading && (
           <div style={{
             padding: '32px 16px', textAlign: 'center',
-            color: 'var(--text-5)', fontSize: 12,
+            color: 'var(--text-3)', fontSize: 12,
           }}>
             No conversations yet.
           </div>
@@ -141,7 +141,7 @@ export function DMInboxPanel({ onClose }: Props) {
             >
               <span style={{
                 width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                background: isOnline ? '#22c55e' : 'var(--text-5)',
+                background: isOnline ? '#22c55e' : 'var(--text-3)',
               }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 }}>
@@ -151,7 +151,7 @@ export function DMInboxPanel({ onClose }: Props) {
                   }}>
                     {c.partner_name}
                   </span>
-                  <span style={{ fontSize: 10, color: 'var(--text-5)', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-3)', flexShrink: 0 }}>
                     {timeAgo(c.last_at)}
                   </span>
                 </div>

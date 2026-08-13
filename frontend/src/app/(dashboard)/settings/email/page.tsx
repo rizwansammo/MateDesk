@@ -142,7 +142,7 @@ function GuideButton({ href }: { href: string }) {
       rel="noopener noreferrer"
       className="flex items-center gap-1.5 px-3 py-1.5 font-medium transition-all"
       style={{
-        fontSize: 11, color: '#34d399',
+        fontSize: 11, color: 'var(--accent-ok-fg)',
         border: '1px solid rgba(52,211,153,0.25)',
         background: 'rgba(52,211,153,0.06)',
         textDecoration: 'none',
@@ -280,7 +280,7 @@ export default function EmailSettingsPage() {
         <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)' }}>Mail Server</span>
         <div className="ml-auto flex items-center gap-2">
           {saved_ok && (
-            <span className="flex items-center gap-1" style={{ fontSize: 12, color: '#34d399' }}>
+            <span className="flex items-center gap-1" style={{ fontSize: 12, color: 'var(--accent-ok-fg)' }}>
               <CheckCircle size={12} /> Saved
             </span>
           )}
@@ -298,7 +298,7 @@ export default function EmailSettingsPage() {
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center flex-1 gap-3">
-          <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           <p style={{ fontSize: 13, color: 'var(--text-4)' }}>Loading settings…</p>
         </div>
       ) : (
@@ -312,8 +312,8 @@ export default function EmailSettingsPage() {
                 style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}
               >
                 <div className="flex items-center gap-2.5">
-                  <Shield size={14} style={{ color: '#a78bfa' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  <Shield size={14} style={{ color: 'var(--accent-violet-fg)' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-violet-fg)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                     Authentication Method
                   </span>
                 </div>
@@ -401,7 +401,7 @@ export default function EmailSettingsPage() {
                           onClick={handleTestImap}
                           disabled={testImap.isPending || !imap.imap_host}
                           className="flex items-center gap-1.5 px-4 py-1.5 font-medium transition-all disabled:opacity-40"
-                          style={{ fontSize: 12, color: '#60a5fa', border: '1px solid #1e3a6e', background: 'rgba(37,99,235,0.08)' }}
+                          style={{ fontSize: 12, color: 'var(--accent-info-fg)', border: '1px solid #1e3a6e', background: 'rgba(37,99,235,0.08)' }}
                           onMouseEnter={e => { if (!testImap.isPending) e.currentTarget.style.background = 'rgba(37,99,235,0.15)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; }}
                         >
@@ -420,14 +420,14 @@ export default function EmailSettingsPage() {
 
                     {/* Status footer */}
                     <div className="flex items-center justify-between"
-                      style={{ fontSize: 11, color: 'var(--text-5)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+                      style={{ fontSize: 11, color: 'var(--text-3)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
                       <span>Last polled: <span style={{ color: 'var(--text-4)' }}>{lastPolled}</span></span>
                       <span>Emails processed: <span style={{ color: 'var(--text-4)' }}>{saved?.emails_processed ?? 0}</span></span>
                     </div>
 
                     {saved?.last_error && (
                       <div className="px-3 py-2"
-                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 11, color: '#f87171' }}>
+                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 11, color: 'var(--accent-danger-fg)' }}>
                         Last error: {saved.last_error}
                       </div>
                     )}
@@ -498,9 +498,9 @@ export default function EmailSettingsPage() {
 
                     <div className="px-3 py-3 flex flex-col gap-1"
                       style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.6 }}>
-                      <span style={{ fontWeight: 600, color: '#60a5fa' }}>How outbound replies work</span>
+                      <span style={{ fontWeight: 600, color: 'var(--accent-info-fg)' }}>How outbound replies work</span>
                       <span>When an agent adds a Public Reply to a ticket that was created from an inbound email, MateDesk automatically sends the reply back to the original sender via this SMTP connection.</span>
-                      <span style={{ marginTop: 4 }}>The subject line includes the ticket reference (e.g. <span style={{ fontFamily: 'monospace', color: '#818cf8' }}>Re: [T15052026-0001] Your issue</span>) so that client replies are threaded back into the same ticket.</span>
+                      <span style={{ marginTop: 4 }}>The subject line includes the ticket reference (e.g. <span style={{ fontFamily: 'monospace', color: 'var(--accent-indigo-fg)' }}>Re: [T15052026-0001] Your issue</span>) so that client replies are threaded back into the same ticket.</span>
                     </div>
                   </div>
                 </div>
@@ -555,7 +555,7 @@ export default function EmailSettingsPage() {
                           className={inp}
                           style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 12 }}
                         />
-                        <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 4 }}>
+                        <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
                           Found in Azure Portal → Microsoft Entra ID → Overview → Tenant ID
                         </p>
                       </Field>
@@ -563,8 +563,8 @@ export default function EmailSettingsPage() {
 
                     <div className="px-3 py-3 flex flex-col gap-1"
                       style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
-                      <span style={{ fontWeight: 600, color: '#a78bfa' }}>Redirect URI to register in your app</span>
-                      <code style={{ fontFamily: 'monospace', color: '#c4b5fd', background: 'rgba(167,139,250,0.1)', padding: '2px 6px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--accent-violet-fg)' }}>Redirect URI to register in your app</span>
+                      <code style={{ fontFamily: 'monospace', color: 'var(--accent-violet-fg)', background: 'rgba(167,139,250,0.1)', padding: '2px 6px' }}>
                         {typeof window !== 'undefined' ? `${window.location.origin}/api/email-settings/oauth2/callback/` : 'https://your-tenant.matedesk.pro/api/email-settings/oauth2/callback/'}
                       </code>
                       <span style={{ marginTop: 4 }}>Add this URI to the allowed redirect URIs in your OAuth2 app registration.</span>
@@ -624,14 +624,14 @@ export default function EmailSettingsPage() {
 
                     {/* Status footer */}
                     <div className="flex items-center justify-between"
-                      style={{ fontSize: 11, color: 'var(--text-5)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+                      style={{ fontSize: 11, color: 'var(--text-3)', borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
                       <span>Last polled: <span style={{ color: 'var(--text-4)' }}>{lastPolled}</span></span>
                       <span>Emails processed: <span style={{ color: 'var(--text-4)' }}>{saved?.emails_processed ?? 0}</span></span>
                     </div>
 
                     {saved?.last_error && (
                       <div className="px-3 py-2"
-                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 11, color: '#f87171' }}>
+                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 11, color: 'var(--accent-danger-fg)' }}>
                         Last error: {saved.last_error}
                       </div>
                     )}
@@ -653,13 +653,13 @@ export default function EmailSettingsPage() {
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--text-1)', marginBottom: 6 }}>Reply email → Reply on ticket</div>
                   <div style={{ color: 'var(--text-4)', lineHeight: 1.6 }}>
-                    If an incoming email references a previous message (via <span style={{ fontFamily: 'monospace', color: '#818cf8' }}>In-Reply-To</span> header) or contains <span style={{ fontFamily: 'monospace', color: '#818cf8' }}>[T…]</span> in the subject, it is appended as a Public Reply to the existing ticket instead of creating a new one.
+                    If an incoming email references a previous message (via <span style={{ fontFamily: 'monospace', color: 'var(--accent-indigo-fg)' }}>In-Reply-To</span> header) or contains <span style={{ fontFamily: 'monospace', color: 'var(--accent-indigo-fg)' }}>[T…]</span> in the subject, it is appended as a Public Reply to the existing ticket instead of creating a new one.
                   </div>
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, color: 'var(--text-1)', marginBottom: 6 }}>Unknown sender → Walk-In org</div>
                   <div style={{ color: 'var(--text-4)', lineHeight: 1.6 }}>
-                    When a sender&apos;s domain doesn&apos;t match any Client Organization, the ticket is filed under the <span style={{ fontFamily: 'monospace', color: '#818cf8' }}>Walk-In</span> organization. You can re-assign it at any time from the ticket detail view.
+                    When a sender&apos;s domain doesn&apos;t match any Client Organization, the ticket is filed under the <span style={{ fontFamily: 'monospace', color: 'var(--accent-indigo-fg)' }}>Walk-In</span> organization. You can re-assign it at any time from the ticket detail view.
                   </div>
                 </div>
               </div>

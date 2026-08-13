@@ -114,10 +114,10 @@ export default function NotificationsPage() {
         <button className="btn-ghost gap-1" onClick={() => router.push('/settings')}>
           <ChevronLeft size={13} /> Settings
         </button>
-        <span style={{ fontSize: 12, color: '#64748b' }}>/ Notifications</span>
+        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>/ Notifications</span>
         <div className="ml-auto flex items-center gap-3">
           {saved && (
-            <span style={{ fontSize: 12, color: '#34d399' }}>Preferences saved.</span>
+            <span style={{ fontSize: 12, color: 'var(--accent-ok-fg)' }}>Preferences saved.</span>
           )}
           <button className="btn-primary gap-1.5" style={{ height: 28, fontSize: 11, paddingTop: 0, paddingBottom: 0 }} onClick={handleSave}>
             <Save size={12} /> Save
@@ -132,13 +132,13 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-              style={{ background: '#252936', color: '#60a5fa' }}
+              style={{ background: 'var(--bg-elevated)', color: 'var(--accent-info-fg)' }}
             >
               <Bell size={18} />
             </div>
             <div>
-              <h1 className="text-sm font-semibold" style={{ color: '#e2e8f0' }}>Notification Settings</h1>
-              <p style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+              <h1 className="text-sm font-semibold" style={{ color: 'var(--text-1)' }}>Notification Settings</h1>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
                 {enabledCount} of {Object.keys(settings).length} notifications enabled
               </p>
             </div>
@@ -159,8 +159,8 @@ export default function NotificationsPage() {
                       style={{ borderBottom: i < group.settings.length - 1 ? '1px solid #1e2130' : 'none' }}
                     >
                       <div className="flex-1 min-w-0 mr-4">
-                        <div className="text-xs font-medium" style={{ color: '#e2e8f0' }}>{s.label}</div>
-                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{s.description}</div>
+                        <div className="text-xs font-medium" style={{ color: 'var(--text-1)' }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{s.description}</div>
                       </div>
                       <Toggle on={settings[s.key]} onChange={() => toggle(s.key)} />
                     </div>
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
           </div>
 
           {/* Note */}
-          <p style={{ fontSize: 11, color: '#475569', marginTop: 20, textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 20, textAlign: 'center' }}>
             Email delivery for notifications will be configured when the mail server is connected (Phase 10).
           </p>
         </div>

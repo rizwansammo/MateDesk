@@ -405,7 +405,7 @@ export default function DocumentEditorPage() {
           <button onClick={() => router.push('/kb/documentation')} className="icon-btn" title="Back to Documentation">
             <ArrowLeft size={16} />
           </button>
-          <BookOpen size={13} style={{ color: '#a78bfa' }} />
+          <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
           <span className="text-[12px] font-bold text-[var(--text-1)]">Knowledge Base</span>
           <span className="text-[12px] text-[var(--text-3)]">/</span>
           {breadcrumbs.length === 0 ? (

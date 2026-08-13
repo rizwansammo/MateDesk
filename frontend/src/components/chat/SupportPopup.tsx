@@ -80,10 +80,10 @@ export function SupportPopup({ onClose }: Props) {
           onClick={onClose}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-5)', display: 'flex', padding: '4px 6px',
+            color: 'var(--text-3)', display: 'flex', padding: '4px 6px',
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <X size={14} />
         </button>
@@ -159,7 +159,7 @@ export function SupportPopup({ onClose }: Props) {
                 borderRadius: 0, color: 'var(--text-2)',
                 fontWeight: 600, fontSize: 12, cursor: 'pointer',
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-5)'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-3)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
             >
               Close
@@ -234,7 +234,7 @@ export function SupportPopup({ onClose }: Props) {
                 background:     body.trim() && !submitting ? '#6366f1' : 'var(--bg-elevated)',
                 border:         body.trim() && !submitting ? 'none' : '1px solid var(--border-md)',
                 borderRadius:   0,
-                color:          body.trim() && !submitting ? '#fff' : 'var(--text-5)',
+                color:          body.trim() && !submitting ? '#fff' : 'var(--text-3)',
                 fontWeight:     700,
                 fontSize:       13,
                 letterSpacing:  '0.03em',
@@ -251,7 +251,7 @@ export function SupportPopup({ onClose }: Props) {
               {submitting ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : null}
               {submitting ? 'Connecting…' : 'Start Support Chat'}
             </button>
-            <p style={{ margin: 0, fontSize: 11, color: 'var(--text-5)', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: 11, color: 'var(--text-3)', textAlign: 'center' }}>
               Ctrl+Enter to submit
             </p>
           </div>

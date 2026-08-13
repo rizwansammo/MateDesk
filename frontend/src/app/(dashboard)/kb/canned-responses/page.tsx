@@ -111,7 +111,7 @@ function CategoryFormModal({ initial = '', onClose, onSave }: CatFormProps) {
     <ModalWrap title={initial ? 'Rename Category' : 'New Category'} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {localErr && (
-          <div style={{ display: 'flex', gap: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, fontSize: 12, color: '#f87171' }}>
+          <div style={{ display: 'flex', gap: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
             <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />{localErr}
           </div>
         )}
@@ -172,13 +172,13 @@ function ResponseFormModal({ initial, categoryId: _catId, onClose, onSave }: Res
     <ModalWrap title={initial ? 'Edit Response' : 'New Canned Response'} onClose={onClose}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {err && (
-          <div style={{ display: 'flex', gap: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, fontSize: 12, color: '#f87171' }}>
+          <div style={{ display: 'flex', gap: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 6, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
             <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />{err}
           </div>
         )}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-3)', display: 'block', marginBottom: 5 }}>
-            Title <span style={{ color: 'var(--text-5)', fontWeight: 400 }}>— short label to identify this response</span>
+            Title <span style={{ color: 'var(--text-3)', fontWeight: 400 }}>— short label to identify this response</span>
           </label>
           <input
             autoFocus
@@ -278,10 +278,10 @@ export default function KBCannedResponsesPage() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Breadcrumb header */}
         <div className="secondary-bar">
-          <BookOpen size={13} style={{ color: '#a78bfa' }} />
+          <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Knowledge Base</span>
           <span style={{ color: 'var(--border-md)' }}>·</span>
-          <MessageSquare size={12} style={{ color: '#34d399' }} />
+          <MessageSquare size={12} style={{ color: 'var(--accent-ok-fg)' }} />
           <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Canned Responses</span>
           <div style={{ flex: 1 }} />
           <button
@@ -303,10 +303,10 @@ export default function KBCannedResponsesPage() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
           {catsLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-5)' }} />
+              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-3)' }} />
             </div>
           ) : categories.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 60, color: 'var(--text-5)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 60, color: 'var(--text-3)' }}>
               <FolderOpen size={40} style={{ opacity: 0.3 }} />
               <div style={{ fontSize: 14, color: 'var(--text-3)' }}>No categories yet</div>
               <div style={{ fontSize: 12 }}>Create your first category to start organising canned responses.</div>
@@ -363,13 +363,13 @@ export default function KBCannedResponsesPage() {
         >
           <ChevronLeft size={11} /> Categories
         </button>
-        <BookOpen size={13} style={{ color: '#a78bfa' }} />
+        <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Knowledge Base</span>
         <span style={{ color: 'var(--border-md)' }}>·</span>
-        <MessageSquare size={12} style={{ color: '#34d399' }} />
+        <MessageSquare size={12} style={{ color: 'var(--accent-ok-fg)' }} />
         <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Canned Responses</span>
         <span style={{ color: 'var(--border-md)' }}>·</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#34d399' }}>{activeCat.name}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-ok-fg)' }}>{activeCat.name}</span>
         <div style={{ flex: 1 }} />
         <button
           onClick={() => setRespFormOpen(true)}
@@ -385,10 +385,10 @@ export default function KBCannedResponsesPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
         {respsLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-5)' }} />
+            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-3)' }} />
           </div>
         ) : responses.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 60, color: 'var(--text-5)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 60, color: 'var(--text-3)' }}>
             <Archive size={36} style={{ opacity: 0.25 }} />
             <div style={{ fontSize: 13 }}>No responses in this category yet.</div>
             <button
@@ -463,7 +463,7 @@ function CategoryCard({
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          <Archive size={18} style={{ color: '#34d399' }} />
+          <Archive size={18} style={{ color: 'var(--accent-ok-fg)' }} />
         </div>
         <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-0)', lineHeight: 1.3 }}>
           {cat.name}
@@ -488,18 +488,18 @@ function CategoryCard({
         <button
           onClick={e => { e.stopPropagation(); onEdit(); }}
           title="Rename"
-          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-5)', borderRadius: 4 }}
+          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', borderRadius: 4 }}
           onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-1)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-5)'; e.currentTarget.style.background = 'transparent'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'transparent'; }}
         >
           <Pencil size={12} />
         </button>
         <button
           onClick={e => { e.stopPropagation(); onDelete(); }}
           title="Delete category"
-          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-5)', borderRadius: 4 }}
+          style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', borderRadius: 4 }}
           onMouseEnter={e => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-5)'; e.currentTarget.style.background = 'transparent'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'transparent'; }}
         >
           <Trash2 size={12} />
         </button>
@@ -565,7 +565,7 @@ function ResponseCard({
         <button
           onClick={onDelete}
           title="Delete"
-          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 11, color: '#f87171', background: 'transparent', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 4, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', fontSize: 11, color: 'var(--accent-danger-fg)', background: 'transparent', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 4, cursor: 'pointer' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
         >

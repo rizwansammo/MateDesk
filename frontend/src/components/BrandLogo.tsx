@@ -30,7 +30,7 @@ export function BrandLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
           whiteSpace: 'nowrap',
         }}
       >
-        Mate<span style={{ color: '#1F4ED8' }}>Desk</span>
+        Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span>
       </span>
     </div>
   );

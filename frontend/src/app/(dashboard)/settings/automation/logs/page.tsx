@@ -67,7 +67,7 @@ function DryRunModal({ onClose }: { onClose: () => void }) {
       }}>
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-md)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <Zap size={14} style={{ color: '#f59e0b' }} />
+          <Zap size={14} style={{ color: 'var(--accent-warn-fg)' }} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)' }}>Dry Run Test</div>
             <div style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 1 }}>
@@ -110,7 +110,7 @@ function DryRunModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {error && (
-            <div style={{ fontSize: 12, color: '#f87171', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ fontSize: 12, color: 'var(--accent-danger-fg)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 5 }}>
               <XCircle size={12} /> {error}
             </div>
           )}
@@ -138,7 +138,7 @@ function DryRunModal({ onClose }: { onClose: () => void }) {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {results.map(r => {
-                  const tc = TRIGGER_COLORS[trigger] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' };
+                  const tc = TRIGGER_COLORS[trigger] ?? { color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
                   return (
                     <div key={r.rule_id} style={{
                       padding: '10px 12px',
@@ -147,24 +147,24 @@ function DryRunModal({ onClose }: { onClose: () => void }) {
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: r.would_fire ? 8 : 0 }}>
                         {r.would_fire
-                          ? <CheckCircle2 size={13} style={{ color: '#34d399', flexShrink: 0 }} />
-                          : <XCircle     size={13} style={{ color: 'var(--text-5)', flexShrink: 0 }} />}
+                          ? <CheckCircle2 size={13} style={{ color: 'var(--accent-ok-fg)', flexShrink: 0 }} />
+                          : <XCircle     size={13} style={{ color: 'var(--text-3)', flexShrink: 0 }} />}
                         <span style={{ fontSize: 12, fontWeight: 600, color: r.would_fire ? 'var(--text-1)' : 'var(--text-4)' }}>
                           {r.rule_name}
                         </span>
                         {r.stop_processing && r.would_fire && (
-                          <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 5px', marginLeft: 'auto' }}>Stop</span>
+                          <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 5px', marginLeft: 'auto' }}>Stop</span>
                         )}
                       </div>
 
                       {r.skip_reason && (
-                        <div style={{ fontSize: 11, color: 'var(--text-5)', marginLeft: 21, fontStyle: 'italic' }}>{r.skip_reason}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 21, fontStyle: 'italic' }}>{r.skip_reason}</div>
                       )}
 
                       {r.would_fire && r.actions.length > 0 && (
                         <div style={{ marginLeft: 21, display: 'flex', flexDirection: 'column', gap: 3 }}>
                           {r.actions.map((a, i) => (
-                            <div key={i} style={{ fontSize: 11, color: '#60a5fa' }}>
+                            <div key={i} style={{ fontSize: 11, color: 'var(--accent-info-fg)' }}>
                               → {a.type.replace(/_/g, ' ')}{a.value ? `: ${a.value}` : ''}
                             </div>
                           ))}
@@ -211,7 +211,7 @@ export default function AutomationLogsPage() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-4)'; }}>
           <ArrowLeft size={14} />
         </button>
-        <Activity size={14} style={{ color: '#60a5fa' }} />
+        <Activity size={14} style={{ color: 'var(--accent-info-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Activity Logs</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— automation execution history</span>
 
@@ -247,7 +247,7 @@ export default function AutomationLogsPage() {
           ))}
         </select>
         {logs.length > 0 && (
-          <span style={{ fontSize: 11, color: 'var(--text-5)', marginLeft: 4 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 4 }}>
             Showing {logs.length} most recent entr{logs.length !== 1 ? 'ies' : 'y'}
           </span>
         )}
@@ -257,7 +257,7 @@ export default function AutomationLogsPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={22} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={22} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : logs.length === 0 ? (
           <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center', padding: '60px 0' }}>
@@ -280,7 +280,7 @@ export default function AutomationLogsPage() {
 
               {logs.map((log, i) => {
                 const isLast = i === logs.length - 1;
-                const tc     = TRIGGER_COLORS[log.trigger] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' };
+                const tc     = TRIGGER_COLORS[log.trigger] ?? { color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
                 return (
                   <div
                     key={log.id}
@@ -291,14 +291,14 @@ export default function AutomationLogsPage() {
                     {/* Fired at */}
                     <div>
                       <div style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 500 }}>{timeAgo(log.fired_at)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 2 }}>{formatDate(log.fired_at)}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>{formatDate(log.fired_at)}</div>
                     </div>
 
                     {/* Rule */}
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', paddingRight: 12 }}>
                       {log.rule_name}
                       {!log.rule && (
-                        <span style={{ fontSize: 10, color: 'var(--text-5)', fontWeight: 400, marginLeft: 6 }}>(deleted)</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 400, marginLeft: 6 }}>(deleted)</span>
                       )}
                     </div>
 
@@ -323,7 +323,7 @@ export default function AutomationLogsPage() {
                     <div>
                       <button
                         onClick={() => router.push(`/requests/${log.ticket_ref}`)}
-                        style={{ fontSize: 12, fontWeight: 600, color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 3 }}
+                        style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 3 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'underline'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = 'none'; }}
                       >

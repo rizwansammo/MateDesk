@@ -25,19 +25,19 @@ import { useAutomationLogs, TRIGGER_LABELS, TRIGGER_COLORS } from '@/hooks/useAu
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  open:                { label: 'Open',               color: '#60a5fa', bg: 'rgba(59,130,246,0.15)'  },
-  pending:             { label: 'Pending',             color: '#818cf8', bg: 'rgba(99,102,241,0.15)'  },
-  in_progress:         { label: 'In Progress',         color: '#fbbf24', bg: 'rgba(245,158,11,0.15)'  },
-  waiting_on_customer: { label: 'Waiting on Customer', color: '#f97316', bg: 'rgba(249,115,22,0.15)'  },
-  solved:              { label: 'Resolved',            color: '#34d399', bg: 'rgba(16,185,129,0.15)'  },
-  closed:              { label: 'Closed',              color: '#9ca3af', bg: 'rgba(107,114,128,0.15)' },
+  open:                { label: 'Open',               color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)'  },
+  pending:             { label: 'Pending',             color: 'var(--accent-indigo-fg)', bg: 'var(--accent-indigo-bg)'  },
+  in_progress:         { label: 'In Progress',         color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)'  },
+  waiting_on_customer: { label: 'Waiting on Customer', color: 'var(--accent-orange-fg)', bg: 'var(--accent-orange-bg)'  },
+  solved:              { label: 'Resolved',            color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)'  },
+  closed:              { label: 'Closed',              color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' },
 };
 
 const PRIORITY_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  low:      { label: 'Low',      color: '#4ade80', bg: 'rgba(34,197,94,0.15)'  },
-  normal:   { label: 'Medium',   color: '#60a5fa', bg: 'rgba(59,130,246,0.15)' },
-  high:     { label: 'High',     color: '#fbbf24', bg: 'rgba(245,158,11,0.15)' },
-  critical: { label: 'Critical', color: '#f87171', bg: 'rgba(239,68,68,0.15)'  },
+  low:      { label: 'Low',      color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)'  },
+  normal:   { label: 'Medium',   color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)' },
+  high:     { label: 'High',     color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
+  critical: { label: 'Critical', color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)'  },
 };
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -156,11 +156,11 @@ function AbsorbedTicketCard({
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(99,102,241,0.06)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
       >
-        <GitMerge size={14} style={{ color: '#6366f1', flexShrink: 0 }} />
+        <GitMerge size={14} style={{ color: 'var(--accent-indigo-fg)', flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>
             Merged:{' '}
-            <span style={{ color: '#a5b4fc', fontFamily: '"IBM Plex Mono", monospace' }}>{sourceRef}</span>
+            <span style={{ color: 'var(--accent-indigo-fg)', fontFamily: '"IBM Plex Mono", monospace' }}>{sourceRef}</span>
             {subject && (
               <span style={{ color: 'var(--text-3)', fontWeight: 400 }}> — {subject}</span>
             )}
@@ -168,13 +168,13 @@ function AbsorbedTicketCard({
           <div style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>
             by {mergedBy} · {timeAgo(mergedAt)}
             {msgCount !== undefined && (
-              <span style={{ marginLeft: 8, color: 'var(--text-5)' }}>
+              <span style={{ marginLeft: 8, color: 'var(--text-3)' }}>
                 · {msgCount} message{msgCount !== 1 ? 's' : ''}
               </span>
             )}
           </div>
         </div>
-        <span style={{ fontSize: 11, color: '#6366f1', flexShrink: 0, userSelect: 'none' }}>
+        <span style={{ fontSize: 11, color: 'var(--accent-indigo-fg)', flexShrink: 0, userSelect: 'none' }}>
           {expanded ? 'Collapse ▴' : 'Show conversation ▾'}
         </span>
       </button>
@@ -184,15 +184,15 @@ function AbsorbedTicketCard({
         <div style={{ borderTop: '1px solid rgba(99,102,241,0.2)', padding: '12px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
-              <Loader2 size={16} className="animate-spin" style={{ color: '#6366f1' }} />
+              <Loader2 size={16} className="animate-spin" style={{ color: 'var(--accent-indigo-fg)' }} />
             </div>
           ) : fetchErr ? (
-            <div style={{ fontSize: 12, color: '#f87171', padding: '4px 0' }}>Failed to load ticket data.</div>
+            <div style={{ fontSize: 12, color: 'var(--accent-danger-fg)', padding: '4px 0' }}>Failed to load ticket data.</div>
           ) : fetched ? (
             <>
               {fetched.description && (
                 <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-panel)', padding: '10px 14px' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-indigo-fg)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
                     Description
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
@@ -219,7 +219,7 @@ function AbsorbedTicketCard({
                   ))}
                 </div>
               ) : (
-                <div style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>No messages in this ticket.</div>
+                <div style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>No messages in this ticket.</div>
               )}
             </>
           ) : null}
@@ -290,7 +290,7 @@ function InlineImages({ attachments }: { attachments: TicketAttachment[] }) {
                   style={{ display: 'block', maxWidth: 280, maxHeight: 200, objectFit: 'cover' }}
                 />
               </button>
-              <span style={{ fontSize: 10, color: 'var(--text-5)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 10, color: 'var(--text-3)', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {a.filename}
               </span>
             </div>
@@ -358,16 +358,16 @@ function MessageBubble({
               )}
             </div>
             {isInternal ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, color: '#fbbf24', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)', padding: '2px 7px', flexShrink: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 600, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)', padding: '2px 7px', flexShrink: 0 }}>
                 <Lock size={9} /> Internal Note
               </span>
             ) : (
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#60a5fa', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', padding: '2px 7px', flexShrink: 0 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', padding: '2px 7px', flexShrink: 0 }}>
                 Public Reply
               </span>
             )}
           </div>
-          <div style={{ marginTop: 4, fontSize: 12, color: '#e2e8f0' }}>{fullDate}</div>
+          <div style={{ marginTop: 4, fontSize: 12, color: 'var(--text-1)' }}>{fullDate}</div>
           {(toEmails?.length || ccEmails?.length) ? (
             <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
               {toEmails && toEmails.length > 0 && (
@@ -533,7 +533,7 @@ function ResoViewModal({ articleId, onClose }: { articleId: string; onClose: () 
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 18px', borderBottom: '1px solid var(--border-md)', flexShrink: 0 }}>
-          <FileText size={15} style={{ color: '#a78bfa', marginTop: 2, flexShrink: 0 }} />
+          <FileText size={15} style={{ color: 'var(--accent-violet-fg)', marginTop: 2, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             {isLoading ? (
               <div style={{ height: 18, width: 200, background: 'var(--bg-elevated)', borderRadius: 3 }} />
@@ -542,7 +542,7 @@ function ResoViewModal({ articleId, onClose }: { articleId: string; onClose: () 
                 {article?.title ?? '—'}
               </div>
             )}
-            <div style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 3 }}>Resolution Note</div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>Resolution Note</div>
           </div>
           <button
             onClick={onClose}
@@ -558,14 +558,14 @@ function ResoViewModal({ articleId, onClose }: { articleId: string; onClose: () 
         <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
           {isLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-5)' }} />
+              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-3)' }} />
             </div>
           ) : article?.content ? (
             <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.75, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
               {article.content}
             </div>
           ) : (
-            <div style={{ fontSize: 13, color: 'var(--text-5)', fontStyle: 'italic' }}>No details provided.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-3)', fontStyle: 'italic' }}>No details provided.</div>
           )}
         </div>
 
@@ -573,9 +573,9 @@ function ResoViewModal({ articleId, onClose }: { articleId: string; onClose: () 
         {article && (
           <div style={{ flexShrink: 0, display: 'flex', gap: 16, padding: '10px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
             {article.author_name && (
-              <span style={{ fontSize: 11, color: 'var(--text-5)' }}>By <span style={{ color: 'var(--text-3)' }}>{article.author_name}</span></span>
+              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>By <span style={{ color: 'var(--text-3)' }}>{article.author_name}</span></span>
             )}
-            <span style={{ fontSize: 11, color: 'var(--text-5)' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
               {new Date(article.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
@@ -601,9 +601,9 @@ function AutomationActivityCard({ ticketRef }: { ticketRef: string }) {
           logs.length > 0 ? (
             <button
               onClick={() => router.push(`/settings/automation/logs`)}
-              style={{ fontSize: 10, color: 'var(--text-5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              style={{ fontSize: 10, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#60a5fa'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
             >
               View all
             </button>
@@ -613,12 +613,12 @@ function AutomationActivityCard({ ticketRef }: { ticketRef: string }) {
       <div style={{ padding: '10px 14px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
-            <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-5)' }} />
+            <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-3)' }} />
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {logs.slice(0, 5).map(log => {
-              const tc = TRIGGER_COLORS[log.trigger] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' };
+              const tc = TRIGGER_COLORS[log.trigger] ?? { color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
               const ago = (() => {
                 const diff = Date.now() - new Date(log.fired_at).getTime();
                 const m    = Math.floor(diff / 60000);
@@ -632,7 +632,7 @@ function AutomationActivityCard({ ticketRef }: { ticketRef: string }) {
                 <div key={log.id} style={{ paddingBottom: 10, borderBottom: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-2)' }}>{log.rule_name}</span>
-                    <span style={{ fontSize: 10, color: 'var(--text-5)' }}>{ago}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-3)' }}>{ago}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                     <span style={{ fontSize: 10, fontWeight: 600, color: tc.color, background: tc.bg, padding: '1px 6px' }}>
@@ -942,7 +942,7 @@ export default function TicketDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#2563eb' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
         <p style={{ fontSize: 13, color: 'var(--text-4)' }}>Loading ticket…</p>
       </div>
     );
@@ -995,12 +995,12 @@ export default function TicketDetailPage() {
           <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: lvlColor, background: lvlColor + '18', padding: '2px 8px' }}>{ticket.level}</span>
         )}
         {ticket.sla_status === 'breached' && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#f87171', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', padding: '2px 8px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: 'var(--accent-danger-fg)', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', padding: '2px 8px' }}>
             <ShieldAlert size={11} /> SLA BREACHED
           </span>
         )}
         {ticket.sla_status === 'due_soon' && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', padding: '2px 8px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', padding: '2px 8px' }}>
             <Shield size={11} /> SLA Due Soon
           </span>
         )}
@@ -1036,18 +1036,18 @@ export default function TicketDetailPage() {
                   <button
                     onClick={() => copyToClipboard(ticket.ref, 'ref')}
                     title="Copy ticket number"
-                    style={{ color: copied === 'ref' ? '#34d399' : 'var(--text-5)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                    style={{ color: copied === 'ref' ? '#34d399' : 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
                     onMouseEnter={e => { if (copied !== 'ref') (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
-                    onMouseLeave={e => { if (copied !== 'ref') (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+                    onMouseLeave={e => { if (copied !== 'ref') (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                   >
                     {copied === 'ref' ? <Check size={13} /> : <Copy size={13} />}
                   </button>
                   <button
                     onClick={() => copyToClipboard(`${ticket.ref} — ${ticket.subject}`, 'full')}
                     title="Copy ticket number + subject"
-                    style={{ color: copied === 'full' ? '#34d399' : 'var(--text-5)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                    style={{ color: copied === 'full' ? '#34d399' : 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center', flexShrink: 0 }}
                     onMouseEnter={e => { if (copied !== 'full') (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
-                    onMouseLeave={e => { if (copied !== 'full') (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+                    onMouseLeave={e => { if (copied !== 'full') (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                   >
                     {copied === 'full' ? <Check size={13} /> : <Clipboard size={13} />}
                   </button>
@@ -1067,19 +1067,19 @@ export default function TicketDetailPage() {
                   </div>
                   <div className="flex items-center gap-2 py-0.5">
                     {ticket.is_internal
-                      ? <Lock size={13} style={{ color: '#a78bfa', flexShrink: 0 }} />
+                      ? <Lock size={13} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
                       : <Building2 size={13} style={{ color: 'var(--text-1)', flexShrink: 0 }} />
                     }
                     <span style={{ fontSize: 13, color: 'var(--text-3)', flexShrink: 0 }}>Organization:</span>
                     {ticket.is_internal ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', background: 'rgba(139,92,246,0.12)', padding: '2px 8px' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-violet-fg)', background: 'rgba(139,92,246,0.12)', padding: '2px 8px' }}>
                         Internal
                       </span>
                     ) : (
                       <>
                         <span style={{ fontSize: 13, color: 'var(--text-1)' }}>{orgName}</span>
                         {orgTz && (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px', flexShrink: 0 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.25)', padding: '1px 6px', flexShrink: 0 }}>
                             <Clock size={9} /> {getTzAbbr(orgTz)}
                           </span>
                         )}
@@ -1094,7 +1094,7 @@ export default function TicketDetailPage() {
                   <div className="flex items-center gap-2 py-0.5">
                     <Tag size={13} style={{ color: 'var(--text-1)', flexShrink: 0 }} />
                     <span style={{ fontSize: 13, color: 'var(--text-3)', flexShrink: 0 }}>Category:</span>
-                    <span style={{ fontSize: 13, color: ticket.category ? 'var(--text-1)' : 'var(--text-5)' }}>{ticket.category || '—'}</span>
+                    <span style={{ fontSize: 13, color: ticket.category ? 'var(--text-1)' : 'var(--text-3)' }}>{ticket.category || '—'}</span>
                   </div>
                 </div>
 
@@ -1102,8 +1102,8 @@ export default function TicketDetailPage() {
                 {(ticket.description || ticket.attachments?.length > 0) && (
                   <div style={{ border: '1px solid var(--border-panel)', background: 'var(--bg-deep)' }}>
                     <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border-panel)', background: 'var(--bg-surface)' }}>
-                      <FileText size={12} style={{ color: '#60a5fa', flexShrink: 0 }} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Description</span>
+                      <FileText size={12} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-info-fg)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Description</span>
                     </div>
                     <div className="px-4 py-4">
                       {ticket.description && (
@@ -1378,7 +1378,7 @@ export default function TicketDetailPage() {
               </div>
               {replies.length === 0 ? (
                 <div className="py-10 text-center">
-                  <p style={{ fontSize: 12, color: 'var(--text-5)' }}>No messages yet</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No messages yet</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10 }}>
@@ -1467,9 +1467,9 @@ export default function TicketDetailPage() {
                 field: 'level', label: 'Level', type: 'select', value: ticket.level ?? '',
                 options: [
                   { value: '', label: '— None —', color: 'var(--text-1)' },
-                  { value: 'L1', label: 'L1', color: '#60a5fa' },
-                  { value: 'L2', label: 'L2', color: '#a78bfa' },
-                  { value: 'L3', label: 'L3', color: '#f87171' },
+                  { value: 'L1', label: 'L1', color: 'var(--accent-info-fg)' },
+                  { value: 'L2', label: 'L2', color: 'var(--accent-violet-fg)' },
+                  { value: 'L3', label: 'L3', color: 'var(--accent-danger-fg)' },
                 ],
               })}
             >
@@ -1609,7 +1609,7 @@ export default function TicketDetailPage() {
               <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px 14px 10px' }}>
                 {/* Header row */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <div style={{ ...MONO, fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  <div style={{ ...MONO, fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                     Resolution
                   </div>
                   {isMSP && !resoEditMode && (
@@ -1640,7 +1640,7 @@ export default function TicketDetailPage() {
                             setResoRemoveIds(new Set());
                           }
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 7px', fontSize: 10, fontWeight: 600, color: '#34d399', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 3, cursor: resoUnlinking ? 'not-allowed' : 'pointer', opacity: resoUnlinking ? 0.6 : 1 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 7px', fontSize: 10, fontWeight: 600, color: 'var(--accent-ok-fg)', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 3, cursor: resoUnlinking ? 'not-allowed' : 'pointer', opacity: resoUnlinking ? 0.6 : 1 }}
                       >
                         {resoUnlinking ? <Loader2 size={9} className="animate-spin" /> : <Check size={9} />} Save
                       </button>
@@ -1660,12 +1660,12 @@ export default function TicketDetailPage() {
                   const markedForRemoval = resoRemoveIds.has(article.id);
                   return (
                     <div key={article.id} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, opacity: markedForRemoval ? 0.35 : 1, transition: 'opacity 0.15s' }}>
-                      <FileText size={11} style={{ color: '#a78bfa', flexShrink: 0 }} />
+                      <FileText size={11} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
                       <button
                         onClick={() => !resoEditMode && setResoViewId(article.id)}
                         style={{
                           flex: 1, minWidth: 0, textAlign: 'left', background: 'none', border: 'none',
-                          fontSize: 12, fontWeight: 600, color: '#a78bfa', lineHeight: 1.4,
+                          fontSize: 12, fontWeight: 600, color: 'var(--accent-violet-fg)', lineHeight: 1.4,
                           cursor: resoEditMode ? 'default' : 'pointer',
                           textDecoration: markedForRemoval ? 'line-through' : 'none',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -1692,10 +1692,10 @@ export default function TicketDetailPage() {
                             background: markedForRemoval ? 'rgba(239,68,68,0.15)' : 'transparent',
                             border: `1px solid ${markedForRemoval ? 'rgba(239,68,68,0.4)' : 'var(--border-panel)'}`,
                             borderRadius: 3, cursor: 'pointer',
-                            color: markedForRemoval ? '#f87171' : 'var(--text-5)',
+                            color: markedForRemoval ? '#f87171' : 'var(--text-3)',
                           }}
                           onMouseEnter={e => { if (!markedForRemoval) { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; } }}
-                          onMouseLeave={e => { if (!markedForRemoval) { e.currentTarget.style.color = 'var(--text-5)'; e.currentTarget.style.borderColor = 'var(--border-panel)'; e.currentTarget.style.background = 'transparent'; } }}
+                          onMouseLeave={e => { if (!markedForRemoval) { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.borderColor = 'var(--border-panel)'; e.currentTarget.style.background = 'transparent'; } }}
                         >
                           <X size={10} />
                         </button>
@@ -1722,10 +1722,10 @@ export default function TicketDetailPage() {
                 </span>
                 {(() => {
                   const cfg: Record<string, { label: string; color: string; bg: string }> = {
-                    on_track:  { label: 'On Track', color: '#34d399', bg: 'rgba(52,211,153,0.12)'  },
-                    due_soon:  { label: 'Due Soon', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)'  },
-                    breached:  { label: 'Breached', color: '#f87171', bg: 'rgba(239,68,68,0.12)'   },
-                    completed: { label: 'Met',      color: '#60a5fa', bg: 'rgba(59,130,246,0.12)'  },
+                    on_track:  { label: 'On Track', color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)'  },
+                    due_soon:  { label: 'Due Soon', color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)'  },
+                    breached:  { label: 'Breached', color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)'   },
+                    completed: { label: 'Met',      color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)'  },
                   };
                   const s = cfg[ticket.sla_status];
                   return s ? (
@@ -1750,7 +1750,7 @@ export default function TicketDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
                     <span style={{ ...MONO, fontSize: 11, fontWeight: 600, color: 'var(--text-3)', width: 72, flexShrink: 0 }}>1st Reply</span>
                     {ticket.first_response_at ? (
-                      <span style={{ fontSize: 11, color: '#34d399', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 11, color: 'var(--accent-ok-fg)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Check size={10} /> Responded
                       </span>
                     ) : (() => {
@@ -1762,7 +1762,7 @@ export default function TicketDetailPage() {
                       );
                     })()}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-5)', paddingLeft: 72 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', paddingLeft: 72 }}>
                     Due {formatDate(ticket.sla_info.first_response_due)}
                   </div>
                 </div>
@@ -1786,7 +1786,7 @@ export default function TicketDetailPage() {
                       );
                     })()}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-5)', paddingLeft: 72 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', paddingLeft: 72 }}>
                     Due {formatDate(ticket.sla_info.resolution_due)}
                   </div>
                 </div>
@@ -1794,7 +1794,7 @@ export default function TicketDetailPage() {
 
               {/* No sla_info but has a status — show minimal info */}
               {!ticket.sla_info && (
-                <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>
+                <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
                   SLA targets not available for this ticket's priority.
                 </div>
               )}
@@ -1810,7 +1810,7 @@ export default function TicketDetailPage() {
                   onClick={() => setRequesterEditOpen(true)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 11, color: '#60a5fa', background: 'rgba(59,130,246,0.1)',
+                    fontSize: 11, color: 'var(--accent-info-fg)', background: 'rgba(59,130,246,0.1)',
                     border: '1px solid rgba(59,130,246,0.2)', padding: '2px 8px', cursor: 'pointer',
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.2)'; }}
@@ -1861,7 +1861,7 @@ export default function TicketDetailPage() {
               title="Time Tracking"
               action={
                 (ticket.timelogs?.length ?? 0) > 0 ? (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', padding: '2px 8px' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-info-fg)', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', padding: '2px 8px' }}>
                     {formatMinutes(ticket.timelogs.reduce((s, l) => s + l.minutes, 0))} total
                   </span>
                 ) : undefined
@@ -1879,12 +1879,12 @@ export default function TicketDetailPage() {
                 ).map(([name, mins]) => (
                   <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{name}</span>
-                    <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: '#60a5fa' }}>{formatMinutes(mins)}</span>
+                    <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--accent-info-fg)' }}>{formatMinutes(mins)}</span>
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: 5, marginTop: 2 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total Billable</span>
-                  <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: '#60a5fa' }}>
+                  <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--accent-info-fg)' }}>
                     {formatMinutes(ticket.timelogs.reduce((s, l) => s + l.minutes, 0))}
                   </span>
                 </div>
@@ -1898,13 +1898,13 @@ export default function TicketDetailPage() {
                   <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderBottom: '1px solid var(--border-subtle)' }}>
                     <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--text-1)', minWidth: 40 }}>{formatMinutes(log.minutes)}</span>
                     <span style={{ fontSize: 11, color: 'var(--text-3)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.agent_name}</span>
-                    <span style={{ ...MONO, fontSize: 10, color: 'var(--text-5)', flexShrink: 0 }}>{log.date}</span>
+                    <span style={{ ...MONO, fontSize: 10, color: 'var(--text-3)', flexShrink: 0 }}>{log.date}</span>
                     {isMSP && (
                       <button
                         onClick={() => deleteTimeLog.mutate(log.id)}
-                        style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-5)', padding: '2px 2px', flexShrink: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: '2px 2px', flexShrink: 0 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
                       >
                         <Trash2 size={11} />
                       </button>
@@ -1916,7 +1916,7 @@ export default function TicketDetailPage() {
 
             {!(ticket.timelogs?.length ?? 0) && (
               <div style={{ padding: '12px 14px', textAlign: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-5)' }}>No time logged yet</span>
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>No time logged yet</span>
               </div>
             )}
 
@@ -1996,7 +1996,7 @@ export default function TicketDetailPage() {
                     <span style={{ color: 'var(--text-4)' }}>Absorbed by: </span>
                     <button
                       onClick={() => router.push(`/requests/${ticket.merge_info.merged_into_ref}`)}
-                      style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                      style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     >
                       #{ticket.merge_info.merged_into_ref}
                     </button>
@@ -2006,7 +2006,7 @@ export default function TicketDetailPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <button
                         onClick={() => { setMergeError(''); setMergeModal({ type: 'merge', searchQ: '', selectedRef: '' }); }}
-                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: '#f87171', background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: 'var(--accent-danger-fg)', background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.08)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
@@ -2014,7 +2014,7 @@ export default function TicketDetailPage() {
                       </button>
                       <button
                         onClick={() => { setMergeError(''); setMergeModal({ type: 'absorb', searchQ: '', selectedRef: '' }); }}
-                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: '#60a5fa', background: 'transparent', border: '1px solid rgba(96,165,250,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'transparent', border: '1px solid rgba(96,165,250,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(96,165,250,0.08)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
@@ -2033,7 +2033,7 @@ export default function TicketDetailPage() {
                             onClick={() => router.push(`/requests/${t.ref}`)}
                             style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '3px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
                           >
-                            <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: '#60a5fa', flexShrink: 0 }}>{t.ref}</span>
+                            <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: 'var(--accent-info-fg)', flexShrink: 0 }}>{t.ref}</span>
                             <span style={{ fontSize: 11, color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{t.subject}</span>
                           </button>
                         ))}
@@ -2062,7 +2062,7 @@ export default function TicketDetailPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 11, color: 'var(--text-1)', marginBottom: 2 }}>Open / Pending</div>
-                      <div style={{ ...MONO, fontSize: 18, fontWeight: 700, color: '#60a5fa' }}>{customerHistory.open_pending}</div>
+                      <div style={{ ...MONO, fontSize: 18, fontWeight: 700, color: 'var(--accent-info-fg)' }}>{customerHistory.open_pending}</div>
                     </div>
                   </div>
                   {customerHistory.tickets.length > 0 ? (
@@ -2078,7 +2078,7 @@ export default function TicketDetailPage() {
                           <span style={{ ...MONO, fontSize: 10, fontWeight: 700, color: 'var(--text-4)', flexShrink: 0, marginTop: 2, minWidth: 16 }}>#{idx + 1}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>{t.subject}</div>
-                            <div style={{ ...MONO, fontSize: 10, fontWeight: 600, color: 'var(--text-5)' }}>{t.ref}</div>
+                            <div style={{ ...MONO, fontSize: 10, fontWeight: 600, color: 'var(--text-3)' }}>{t.ref}</div>
                           </div>
                           <span style={{ fontSize: 10, fontWeight: 700, flexShrink: 0, padding: '2px 6px', color: STATUS_CFG[t.status]?.color ?? 'var(--text-3)', background: STATUS_CFG[t.status]?.bg ?? 'transparent' }}>
                             {STATUS_CFG[t.status]?.label ?? t.status}
@@ -2385,7 +2385,7 @@ export default function TicketDetailPage() {
                   {/* Article list */}
                   <div style={{ border: '1px solid var(--border-subtle)', maxHeight: 260, overflowY: 'auto' }}>
                     {existingArticles.length === 0 ? (
-                      <div style={{ padding: '20px 14px', fontSize: 13, color: 'var(--text-5)', textAlign: 'center' }}>
+                      <div style={{ padding: '20px 14px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>
                         {resoSearchQ ? 'No resolutions match your search.' : 'No resolution articles yet.'}
                       </div>
                     ) : existingArticles.map(a => {
@@ -2416,7 +2416,7 @@ export default function TicketDetailPage() {
                   </div>
 
                   {resoSelectedId && (
-                    <p style={{ fontSize: 11, color: '#34d399' }}>
+                    <p style={{ fontSize: 11, color: 'var(--accent-ok-fg)' }}>
                       Selected — this article will be linked to ticket {ticket?.ref}.
                     </p>
                   )}
@@ -2424,7 +2424,7 @@ export default function TicketDetailPage() {
               )}
 
               {resoError && (
-                <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: 12 }}>
+                <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--accent-danger-fg)', fontSize: 12 }}>
                   {resoError}
                 </div>
               )}
@@ -2513,7 +2513,7 @@ export default function TicketDetailPage() {
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 2 }}>Full requester profile editing will be available in a future update.</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>Full requester profile editing will be available in a future update.</p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '10px 16px', borderTop: '1px solid var(--border-subtle)' }}>
               <button onClick={() => setRequesterEditOpen(false)} style={{ padding: '6px 14px', background: 'var(--bg-elevated)', border: '1px solid var(--border-md)', color: 'var(--text-3)', fontSize: 12, cursor: 'pointer' }}>
@@ -2596,20 +2596,20 @@ export default function TicketDetailPage() {
                       onMouseEnter={e => { if (mergeModal.selectedRef !== t.ref) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
                       onMouseLeave={e => { if (mergeModal.selectedRef !== t.ref) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                     >
-                      <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: '#60a5fa', flexShrink: 0 }}>{t.ref}</span>
+                      <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color: 'var(--accent-info-fg)', flexShrink: 0 }}>{t.ref}</span>
                       <span style={{ fontSize: 12, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{t.subject}</span>
-                      {mergeModal.selectedRef === t.ref && <Check size={12} style={{ color: '#60a5fa', flexShrink: 0 }} />}
+                      {mergeModal.selectedRef === t.ref && <Check size={12} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />}
                     </button>
                   ))}
                 </div>
               )}
 
               {mergeModal.searchQ && mergeSearchResults.length === 0 && (
-                <div style={{ paddingTop: 8, fontSize: 12, color: 'var(--text-5)', textAlign: 'center' }}>No matching tickets found</div>
+                <div style={{ paddingTop: 8, fontSize: 12, color: 'var(--text-3)', textAlign: 'center' }}>No matching tickets found</div>
               )}
 
               {mergeError && (
-                <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--accent-danger-fg)', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <AlertCircle size={12} /> {mergeError}
                 </div>
               )}

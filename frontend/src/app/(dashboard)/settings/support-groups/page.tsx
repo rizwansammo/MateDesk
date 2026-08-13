@@ -76,7 +76,7 @@ function GroupModal({ initial, onClose }: { initial?: SupportGroup; onClose: () 
               onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-md)'; }}
             />
           </div>
-          {error && <p style={{ fontSize: 11, color: '#f87171', margin: 0 }}>{error}</p>}
+          {error && <p style={{ fontSize: 11, color: 'var(--accent-danger-fg)', margin: 0 }}>{error}</p>}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '10px 16px', borderTop: '1px solid var(--border-subtle)' }}>
           <button onClick={onClose} style={{ padding: '6px 14px', background: 'var(--bg-elevated)', border: '1px solid var(--border-md)', color: 'var(--text-3)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
@@ -123,7 +123,7 @@ function DeleteModal({ group, onClose }: { group: SupportGroup; onClose: () => v
             Delete <strong style={{ color: 'var(--text-1)' }}>{group.name}</strong>?
             {group.ticket_count > 0 && <> {group.ticket_count} ticket{group.ticket_count !== 1 ? 's' : ''} will be unassigned from this group.</>}
           </p>
-          {error && <p style={{ fontSize: 11, color: '#f87171', marginTop: 8, marginBottom: 0 }}>{error}</p>}
+          {error && <p style={{ fontSize: 11, color: 'var(--accent-danger-fg)', marginTop: 8, marginBottom: 0 }}>{error}</p>}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '10px 16px', borderTop: '1px solid var(--border-subtle)' }}>
           <button onClick={onClose} style={{ padding: '6px 14px', background: 'var(--bg-elevated)', border: '1px solid var(--border-md)', color: 'var(--text-3)', fontSize: 12, cursor: 'pointer' }}>Cancel</button>
@@ -166,7 +166,7 @@ function AgentsPanel({ group }: { group: SupportGroup }) {
             </span>
             <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {group.agents.length === 0 ? (
-                <span style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>No agents assigned yet.</span>
+                <span style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>No agents assigned yet.</span>
               ) : group.agents.map(agent => (
                 <div
                   key={agent.id}
@@ -267,7 +267,7 @@ export default function SupportGroupsPage() {
 
           <div className="flex items-center gap-3 mb-6">
             <div style={{ width: 40, height: 40, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Layers size={18} style={{ color: '#60a5fa' }} />
+              <Layers size={18} style={{ color: 'var(--accent-info-fg)' }} />
             </div>
             <div>
               <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Support Groups</h1>
@@ -277,10 +277,10 @@ export default function SupportGroupsPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : isError ? (
-            <p style={{ fontSize: 12, color: '#f87171', textAlign: 'center', padding: '32px 0' }}>Failed to load groups.</p>
+            <p style={{ fontSize: 12, color: 'var(--accent-danger-fg)', textAlign: 'center', padding: '32px 0' }}>Failed to load groups.</p>
           ) : (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
               <table className="data-table">
@@ -326,7 +326,7 @@ export default function SupportGroupsPage() {
                               <div>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>{group.name}</span>
                                 {group.is_default && (
-                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fbbf24', background: 'rgba(245,158,11,0.15)', padding: '1px 6px' }}>DEFAULT</span>
+                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.15)', padding: '1px 6px' }}>DEFAULT</span>
                                 )}
                               </div>
                             </div>
@@ -337,7 +337,7 @@ export default function SupportGroupsPage() {
                           <td className="text-right" style={{ color: 'var(--text-2)', fontWeight: 600, fontSize: 13 }}>
                             {group.agents.length}
                           </td>
-                          <td className="text-right" style={{ color: '#60a5fa', fontWeight: 600, fontSize: 13 }}>
+                          <td className="text-right" style={{ color: 'var(--accent-info-fg)', fontWeight: 600, fontSize: 13 }}>
                             {group.ticket_count}
                           </td>
                           <td onClick={e => e.stopPropagation()}>

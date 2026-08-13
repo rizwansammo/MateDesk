@@ -13,9 +13,9 @@ import {
 import type { Invoice, InvoiceStatus } from '@/types/billing';
 
 const STATUS_CFG: Record<InvoiceStatus, { label: string; color: string; bg: string; next: InvoiceStatus }> = {
-  draft: { label: 'Draft', color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', next: 'sent' },
-  sent:  { label: 'Sent',  color: '#60a5fa', bg: 'rgba(59,130,246,0.12)',  next: 'paid' },
-  paid:  { label: 'Paid',  color: '#34d399', bg: 'rgba(16,185,129,0.12)',  next: 'draft' },
+  draft: { label: 'Draft', color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)', next: 'sent' },
+  sent:  { label: 'Sent',  color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)',  next: 'paid' },
+  paid:  { label: 'Paid',  color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)',  next: 'draft' },
 };
 
 // ── Invoice row ───────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
         />
 
         {/* Invoice # */}
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#60a5fa', fontFamily: 'monospace' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-info-fg)', fontFamily: 'monospace' }}>
           {invoice.invoice_number}
         </span>
 
@@ -162,12 +162,12 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
                       </>
                     ) : (
                       <>
-                        <td style={{ padding: '6px 10px', color: '#60a5fa', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>{li.ticket_ref || '—'}</td>
+                        <td style={{ padding: '6px 10px', color: 'var(--accent-info-fg)', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>{li.ticket_ref || '—'}</td>
                         <td style={{ padding: '6px 10px', color: 'var(--text-2)', maxWidth: 280 }}><span className="block truncate">{li.ticket_subject || li.description}</span></td>
                         <td style={{ padding: '6px 10px' }}>
                           {li.ticket_level
                             ? <span style={{ fontSize: 11, fontWeight: 700, color: li.ticket_level === 'L3' ? '#f87171' : li.ticket_level === 'L2' ? '#a78bfa' : '#60a5fa', background: (li.ticket_level === 'L3' ? '#f87171' : li.ticket_level === 'L2' ? '#a78bfa' : '#60a5fa') + '18', padding: '1px 6px' }}>{li.ticket_level}</span>
-                            : <span style={{ color: 'var(--text-5)' }}>—</span>
+                            : <span style={{ color: 'var(--text-3)' }}>—</span>
                           }
                         </td>
                         <td style={{ padding: '6px 10px', color: 'var(--text-2)', textAlign: 'right', whiteSpace: 'nowrap' }}>{parseFloat(li.unit_rate).toFixed(2)}</td>
@@ -190,7 +190,7 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
                 Tax ({invoice.tax_rate}%): <strong style={{ color: 'var(--text-1)' }}>{invoice.currency} {parseFloat(invoice.tax_amount).toFixed(2)}</strong>
               </span>
             )}
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#60a5fa' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-info-fg)' }}>
               Total: {invoice.currency} {parseFloat(invoice.total).toFixed(2)}
             </span>
           </div>
@@ -257,7 +257,7 @@ export default function BillingInvoicesPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <Building2 size={14} style={{ color: '#f59e0b' }} />
+        <Building2 size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Invoices</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— generate & track client invoices</span>
       </div>
@@ -269,7 +269,7 @@ export default function BillingInvoicesPage() {
         <div style={{ maxWidth: 860, margin: '0 auto', marginBottom: 24 }}>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
             <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-md)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FileText size={13} style={{ color: '#f59e0b' }} />
+              <FileText size={13} style={{ color: 'var(--accent-warn-fg)' }} />
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Generate Invoice</span>
             </div>
 
@@ -291,7 +291,7 @@ export default function BillingInvoicesPage() {
                     ))}
                   </select>
                   {configuredOrgs.length === 0 && (
-                    <span style={{ fontSize: 10, color: '#f59e0b' }}>Configure rates first →</span>
+                    <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)' }}>Configure rates first →</span>
                   )}
                 </div>
 
@@ -350,7 +350,7 @@ export default function BillingInvoicesPage() {
               </div>
 
               {genError && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: '#f87171' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
                   <AlertCircle size={12} />
                   {genError}
                 </div>
@@ -363,7 +363,7 @@ export default function BillingInvoicesPage() {
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 size={22} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={22} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : invoices.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 0', border: '1px solid var(--border-md)', background: 'var(--bg-card)', color: 'var(--text-4)', fontSize: 13 }}>

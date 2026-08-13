@@ -220,7 +220,7 @@ export default function RequestsPage() {
 
         <div className="flex items-center gap-1.5 ml-auto">
           {selectedIds.size > 0 && (
-            <span className="px-2 py-1" style={{ fontSize: 11, background: 'rgba(37,99,235,0.2)', color: '#60a5fa' }}>
+            <span className="px-2 py-1" style={{ fontSize: 11, background: 'rgba(37,99,235,0.2)', color: 'var(--accent-info-fg)' }}>
               {selectedIds.size} selected
             </span>
           )}
@@ -273,7 +273,7 @@ export default function RequestsPage() {
               <tr>
                 <td colSpan={14}>
                   <div className="empty-state py-16">
-                    <Loader2 size={28} className="animate-spin" style={{ color: '#2563eb', marginBottom: 8 }} />
+                    <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-info-fg)', marginBottom: 8 }} />
                     <p style={{ fontSize: 12, color: 'var(--text-4)' }}>Loading tickets…</p>
                   </div>
                 </td>
@@ -282,7 +282,7 @@ export default function RequestsPage() {
               <tr>
                 <td colSpan={14}>
                   <div className="empty-state py-16">
-                    <p className="empty-state-text" style={{ color: '#f87171' }}>Failed to load tickets</p>
+                    <p className="empty-state-text" style={{ color: 'var(--accent-danger-fg)' }}>Failed to load tickets</p>
                     <button className="btn-primary mt-3" style={{ fontSize: 11 }} onClick={() => refetch()}>Retry</button>
                   </div>
                 </td>
@@ -293,7 +293,7 @@ export default function RequestsPage() {
                   <div className="empty-state py-16">
                     <Filter size={32} style={{ color: 'var(--border-md)', marginBottom: 8 }} />
                     <p className="empty-state-text">No tickets yet</p>
-                    <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 4 }}>Create your first ticket to get started</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>Create your first ticket to get started</p>
                     <button
                       className="btn-primary mt-4 gap-1"
                       style={{ fontSize: 11 }}
@@ -668,7 +668,7 @@ function OrgChangePopup({ ticketRef, fromEmail, currentOrg, pos, orgs, onClose }
 
         {/* Error */}
         {error && (
-          <p style={{ fontSize: 11, color: '#f87171', margin: 0 }}>{error}</p>
+          <p style={{ fontSize: 11, color: 'var(--accent-danger-fg)', margin: 0 }}>{error}</p>
         )}
 
         {/* Actions */}
@@ -740,10 +740,10 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
       </td>
       <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
         {ticket.status === 'closed' || ticket.status === 'solved'
-          ? <Mail size={15} style={{ color: 'var(--text-5)', display: 'inline-block' }} />
+          ? <Mail size={15} style={{ color: 'var(--text-3)', display: 'inline-block' }} />
           : ticket.last_reply_author_is_agent === true
-            ? <MailOpen size={15} style={{ color: '#22c55e', display: 'inline-block' }} />
-            : <Mail size={15} style={{ color: '#ef4444', display: 'inline-block' }} />}
+            ? <MailOpen size={15} style={{ color: 'var(--accent-ok-fg)', display: 'inline-block' }} />
+            : <Mail size={15} style={{ color: 'var(--accent-danger-fg)', display: 'inline-block' }} />}
       </td>
       <td onClick={e => e.stopPropagation()}>
         <span
@@ -779,10 +779,10 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
           onMouseEnter={canAssign ? (e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }) : undefined}
           onMouseLeave={canAssign ? (e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }) : undefined}
         >
-          <User size={14} style={{ flexShrink: 0, color: ticket.assignee ? getAvatarColor(ticket.assignee) : 'var(--text-5)' }} />
+          <User size={14} style={{ flexShrink: 0, color: ticket.assignee ? getAvatarColor(ticket.assignee) : 'var(--text-3)' }} />
           {ticket.assignee
             ? <span className="truncate" style={{ color: 'var(--text-2)', fontSize: 13 }}>{ticket.assignee}</span>
-            : <span style={{ fontSize: 13, color: 'var(--text-5)', fontStyle: 'italic' }}>Unassigned</span>
+            : <span style={{ fontSize: 13, color: 'var(--text-3)', fontStyle: 'italic' }}>Unassigned</span>
           }
         </div>
       </td>
@@ -790,7 +790,7 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
       <td>
         {lvl
           ? <span className="px-1.5 py-0.5 font-semibold" style={{ fontSize: 12, color: lvlColor, background: lvlColor + '18' }}>{lvl}</span>
-          : <span style={{ color: 'var(--text-5)', fontSize: 13 }}>—</span>
+          : <span style={{ color: 'var(--text-3)', fontSize: 13 }}>—</span>
         }
       </td>
 
@@ -805,7 +805,7 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
         >
           {ticket.group_name
             ? <span className="truncate" style={{ fontSize: 13, color: 'var(--text-3)' }}>{ticket.group_name}</span>
-            : <span style={{ fontSize: 13, color: 'var(--text-5)', fontStyle: 'italic' }}>—</span>
+            : <span style={{ fontSize: 13, color: 'var(--text-3)', fontStyle: 'italic' }}>—</span>
           }
         </div>
       </td>
@@ -823,7 +823,7 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
         {(() => {
           const s = SLA_CFG[ticket.sla_status] ?? SLA_CFG.not_applied;
           if (ticket.sla_status === 'not_applied') {
-            return <span style={{ fontSize: 12, color: 'var(--text-5)' }}>—</span>;
+            return <span style={{ fontSize: 12, color: 'var(--text-3)' }}>—</span>;
           }
           return (
             <span style={{ fontSize: 11, fontWeight: 600, color: s.color, background: s.bg, padding: '2px 7px', whiteSpace: 'nowrap' }}>
@@ -837,8 +837,8 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
       <td style={{ maxWidth: 130 }} onClick={e => e.stopPropagation()}>
         {ticket.is_internal ? (
           <div className="flex items-center gap-1" style={{ display: 'inline-flex' }}>
-            <Lock size={10} style={{ color: '#a78bfa', flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#a78bfa', background: 'rgba(139,92,246,0.12)', padding: '2px 7px', whiteSpace: 'nowrap' }}>Internal</span>
+            <Lock size={10} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-violet-fg)', background: 'rgba(139,92,246,0.12)', padding: '2px 7px', whiteSpace: 'nowrap' }}>Internal</span>
           </div>
         ) : isWalkIn && onOpenOrgChange ? (
           <div
@@ -849,8 +849,8 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             title="Click to reassign organization"
           >
-            <Building2 size={11} style={{ color: '#fbbf24', flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: '#fbbf24' }}>Walk-In</span>
+            <Building2 size={11} style={{ color: 'var(--accent-warn-fg)', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: 'var(--accent-warn-fg)' }}>Walk-In</span>
           </div>
         ) : (
           <span className="block truncate" style={{ color: 'var(--text-4)', fontSize: 13 }}>

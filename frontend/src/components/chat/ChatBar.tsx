@@ -62,7 +62,7 @@ function Bubble({ msg, myId, isSupport }: {
       gap: 2,
     }}>
       {isSupport && !isMine && (
-        <span style={{ fontSize: 10, color: 'var(--text-5)', paddingLeft: 2 }}>
+        <span style={{ fontSize: 10, color: 'var(--text-3)', paddingLeft: 2 }}>
           {msg.senderType === 'agent' ? 'Support Agent' : 'You'}
         </span>
       )}
@@ -251,9 +251,9 @@ export function ChatBar({ win }: { win: ChatWindow }) {
   function StatusBadge() {
     if (!isSupport || !win.sessionStatus) return null;
     const cfg = {
-      waiting: { label: 'Waiting', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
-      active:  { label: 'Active',  bg: 'rgba(34,197,94,0.12)',  color: '#4ade80' },
-      ended:   { label: 'Ended',   bg: 'rgba(100,116,139,0.12)', color: '#64748b' },
+      waiting: { label: 'Waiting', bg: 'var(--accent-warn-bg)', color: 'var(--accent-warn-fg)' },
+      active:  { label: 'Active',  bg: 'var(--accent-ok-bg)',  color: 'var(--accent-ok-fg)' },
+      ended:   { label: 'Ended',   bg: 'var(--accent-neutral-bg)', color: 'var(--text-3)' },
     }[win.sessionStatus] ?? { label: win.sessionStatus, bg: 'transparent', color: 'var(--text-4)' };
     return (
       <span style={{
@@ -318,7 +318,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
               fontSize: 10, fontWeight: 700, padding: '3px 8px',
               border: '1px solid rgba(248,113,113,0.4)',
               background: 'rgba(248,113,113,0.1)',
-              color: '#f87171', cursor: 'pointer',
+              color: 'var(--accent-danger-fg)', cursor: 'pointer',
               letterSpacing: '0.03em', flexShrink: 0,
               transition: 'all 0.2s',
             }}
@@ -333,7 +333,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
               fontSize: 10, fontWeight: 700, padding: '3px 8px',
               border: '1px solid rgba(251,191,36,0.4)',
               background: 'rgba(251,191,36,0.1)',
-              color: '#fbbf24', letterSpacing: '0.03em',
+              color: 'var(--accent-warn-fg)', letterSpacing: '0.03em',
             }}>
               Requested…
             </span>
@@ -343,7 +343,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
                 fontSize: 10, fontWeight: 700, padding: '3px 7px',
                 border: '1px solid rgba(239,68,68,0.5)',
                 background: 'rgba(239,68,68,0.15)',
-                color: '#ef4444', cursor: 'pointer',
+                color: 'var(--accent-danger-fg)', cursor: 'pointer',
                 letterSpacing: '0.03em',
               }}
               title="Force end — use if user is unresponsive"
@@ -354,18 +354,18 @@ export function ChatBar({ win }: { win: ChatWindow }) {
         )}
 
         <button
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-5)', padding: '4px 3px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: '4px 3px', display: 'flex', alignItems: 'center' }}
           onClick={(e) => { e.stopPropagation(); toggleMinimize(win.id); }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <Minus size={13} />
         </button>
         <button
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-5)', padding: '4px 3px', display: 'flex', alignItems: 'center' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: '4px 3px', display: 'flex', alignItems: 'center' }}
           onClick={(e) => { e.stopPropagation(); closeWindow(win.id); }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}
         >
           <X size={13} />
         </button>
@@ -381,7 +381,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
               padding: '5px 12px', flexShrink: 0,
               background: 'rgba(251,191,36,0.07)',
               borderBottom: '1px solid rgba(251,191,36,0.15)',
-              fontSize: 11, color: '#fbbf24',
+              fontSize: 11, color: 'var(--accent-warn-fg)',
             }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', background: '#fbbf24',
@@ -417,7 +417,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
             ).length === 0 && (
               <div style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--text-5)', fontSize: 12,
+                color: 'var(--text-3)', fontSize: 12,
               }}>
                 {isWaiting && isSupport
                   ? (isAgent ? 'Waiting for user to accept…' : 'Waiting for an agent…')
@@ -442,7 +442,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
           {isEnded && (
             <div style={{
               fontSize: 11, textAlign: 'center', padding: '7px 10px',
-              color: 'var(--text-5)', background: 'var(--bg-elevated)',
+              color: 'var(--text-3)', background: 'var(--bg-elevated)',
               borderTop: '1px solid var(--border-subtle)', flexShrink: 0,
             }}>
               This session has ended.
@@ -487,7 +487,7 @@ export function ChatBar({ win }: { win: ChatWindow }) {
                 style={{
                   background: draft.trim() ? '#6366f1' : 'var(--bg-elevated)',
                   border: draft.trim() ? 'none' : '1px solid var(--border-md)',
-                  color: draft.trim() ? '#fff' : 'var(--text-5)',
+                  color: draft.trim() ? '#fff' : 'var(--text-3)',
                   cursor: draft.trim() ? 'pointer' : 'default',
                   fontSize: 12, fontWeight: 700, padding: '0 14px',
                   flexShrink: 0, letterSpacing: '0.03em',

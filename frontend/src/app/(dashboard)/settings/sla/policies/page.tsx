@@ -24,10 +24,10 @@ function fmt(minutes: number): string {
 }
 
 const PRIORITIES: Array<{ key: 'critical' | 'high' | 'normal' | 'low'; color: string; bg: string }> = [
-  { key: 'critical', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
-  { key: 'high',     color: '#fb923c', bg: 'rgba(251,146,60,0.12)'  },
-  { key: 'normal',   color: '#60a5fa', bg: 'rgba(96,165,250,0.12)'  },
-  { key: 'low',      color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+  { key: 'critical', color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)' },
+  { key: 'high',     color: 'var(--accent-orange-fg)', bg: 'var(--accent-orange-bg)'  },
+  { key: 'normal',   color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)'  },
+  { key: 'low',      color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' },
 ];
 
 const DEFAULT_TARGETS: Record<string, { first_response_minutes: number; resolution_minutes: number; due_soon_minutes: number }> = {
@@ -165,7 +165,7 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', marginBottom: 5 }}>Priority Order</label>
                 <input type="number" min={1} max={999} value={order} onChange={e => setOrder(Number(e.target.value))} style={inp} onFocus={fi} onBlur={fo} />
-                <p style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 3 }}>Lower = higher priority</p>
+                <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>Lower = higher priority</p>
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
@@ -202,13 +202,13 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
                     height: 32, padding: '0 14px', fontSize: 12, fontWeight: 500, cursor: opt.locked ? 'not-allowed' : 'pointer',
                     background: scope === opt.key ? 'rgba(37,99,235,0.15)' : 'transparent',
                     border: scope === opt.key ? '1px solid rgba(37,99,235,0.4)' : '1px solid var(--border-md)',
-                    color: opt.locked ? 'var(--text-5)' : scope === opt.key ? '#60a5fa' : 'var(--text-3)',
+                    color: opt.locked ? 'var(--text-3)' : scope === opt.key ? '#60a5fa' : 'var(--text-3)',
                     opacity: opt.locked ? 0.5 : 1,
                   }}
                 >
                   {opt.locked && <Lock size={10} />}
                   {opt.label}
-                  {opt.locked && <span style={{ fontSize: 9, color: '#f59e0b', background: 'rgba(245,158,11,0.15)', padding: '1px 4px', marginLeft: 2 }}>Phase B</span>}
+                  {opt.locked && <span style={{ fontSize: 9, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.15)', padding: '1px 4px', marginLeft: 2 }}>Phase B</span>}
                 </button>
               ))}
             </div>
@@ -264,7 +264,7 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
                 </tbody>
               </table>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 8 }}>All values in minutes. First Response and Resolution are measured from ticket creation.</p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>All values in minutes. First Response and Resolution are measured from ticket creation.</p>
           </div>
 
           {/* ── Breach Emails ── */}
@@ -279,9 +279,9 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
                     <span style={{ fontSize: 12, color: 'var(--text-2)' }}>{email}</span>
                   </div>
                   <button onClick={() => setEmails(v => v.filter(e => e !== email))}
-                    style={{ color: 'var(--text-5)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
+                    style={{ color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; }}>
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; }}>
                     <X size={12} />
                   </button>
                 </div>
@@ -315,12 +315,12 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.2)' }}>
                 <div style={{ width: 8, height: 8, background: '#2563eb', borderRadius: '50%', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--text-1)' }}>Real elapsed time</span>
-                <span style={{ marginLeft: 'auto', fontSize: 10, color: '#34d399', background: 'rgba(16,185,129,0.12)', padding: '1px 6px' }}>Active</span>
+                <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--accent-ok-fg)', background: 'rgba(16,185,129,0.12)', padding: '1px 6px' }}>Active</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.5 }}>
-                <Lock size={11} style={{ color: 'var(--text-5)', flexShrink: 0 }} />
+                <Lock size={11} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--text-4)' }}>Business hours only</span>
-                <span style={{ marginLeft: 'auto', fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 6px' }}>Phase B — requires Business Hours setup</span>
+                <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 6px' }}>Phase B — requires Business Hours setup</span>
               </div>
             </div>
           </div>
@@ -330,16 +330,16 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
             {sectionHdr('Pause Rules')}
             <div style={{ padding: '12px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', opacity: 0.6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <Lock size={11} style={{ color: 'var(--text-5)' }} />
+                <Lock size={11} style={{ color: 'var(--text-3)' }} />
                 <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Pause SLA when ticket is:</span>
-                <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 6px', marginLeft: 'auto' }}>Phase B</span>
+                <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 6px', marginLeft: 'auto' }}>Phase B</span>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {['Waiting on Customer', 'On Hold'].map(s => (
-                  <span key={s} style={{ fontSize: 11, color: 'var(--text-5)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 8px' }}>{s}</span>
+                  <span key={s} style={{ fontSize: 11, color: 'var(--text-3)', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 8px' }}>{s}</span>
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 8 }}>SLA clock pauses when status changes to these, resumes when customer replies or status changes back.</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>SLA clock pauses when status changes to these, resumes when customer replies or status changes back.</p>
             </div>
           </div>
         </div>
@@ -347,7 +347,7 @@ function PolicyPanel({ editing, onClose }: PanelProps) {
         {/* Footer */}
         <div style={{ flexShrink: 0, padding: '14px 20px', borderTop: '1px solid var(--border-md)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {error && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#f87171' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
               <AlertCircle size={12} /> {error}
             </div>
           )}
@@ -402,7 +402,7 @@ export default function SLAPoliciesPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <Shield size={14} style={{ color: '#f59e0b' }} />
+        <Shield size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>SLA Policies</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— response & resolution targets</span>
         <div style={{ marginLeft: 'auto' }}>
@@ -420,7 +420,7 @@ export default function SLAPoliciesPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : policies.length === 0 ? (
           <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', padding: '60px 0' }}>
@@ -469,7 +469,7 @@ export default function SLAPoliciesPage() {
                         )}
                       </div>
                       <div>
-                        <span style={{ fontSize: 11, color: '#60a5fa', background: 'rgba(96,165,250,0.1)', padding: '2px 8px' }}>
+                        <span style={{ fontSize: 11, color: 'var(--accent-info-fg)', background: 'rgba(96,165,250,0.1)', padding: '2px 8px' }}>
                           {policy.scope_type === 'specific_org' && policy.scope_org_name
                             ? policy.scope_org_name
                             : SCOPE_LABELS[policy.scope_type]}
@@ -481,7 +481,7 @@ export default function SLAPoliciesPage() {
                         </span>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--text-3)', fontWeight: 600 }}>{policy.priority_order}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-5)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-3)' }}>
                         {new Date(policy.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </div>
                       <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>

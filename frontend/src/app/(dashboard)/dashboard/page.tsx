@@ -39,19 +39,19 @@ export default function DashboardPage() {
   const { data: volume }                              = useVolumeByDay();
 
   const statCards = [
-    { label: 'Total Open',     value: stats?.total_open     ?? 0, color: '#60a5fa', icon: TrendingUp   },
-    { label: 'Unassigned',     value: stats?.unassigned     ?? 0, color: '#94a3b8', icon: Users        },
-    { label: 'Overdue',        value: stats?.overdue        ?? 0, color: '#f87171', icon: AlertTriangle },
-    { label: 'Waiting Client', value: stats?.waiting_client ?? 0, color: '#fb923c', icon: Clock        },
-    { label: 'Resolved Today', value: stats?.solved_today   ?? 0, color: '#34d399', icon: CheckCircle  },
-    { label: 'Closed',         value: stats?.closed         ?? 0, color: '#64748b', icon: XCircle      },
+    { label: 'Total Open',     value: stats?.total_open     ?? 0, color: 'var(--accent-info-fg)', icon: TrendingUp   },
+    { label: 'Unassigned',     value: stats?.unassigned     ?? 0, color: 'var(--text-3)', icon: Users        },
+    { label: 'Overdue',        value: stats?.overdue        ?? 0, color: 'var(--accent-danger-fg)', icon: AlertTriangle },
+    { label: 'Waiting Client', value: stats?.waiting_client ?? 0, color: 'var(--accent-orange-fg)', icon: Clock        },
+    { label: 'Resolved Today', value: stats?.solved_today   ?? 0, color: 'var(--accent-ok-fg)', icon: CheckCircle  },
+    { label: 'Closed',         value: stats?.closed         ?? 0, color: 'var(--text-3)', icon: XCircle      },
   ];
 
   const priorityData = [
-    { name: 'Normal',   value: stats?.priority_breakdown?.normal   ?? 0, color: '#3b82f6' },
-    { name: 'Low',      value: stats?.priority_breakdown?.low      ?? 0, color: '#22c55e' },
-    { name: 'High',     value: stats?.priority_breakdown?.high     ?? 0, color: '#f59e0b' },
-    { name: 'Critical', value: stats?.priority_breakdown?.critical ?? 0, color: '#ef4444' },
+    { name: 'Normal',   value: stats?.priority_breakdown?.normal   ?? 0, color: 'var(--accent-info-fg)' },
+    { name: 'Low',      value: stats?.priority_breakdown?.low      ?? 0, color: 'var(--accent-ok-fg)' },
+    { name: 'High',     value: stats?.priority_breakdown?.high     ?? 0, color: 'var(--accent-warn-fg)' },
+    { name: 'Critical', value: stats?.priority_breakdown?.critical ?? 0, color: 'var(--accent-danger-fg)' },
   ];
 
   const unassigned = stats?.unassigned   ?? 0;
@@ -120,7 +120,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div style={{ fontFamily: 'var(--font-hemi)', fontSize: 32, lineHeight: 1, color }}>{value}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-pale)', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600, marginTop: 4 }}>{label}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600, marginTop: 4 }}>{label}</div>
               </div>
             </div>
           ))}
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                     {!agents || agents.length === 0 ? (
                       <tr>
                         <td colSpan={4}>
-                          <div className="py-8 text-center" style={{ fontSize: 12, color: 'var(--text-5)' }}>No technicians yet</div>
+                          <div className="py-8 text-center" style={{ fontSize: 12, color: 'var(--text-3)' }}>No technicians yet</div>
                         </td>
                       </tr>
                     ) : agents.map(a => (
@@ -158,16 +158,16 @@ export default function DashboardPage() {
                             <span style={{ fontSize: 10, color: 'var(--text-4)', marginLeft: 6 }}>{ROLE_LABELS[a.role] ?? a.role}</span>
                           </div>
                         </td>
-                        <td className="text-right" style={{ color: '#60a5fa', fontWeight: 600 }}>{a.open}</td>
-                        <td className="text-right" style={{ color: '#fbbf24', fontWeight: 600 }}>{a.waiting_client}</td>
-                        <td className="text-right" style={{ color: a.overdue > 0 ? '#f87171' : 'var(--text-5)', fontWeight: 600 }}>{a.overdue}</td>
+                        <td className="text-right" style={{ color: 'var(--accent-info-fg)', fontWeight: 600 }}>{a.open}</td>
+                        <td className="text-right" style={{ color: 'var(--accent-warn-fg)', fontWeight: 600 }}>{a.waiting_client}</td>
+                        <td className="text-right" style={{ color: a.overdue > 0 ? '#f87171' : 'var(--text-3)', fontWeight: 600 }}>{a.overdue}</td>
                       </tr>
                     ))}
                     <tr style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-md)', fontWeight: 600 }}>
                       <td style={{ color: 'var(--text-1)' }}>Total</td>
-                      <td className="text-right" style={{ color: '#60a5fa' }}>{agents?.reduce((s, a) => s + a.open, 0) ?? 0}</td>
-                      <td className="text-right" style={{ color: '#fbbf24' }}>{agents?.reduce((s, a) => s + a.waiting_client, 0) ?? 0}</td>
-                      <td className="text-right" style={{ color: 'var(--text-5)' }}>{agents?.reduce((s, a) => s + a.overdue, 0) ?? 0}</td>
+                      <td className="text-right" style={{ color: 'var(--accent-info-fg)' }}>{agents?.reduce((s, a) => s + a.open, 0) ?? 0}</td>
+                      <td className="text-right" style={{ color: 'var(--accent-warn-fg)' }}>{agents?.reduce((s, a) => s + a.waiting_client, 0) ?? 0}</td>
+                      <td className="text-right" style={{ color: 'var(--text-3)' }}>{agents?.reduce((s, a) => s + a.overdue, 0) ?? 0}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
               <div className="panel-header">
                 <span className="panel-title">Request Summary</span>
                 <div className="flex items-center gap-3" style={{ fontSize: 11, color: 'var(--text-4)' }}>
-                  {[{ color: '#3b82f6', label: 'Inbound' }, { color: '#10b981', label: 'Completed' }].map(l => (
+                  {[{ color: 'var(--accent-info-fg)', label: 'Inbound' }, { color: 'var(--accent-ok-fg)', label: 'Completed' }].map(l => (
                     <span key={l.label} className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full inline-block" style={{ background: l.color }} />
                       {l.label}
@@ -228,12 +228,12 @@ export default function DashboardPage() {
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex items-center justify-between p-3" style={{ background: 'var(--bg-surface)' }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-pale)' }}>Unassigned</span>
-                  <span className="font-bold" style={{ fontSize: 20, color: '#94a3b8' }}>{unassigned}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Unassigned</span>
+                  <span className="font-bold" style={{ fontSize: 20, color: 'var(--text-3)' }}>{unassigned}</span>
                 </div>
                 <div className="flex items-center justify-between p-3" style={{ background: 'var(--bg-surface)' }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-pale)' }}>Total Open</span>
-                  <span className="font-bold" style={{ fontSize: 20, color: '#60a5fa' }}>{totalOpen}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Total Open</span>
+                  <span className="font-bold" style={{ fontSize: 20, color: 'var(--accent-info-fg)' }}>{totalOpen}</span>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1.5" style={{ fontSize: 11, color: 'var(--text-4)' }}>
@@ -253,9 +253,9 @@ export default function DashboardPage() {
         <div className="panel">
           <div className="panel-header">
             <span className="panel-title flex items-center gap-1.5">
-              <Activity size={13} style={{ color: '#60a5fa' }} />
+              <Activity size={13} style={{ color: 'var(--accent-info-fg)' }} />
               Activity Log
-              <span className="px-1.5 py-0.5 font-semibold ml-1" style={{ fontSize: 9, background: 'rgba(37,99,235,0.15)', color: '#60a5fa', letterSpacing: '0.06em' }}>
+              <span className="px-1.5 py-0.5 font-semibold ml-1" style={{ fontSize: 9, background: 'rgba(37,99,235,0.15)', color: 'var(--accent-info-fg)', letterSpacing: '0.06em' }}>
                 LIVE
               </span>
             </span>
@@ -267,8 +267,8 @@ export default function DashboardPage() {
           {!activity || activity.length === 0 ? (
             <div className="py-10 text-center">
               <Activity size={24} style={{ color: 'var(--border-md)', margin: '0 auto 8px' }} />
-              <p style={{ fontSize: 12, color: 'var(--text-5)' }}>No activity yet</p>
-              <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 4 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-3)' }}>No activity yet</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
                 Activity will appear here once tickets are created.{' '}
                 <Link href="/requests/new" className="text-[#60a5fa] hover:underline">Create your first ticket</Link>
               </p>
@@ -286,10 +286,10 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-1)' }}>{item.author}</span>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#60a5fa' }}>{item.ticket_ref}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--accent-info-fg)' }}>{item.ticket_ref}</span>
                       <span style={{ fontSize: 11, color: 'var(--text-4)' }}>{timeAgo(item.created_at)}</span>
                     </div>
-                    <p className="truncate" style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{item.body}</p>
+                    <p className="truncate" style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{item.body}</p>
                   </div>
                 </div>
               ))}

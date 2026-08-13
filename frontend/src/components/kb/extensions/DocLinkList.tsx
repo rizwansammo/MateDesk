@@ -54,7 +54,7 @@ const DocLinkList = forwardRef((props: Props, ref) => {
           className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left"
           style={{ background: i === selected ? 'var(--bg-surface)' : 'transparent' }}
         >
-          <FileText size={14} className="flex-shrink-0" style={{ color: '#a78bfa' }} />
+          <FileText size={14} className="flex-shrink-0" style={{ color: 'var(--accent-violet-fg)' }} />
           <span className="flex flex-col min-w-0">
             <span className="text-[13px] text-[var(--text-1)] truncate">{item.title || 'Untitled'}</span>
             {item.document_type && <span className="text-[11px] text-[var(--text-3)] truncate">{item.document_type}</span>}

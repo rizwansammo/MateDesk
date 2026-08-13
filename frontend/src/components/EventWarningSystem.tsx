@@ -152,7 +152,7 @@ function EventWarningPopup({ event, now, onDismiss, onComplete }: PopupProps) {
           {/* Assigned agents */}
           {event.assigned_agents.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: 12, color: 'var(--text-5)' }}>Assigned:</span>
+              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Assigned:</span>
               {event.assigned_agents.map(a => (
                 <span
                   key={a.id}
@@ -178,7 +178,7 @@ function EventWarningPopup({ event, now, onDismiss, onComplete }: PopupProps) {
                 background: 'rgba(99,102,241,0.06)',
                 border: '1px solid rgba(99,102,241,0.2)',
                 borderRadius: 6, cursor: 'pointer',
-                color: '#818cf8', fontSize: 12,
+                color: 'var(--accent-indigo-fg)', fontSize: 12,
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.12)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.06)'; }}
@@ -298,10 +298,10 @@ function NotificationBar({ events, now, onClickEvent, onDismissEvent }: BarProps
               style={{
                 width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                color: 'var(--text-5)', borderRadius: 3, flexShrink: 0,
+                color: 'var(--text-3)', borderRadius: 3, flexShrink: 0,
               }}
               onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-5)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; }}
               title="Dismiss"
             >
               <X size={12} />

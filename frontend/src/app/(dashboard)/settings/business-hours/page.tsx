@@ -58,7 +58,7 @@ export default function BusinessHoursPage() {
 
           <div className="flex items-center gap-3 mb-6">
             <div style={{ width: 40, height: 40, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Clock size={18} style={{ color: '#60a5fa' }} />
+              <Clock size={18} style={{ color: 'var(--accent-info-fg)' }} />
             </div>
             <div>
               <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Business Hours</h1>
@@ -98,7 +98,7 @@ export default function BusinessHoursPage() {
                     </button>
 
                     {/* Day label */}
-                    <span style={{ fontSize: 13, color: day.open ? 'var(--text-1)' : 'var(--text-5)', width: 100, flexShrink: 0 }}>
+                    <span style={{ fontSize: 13, color: day.open ? 'var(--text-1)' : 'var(--text-3)', width: 100, flexShrink: 0 }}>
                       {label}
                     </span>
 
@@ -112,7 +112,7 @@ export default function BusinessHoursPage() {
                           className={timeInp}
                           style={{ colorScheme: 'dark' }}
                         />
-                        <span style={{ fontSize: 11, color: 'var(--text-5)' }}>to</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-3)' }}>to</span>
                         <input
                           type="time"
                           value={day.end}
@@ -122,7 +122,7 @@ export default function BusinessHoursPage() {
                         />
                       </div>
                     ) : (
-                      <span style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic' }}>Closed</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>Closed</span>
                     )}
                   </div>
                 );
@@ -152,7 +152,7 @@ export default function BusinessHoursPage() {
               >
                 <Save size={12} /> Save Changes
               </button>
-              <span style={{ fontSize: 11, color: 'var(--text-5)' }}>Backend integration coming soon</span>
+              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Backend integration coming soon</span>
             </div>
           </div>
 

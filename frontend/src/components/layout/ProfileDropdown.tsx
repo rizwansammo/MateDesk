@@ -118,7 +118,7 @@ export function ProfileDropdown({ onClose }: Props) {
               style={{
                 fontSize: 11, fontWeight: 600,
                 padding: '3px 10px',
-                background: 'rgba(37,99,235,0.15)', color: '#60a5fa',
+                background: 'rgba(37,99,235,0.15)', color: 'var(--accent-info-fg)',
                 border: '1px solid rgba(37,99,235,0.25)',
               }}
             >
@@ -128,7 +128,7 @@ export function ProfileDropdown({ onClose }: Props) {
               style={{
                 fontSize: 11, fontWeight: 600,
                 padding: '3px 10px',
-                background: 'rgba(16,185,129,0.12)', color: '#34d399',
+                background: 'rgba(16,185,129,0.12)', color: 'var(--accent-ok-fg)',
                 border: '1px solid rgba(16,185,129,0.2)',
                 display: 'flex', alignItems: 'center', gap: 5,
               }}
@@ -224,7 +224,7 @@ export function ProfileDropdown({ onClose }: Props) {
             style={{
               display: 'flex', alignItems: 'center', gap: 12,
               width: '100%', padding: '11px 20px',
-              fontSize: 13, color: '#f87171',
+              fontSize: 13, color: 'var(--accent-danger-fg)',
               background: 'transparent', border: 'none', cursor: 'pointer',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}

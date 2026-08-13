@@ -17,7 +17,7 @@ const PRIORITIES = [
 ];
 
 const lbl = 'block mb-1.5 font-medium text-[var(--text-3)]';
-const inp = 'w-full h-10 px-3 bg-[var(--bg-card)] border border-[var(--border-md)] text-[var(--text-1)] placeholder-[var(--text-5)] outline-none focus:border-[#3b82f6] transition-colors text-[13px]';
+const inp = 'w-full h-10 px-3 bg-[var(--bg-card)] border border-[var(--border-md)] text-[var(--text-1)] placeholder-[var(--text-3)] outline-none focus:border-[#3b82f6] transition-colors text-[13px]';
 const sel = `${inp} cursor-pointer appearance-none`;
 
 type TicketType = 'client' | 'internal';
@@ -155,13 +155,13 @@ export default function NewTicketPage() {
                     >
                       <Icon
                         size={18}
-                        style={{ color: active ? (type === 'internal' ? '#a78bfa' : '#2563eb') : 'var(--text-5)', flexShrink: 0 }}
+                        style={{ color: active ? (type === 'internal' ? '#a78bfa' : '#2563eb') : 'var(--text-3)', flexShrink: 0 }}
                       />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: active ? 'var(--text-0)' : 'var(--text-3)' }}>
                           {label}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 1 }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>
                           {desc}
                         </div>
                       </div>
@@ -179,7 +179,7 @@ export default function NewTicketPage() {
                 background: 'rgba(139,92,246,0.08)',
                 border: '1px solid rgba(139,92,246,0.25)',
               }}>
-                <Lock size={13} style={{ color: '#a78bfa', flexShrink: 0 }} />
+                <Lock size={13} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
                   Reported by <strong style={{ color: 'var(--text-1)' }}>{user?.full_name}</strong> · Visible to MSP staff only
                 </span>
@@ -187,7 +187,7 @@ export default function NewTicketPage() {
             )}
 
             {error && (
-              <div className="mb-4 px-3 py-2" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 12 }}>
+              <div className="mb-4 px-3 py-2" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--accent-danger-fg)', fontSize: 12 }}>
                 {error}
               </div>
             )}
@@ -197,7 +197,7 @@ export default function NewTicketPage() {
               {/* Subject */}
               <div>
                 <label className={lbl} style={{ fontSize: 12 }}>
-                  Subject <span style={{ color: '#ef4444' }}>*</span>
+                  Subject <span style={{ color: 'var(--accent-danger-fg)' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -212,7 +212,7 @@ export default function NewTicketPage() {
               {/* Description */}
               <div>
                 <label className={lbl} style={{ fontSize: 12 }}>
-                  Description <span style={{ color: '#ef4444' }}>*</span>
+                  Description <span style={{ color: 'var(--accent-danger-fg)' }}>*</span>
                 </label>
                 <textarea
                   required
@@ -220,7 +220,7 @@ export default function NewTicketPage() {
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Detailed description…"
-                  className="w-full px-3 py-2.5 bg-[var(--bg-card)] border border-[var(--border-md)] text-[var(--text-1)] placeholder-[var(--text-5)] outline-none focus:border-[#3b82f6] transition-colors resize-y text-[13px]"
+                  className="w-full px-3 py-2.5 bg-[var(--bg-card)] border border-[var(--border-md)] text-[var(--text-1)] placeholder-[var(--text-3)] outline-none focus:border-[#3b82f6] transition-colors resize-y text-[13px]"
                   style={{ minHeight: 100 }}
                 />
               </div>

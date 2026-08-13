@@ -160,7 +160,7 @@ export default function OrganizationsPage() {
       <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : (
           <table className="data-table">
@@ -180,7 +180,7 @@ export default function OrganizationsPage() {
               {orgs.length === 0 ? (
                 <tr>
                   <td colSpan={8}>
-                    <div className="py-14 text-center" style={{ fontSize: 13, color: 'var(--text-5)' }}>
+                    <div className="py-14 text-center" style={{ fontSize: 13, color: 'var(--text-3)' }}>
                       {search ? `No results for "${search}"` : 'No client organizations yet — click New Client to add one'}
                     </div>
                   </td>
@@ -206,14 +206,14 @@ export default function OrganizationsPage() {
                       </Link>
                     </div>
                   </td>
-                  <td style={{ color: '#60a5fa', fontSize: 12 }}>{org.domain || '—'}</td>
+                  <td style={{ color: 'var(--accent-info-fg)', fontSize: 12 }}>{org.domain || '—'}</td>
                   <td style={{ color: 'var(--text-2)', fontSize: 13 }}>{org.contact_name || '—'}</td>
                   <td>
                     <span className={org.is_active ? 'badge badge-success' : 'badge badge-danger'}>
                       {org.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="text-right" style={{ color: '#60a5fa', fontWeight: 600, fontSize: 13 }}>
+                  <td className="text-right" style={{ color: 'var(--accent-info-fg)', fontWeight: 600, fontSize: 13 }}>
                     {org.total_tickets}
                   </td>
                   <td className="text-right" style={{ color: 'var(--text-3)', fontSize: 13 }}>
@@ -271,7 +271,7 @@ export default function OrganizationsPage() {
             <div className="flex flex-col gap-4 overflow-y-auto" style={{ padding: '20px' }}>
 
               {formError && (
-                <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: 12 }}>
+                <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--accent-danger-fg)', fontSize: 12 }}>
                   {formError}
                 </div>
               )}
@@ -337,7 +337,7 @@ export default function OrganizationsPage() {
                       style={{ cursor: 'pointer' }}
                     >
                       {CLIENT_ROLE_OPTIONS.map(o => (
-                        <option key={o.value} value={o.value} style={{ background: '#0f1117' }}>{o.label}</option>
+                        <option key={o.value} value={o.value} style={{ background: 'var(--bg-base)', color: 'var(--text-1)' }}>{o.label}</option>
                       ))}
                     </select>
                   </div>
@@ -355,7 +355,7 @@ export default function OrganizationsPage() {
                     <label className={lbl}>Contact Phone</label>
                     <input type="tel" value={contact.phone} onChange={e => setContact(p => ({ ...p, phone: e.target.value }))} placeholder="+1 (555) 000-0000" className={inp} />
                   </div>
-                  <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: -4 }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -4 }}>
                     Leave email blank to skip user creation. The user account will have no password until a password-reset link is sent.
                   </p>
                 </>
@@ -416,7 +416,7 @@ export default function OrganizationsPage() {
                       onChange={e => setDeleteUsersChecked(e.target.checked)}
                       style={{ accentColor: '#dc2626', width: 14, height: 14, flexShrink: 0 }}
                     />
-                    <span style={{ fontSize: 13, color: '#f87171', lineHeight: 1.4 }}>
+                    <span style={{ fontSize: 13, color: 'var(--accent-danger-fg)', lineHeight: 1.4 }}>
                       Also permanently delete all {userCount} user{userCount !== 1 ? 's' : ''} in this organization
                     </span>
                   </label>

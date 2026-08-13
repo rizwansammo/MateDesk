@@ -63,7 +63,7 @@ export default function BillingCompanyPage() {
         >
           <ArrowLeft size={14} />
         </button>
-        <Building2 size={14} style={{ color: '#f59e0b' }} />
+        <Building2 size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Company Info</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— shown on all invoices</span>
       </div>
@@ -72,7 +72,7 @@ export default function BillingCompanyPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : (
           <div style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -103,7 +103,7 @@ export default function BillingCompanyPage() {
               <div style={{ padding: '16px 20px' }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 6 }}>Payment Terms</label>
                 <textarea value={form.payment_terms} onChange={field('payment_terms')} rows={2} placeholder="e.g. Payment due within 30 days of invoice date." style={{ ...inp, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }} onFocus={fi} onBlur={fo} />
-                <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 5 }}>Printed at the bottom of every invoice PDF.</p>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 5 }}>Printed at the bottom of every invoice PDF.</p>
               </div>
             </div>
 
@@ -118,7 +118,7 @@ export default function BillingCompanyPage() {
                   : saved ? <><Check size={12} /> Saved</>
                   : <><Save size={12} /> Save Changes</>}
               </button>
-              {update.isError && <span style={{ fontSize: 12, color: '#f87171' }}>Failed to save.</span>}
+              {update.isError && <span style={{ fontSize: 12, color: 'var(--accent-danger-fg)' }}>Failed to save.</span>}
             </div>
 
           </div>

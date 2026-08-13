@@ -19,9 +19,9 @@ interface AgentInfo {
 }
 
 const ROLE_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  msp_owner:   { label: 'Owner',   color: '#f87171', bg: 'rgba(239,68,68,0.12)'  },
-  msp_manager: { label: 'Manager', color: '#fbbf24', bg: 'rgba(245,158,11,0.12)' },
-  msp_agent:   { label: 'Agent',   color: '#60a5fa', bg: 'rgba(59,130,246,0.12)' },
+  msp_owner:   { label: 'Owner',   color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)'  },
+  msp_manager: { label: 'Manager', color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
+  msp_agent:   { label: 'Agent',   color: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)' },
 };
 
 const MONO: React.CSSProperties = { fontFamily: '"IBM Plex Mono", monospace' };
@@ -62,13 +62,13 @@ export default function AgentsPage() {
         <span style={{ ...MONO, fontSize: 12, fontWeight: 700, color: 'var(--text-0)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Agents
         </span>
-        <span style={{ ...MONO, fontSize: 11, color: 'var(--text-5)' }}>
+        <span style={{ ...MONO, fontSize: 11, color: 'var(--text-3)' }}>
           {agents.length > 0 && `${agents.length} staff`}
         </span>
         <div style={{ flex: 1 }} />
         {/* Search */}
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <Search size={13} style={{ position: 'absolute', left: 8, color: 'var(--text-5)', pointerEvents: 'none' }} />
+          <Search size={13} style={{ position: 'absolute', left: 8, color: 'var(--text-3)', pointerEvents: 'none' }} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -87,12 +87,12 @@ export default function AgentsPage() {
       {/* Body */}
       <div className="flex-1 overflow-y-auto" style={{ padding: '16px 20px' }}>
         {loading && (
-          <div style={{ color: 'var(--text-5)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
             Loading…
           </div>
         )}
         {!loading && filtered.length === 0 && (
-          <div style={{ color: 'var(--text-5)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ color: 'var(--text-3)', fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
             {query ? 'No agents match your search.' : 'No other agents found.'}
           </div>
         )}
@@ -100,7 +100,7 @@ export default function AgentsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
             {filtered.map((agent) => {
               const isOnline   = onlineUsers.has(agent.id);
-              const roleCfg    = ROLE_CFG[agent.role] ?? { label: agent.role, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+              const roleCfg    = ROLE_CFG[agent.role] ?? { label: agent.role, color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
               const avatarColor = getAvatarColor(agent.full_name);
               const initials    = getInitials(agent.full_name);
               const isSelf      = agent.id === myId;
@@ -119,7 +119,7 @@ export default function AgentsPage() {
                     transition:    'border-color 0.15s',
                   }}
                   onClick={() => router.push(`/agents/${agent.id}`)}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-5)'; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--text-3)'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
                 >
                   {/* Avatar + presence */}
@@ -134,7 +134,7 @@ export default function AgentsPage() {
                     <span style={{
                       position: 'absolute', bottom: 1, right: 1,
                       width: 9, height: 9, borderRadius: '50%',
-                      background: isOnline ? '#22c55e' : 'var(--text-5)',
+                      background: isOnline ? '#22c55e' : 'var(--text-3)',
                       border: '1.5px solid var(--bg-card)',
                     }} />
                   </div>

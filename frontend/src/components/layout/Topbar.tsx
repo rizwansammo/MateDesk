@@ -83,7 +83,7 @@ export function Topbar() {
           }
         </div>
         <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: 3, transition: 'font-size 0.15s' }}>
-          {mdCustomText || <>Mate<span style={{ color: '#1F4ED8' }}>Desk</span></>}
+          {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
         </span>
       </button>
 

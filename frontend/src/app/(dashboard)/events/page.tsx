@@ -14,10 +14,10 @@ import type { CalendarEvent } from '@/types/events';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function eventColor(ev: CalendarEvent): { accent: string; bg: string; border: string } {
-  if (ev.status === 'completed') return { accent: '#34d399', bg: 'rgba(16,185,129,0.07)', border: 'rgba(52,211,153,0.3)' };
+  if (ev.status === 'completed') return { accent: '#34d399', bg: 'var(--accent-ok-bg)', border: 'rgba(52,211,153,0.3)' };
   const isOverdue = new Date(ev.event_dt) < new Date();
-  if (isOverdue) return { accent: '#f87171', bg: 'rgba(239,68,68,0.07)', border: 'rgba(248,113,113,0.3)' };
-  return { accent: '#fbbf24', bg: 'rgba(245,158,11,0.07)', border: 'rgba(251,191,36,0.3)' };
+  if (isOverdue) return { accent: '#f87171', bg: 'var(--accent-danger-bg)', border: 'rgba(248,113,113,0.3)' };
+  return { accent: '#fbbf24', bg: 'var(--accent-warn-bg)', border: 'rgba(251,191,36,0.3)' };
 }
 
 function fmtDt(iso: string): string {
@@ -218,7 +218,7 @@ function EventCard({
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.25)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.1)'; }}
           >
-            <Check size={11} style={{ color: '#34d399' }} />
+            <Check size={11} style={{ color: 'var(--accent-ok-fg)' }} />
           </button>
         )}
         <button
@@ -228,7 +228,7 @@ function EventCard({
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.22)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.08)'; }}
         >
-          <Trash2 size={10} style={{ color: '#f87171' }} />
+          <Trash2 size={10} style={{ color: 'var(--accent-danger-fg)' }} />
         </button>
       </div>
 
@@ -281,12 +281,12 @@ function EventDetailPopup({
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button onClick={onEdit} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#60a5fa', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', cursor: 'pointer' }}
+            <button onClick={onEdit} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', cursor: 'pointer' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.2)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.1)'; }}>
               <Pencil size={10} /> Edit
             </button>
-            <button onClick={onDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#f87171', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
+            <button onClick={onDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'var(--accent-danger-fg)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.18)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.08)'; }}>
               <Trash2 size={10} /> Delete
@@ -318,7 +318,7 @@ function EventDetailPopup({
                 <div style={{ ...lbl, marginBottom: 4 }}>Linked Ticket</div>
                 <button
                   onClick={() => router.push(`/requests/${ev.linked_ticket_ref}`)}
-                  style={{ fontSize: 13, fontWeight: 600, color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
+                  style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <LinkIcon size={11} /> {ev.linked_ticket_ref}
                 </button>
@@ -345,7 +345,7 @@ function EventDetailPopup({
           <div style={{ padding: '12px 18px', borderTop: '1px solid var(--border-subtle)' }}>
             <button
               onClick={onComplete}
-              style={{ width: '100%', height: 36, background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', color: '#34d399', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ width: '100%', height: 36, background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', color: 'var(--accent-ok-fg)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.22)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.12)'; }}
             >
@@ -417,7 +417,7 @@ function EventFormModal({
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: '1px solid var(--border-md)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <CalendarDays size={14} style={{ color: '#60a5fa' }} />
+            <CalendarDays size={14} style={{ color: 'var(--accent-info-fg)' }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)' }}>{modalTitle}</span>
           </div>
           <button onClick={onClose} style={{ color: 'var(--text-4)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
@@ -468,7 +468,7 @@ function EventFormModal({
                 style={{ ...inp, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 <CalendarDays size={13} style={{ color: 'var(--text-4)', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: form.date ? 'var(--text-1)' : 'var(--text-5)' }}>
+                <span style={{ fontSize: 13, color: form.date ? 'var(--text-1)' : 'var(--text-3)' }}>
                   {form.date || 'Pick date…'}
                 </span>
               </button>
@@ -491,7 +491,7 @@ function EventFormModal({
                 style={{ ...inp, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 <Clock size={13} style={{ color: 'var(--text-4)', flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: form.time ? 'var(--text-1)' : 'var(--text-5)' }}>
+                <span style={{ fontSize: 13, color: form.time ? 'var(--text-1)' : 'var(--text-3)' }}>
                   {form.time || 'Pick time…'}
                 </span>
               </button>
@@ -513,7 +513,7 @@ function EventFormModal({
             </label>
             <div style={{ border: '1px solid var(--border-md)', background: 'var(--bg-base)', maxHeight: 140, overflowY: 'auto' }}>
               {agents.length === 0 ? (
-                <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-5)' }}>No agents available</div>
+                <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-3)' }}>No agents available</div>
               ) : agents.map(a => {
                 const selected = form.agentIds.includes(a.id);
                 return (
@@ -530,7 +530,7 @@ function EventFormModal({
                       style={{ width: 14, height: 14, accentColor: '#2563eb', cursor: 'pointer' }}
                     />
                     <span style={{ fontSize: 13, color: selected ? 'var(--text-0)' : 'var(--text-2)', fontWeight: selected ? 600 : 400 }}>{a.full_name}</span>
-                    <span style={{ fontSize: 10, color: 'var(--text-5)', marginLeft: 'auto' }}>{a.role}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 'auto' }}>{a.role}</span>
                   </label>
                 );
               })}
@@ -554,7 +554,7 @@ function EventFormModal({
           </div>
 
           {error && (
-            <div style={{ padding: '9px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ padding: '9px 12px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 12, color: 'var(--accent-danger-fg)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <AlertCircle size={12} /> {error}
             </div>
           )}
@@ -689,7 +689,7 @@ export default function EventsPage() {
 
       {/* Secondary bar */}
       <div className="secondary-bar">
-        <CalendarDays size={13} style={{ color: '#60a5fa' }} />
+        <CalendarDays size={13} style={{ color: 'var(--accent-info-fg)' }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Events</span>
         <div style={{ flex: 1 }} />
         {isMSP && (
@@ -710,9 +710,9 @@ export default function EventsPage() {
         {/* Stats row */}
         <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
           {[
-            { label: 'Pending',   value: pendingCount,   color: '#fbbf24', bg: 'rgba(245,158,11,0.08)',   border: 'rgba(251,191,36,0.25)' },
-            { label: 'Overdue',   value: overdueCount,   color: '#f87171', bg: 'rgba(239,68,68,0.08)',    border: 'rgba(248,113,113,0.25)' },
-            { label: 'Completed', value: completedCount, color: '#34d399', bg: 'rgba(16,185,129,0.08)',   border: 'rgba(52,211,153,0.25)' },
+            { label: 'Pending',   value: pendingCount,   color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)',   border: 'rgba(251,191,36,0.25)' },
+            { label: 'Overdue',   value: overdueCount,   color: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)',    border: 'rgba(248,113,113,0.25)' },
+            { label: 'Completed', value: completedCount, color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)',   border: 'rgba(52,211,153,0.25)' },
           ].map(s => (
             <div key={s.label} style={{ flex: 1, padding: '14px 18px', background: s.bg, border: `1px solid ${s.border}` }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-4)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 4 }}>{s.label}</div>
@@ -737,11 +737,11 @@ export default function EventsPage() {
         {/* Event list */}
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
-            <CalendarDays size={40} style={{ color: 'var(--text-5)' }} />
+            <CalendarDays size={40} style={{ color: 'var(--text-3)' }} />
             <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-3)' }}>No events yet</p>
             {isMSP && (
               <button

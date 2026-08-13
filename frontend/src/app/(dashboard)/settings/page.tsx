@@ -20,7 +20,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Building2,
     title: 'MSP Details',
     desc:  'Organization info & email signature',
-    color: '#3b82f6',
+    color: 'var(--accent-info-fg)',
     links: [
       { label: 'Organization Details', href: '/settings/organization'    },
       { label: 'Email Signature',      href: '/settings/email-signature' },
@@ -30,7 +30,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Users,
     title: 'Clients',
     desc:  'Manage client organizations, users and business hours',
-    color: '#a855f7',
+    color: 'var(--accent-violet-fg)',
     links: [
       { label: 'Organizations',  href: '/settings/organizations' },
       { label: 'Client Users',   href: '/settings/client-users'  },
@@ -50,7 +50,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Users2,
     title: 'Resources & Groups',
     desc:  'Staff members and support team groups',
-    color: '#10b981',
+    color: 'var(--accent-ok-fg)',
     links: [
       { label: 'Staff Members',   href: '/settings/staff'          },
       { label: 'Support Groups',  href: '/settings/support-groups' },
@@ -60,7 +60,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Clock,
     title: 'SLA',
     desc:  'Response targets, breach rules & VIP notifications',
-    color: '#f59e0b',
+    color: 'var(--accent-warn-fg)',
     links: [
       { label: 'SLA Policies', href: '/settings/sla/policies'  },
       { label: 'VIP Rules',    href: '/settings/sla/vip-rules' },
@@ -70,7 +70,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Palette,
     title: 'Appearance',
     desc:  'Interface zoom & display preferences',
-    color: '#f97316',
+    color: 'var(--accent-orange-fg)',
     links: [
       { label: 'Interface Zoom',   href: '/settings/appearance' },
       { label: 'Tickets per Page', href: '/settings/appearance' },
@@ -80,7 +80,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Sliders,
     title: 'General Settings',
     desc:  'Timezone, locale & ticket categories',
-    color: '#94a3b8',
+    color: 'var(--text-3)',
     links: [
       { label: 'Timezone & Locale',  href: '/settings' },
       { label: 'Ticket Categories',  href: '/settings' },
@@ -90,7 +90,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Shield,
     title: 'Security & Access',
     desc:  'Permissions, 2FA & API access',
-    color: '#ef4444',
+    color: 'var(--accent-danger-fg)',
     links: [
       { label: 'Role Permissions', href: '/settings' },
       { label: 'Two-Factor Auth',  href: '/settings' },
@@ -101,7 +101,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Bell,
     title: 'Notifications',
     desc:  'Rules, announcements & reminders',
-    color: '#22c55e',
+    color: 'var(--accent-ok-fg)',
     links: [
       { label: 'Notification Rules', href: '/settings/notifications' },
       { label: 'Announcements',      href: '/settings/notifications' },
@@ -112,7 +112,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  BookOpen,
     title: 'Templates & Automation',
     desc:  'Reply templates & workflow rules',
-    color: '#8b5cf6',
+    color: 'var(--accent-violet-fg)',
     links: [
       { label: 'Canned Responses', href: '/settings/canned-responses' },
       { label: 'Business Rules',   href: '/settings' },
@@ -123,7 +123,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  Zap,
     title: 'Automation',
     desc:  'Pre-built templates & custom IF → THEN ticket rules',
-    color: '#f59e0b',
+    color: 'var(--accent-warn-fg)',
     links: [
       { label: 'Pre-Built Rules', href: '/settings/automation/prebuilt' },
       { label: 'Custom Rules',    href: '/settings/automation/rules'    },
@@ -134,7 +134,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     icon:  DollarSign,
     title: 'Billing',
     desc:  'Client rates, invoicing & payment tracking',
-    color: '#f59e0b',
+    color: 'var(--accent-warn-fg)',
     links: [
       { label: 'Company Info', href: '/settings/billing/company'  },
       { label: 'Client Rates', href: '/settings/billing/rates'    },

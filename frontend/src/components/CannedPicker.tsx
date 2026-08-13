@@ -55,7 +55,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
   function CategoryGrid() {
     if (categories.length === 0) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10, color: 'var(--text-5)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10, color: 'var(--text-3)' }}>
           <Archive size={32} style={{ opacity: 0.3 }} />
           <span style={{ fontSize: 13 }}>No categories yet. Create them in Settings → Canned Responses.</span>
         </div>
@@ -93,9 +93,9 @@ export function CannedPicker({ onSelect, onClose }: Props) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                <Archive size={14} style={{ color: '#60a5fa' }} />
+                <Archive size={14} style={{ color: 'var(--accent-info-fg)' }} />
               </div>
-              <ChevronRight size={12} style={{ color: 'var(--text-5)' }} />
+              <ChevronRight size={12} style={{ color: 'var(--text-3)' }} />
             </div>
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', lineHeight: 1.3 }}>
               {cat.name}
@@ -111,7 +111,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
   function ResponseView() {
     if (responses.length === 0) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10, color: 'var(--text-5)', padding: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 10, color: 'var(--text-3)', padding: 20 }}>
           <Archive size={28} style={{ opacity: 0.3 }} />
           <span style={{ fontSize: 13 }}>
             {isSearching ? `No responses match "${search}"` : 'No responses in this category.'}
@@ -142,7 +142,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
                   style={{
                     padding: '6px 14px 4px',
                     fontSize: 10, fontWeight: 700,
-                    color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em',
+                    color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em',
                     borderBottom: '1px solid var(--border-subtle)',
                     background: 'var(--bg-surface)',
                   }}
@@ -176,7 +176,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
                 transition: 'opacity 0.18s, transform 0.18s',
               }}
             >
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                 PREVIEW
               </div>
               <div
@@ -210,7 +210,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-5)', fontSize: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-3)', fontSize: 12 }}>
               Hover a response to preview
             </div>
           )}
@@ -292,7 +292,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
             </button>
           )}
 
-          <Archive size={14} style={{ color: '#60a5fa', flexShrink: 0 }} />
+          <Archive size={14} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />
 
           {/* Breadcrumb */}
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', flexShrink: 0 }}>
@@ -301,7 +301,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
 
           {/* Search */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card)', border: '1px solid var(--border-md)', borderRadius: 5, padding: '0 10px', height: 30 }}>
-            <Search size={12} style={{ color: 'var(--text-5)', flexShrink: 0 }} />
+            <Search size={12} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
             <input
               ref={searchRef}
               value={search}
@@ -318,7 +318,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
             {search && (
               <button
                 onClick={() => setSearch('')}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-5)', display: 'flex', alignItems: 'center', padding: 0 }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-3)', display: 'flex', alignItems: 'center', padding: 0 }}
               >
                 <X size={11} />
               </button>
@@ -347,7 +347,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
             flexShrink: 0, padding: '6px 16px',
             borderTop: '1px solid var(--border-subtle)',
             background: 'var(--bg-surface)',
-            fontSize: 10, color: 'var(--text-5)', textAlign: 'center',
+            fontSize: 10, color: 'var(--text-3)', textAlign: 'center',
           }}
         >
           Tip: type <span style={{ fontFamily: 'monospace', background: 'var(--bg-card)', padding: '1px 4px', borderRadius: 3 }}>//c</span> in the reply box to open this picker instantly

@@ -112,12 +112,12 @@ export default function ClientUsersPage() {
       <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <UserX size={32} style={{ color: 'var(--border-md)' }} />
-            <p style={{ fontSize: 13, color: 'var(--text-5)' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-3)' }}>
               {tab === 'unattached' ? 'No unattached users — all users belong to an organization.' : 'No users found.'}
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function ClientUsersPage() {
                   </td>
                   <td style={{ color: 'var(--text-3)', fontSize: 12 }}>{user.email}</td>
                   <td>
-                    <span style={{ fontSize: 11, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
+                    <span style={{ fontSize: 11, color: 'var(--accent-indigo-fg)', background: 'rgba(129,140,248,0.1)', padding: '2px 7px' }}>
                       {ROLE_LABELS[user.role] ?? user.role}
                     </span>
                   </td>
@@ -171,18 +171,18 @@ export default function ClientUsersPage() {
                     {user.org_id ? (
                       <Link
                         href={`/settings/organizations/${user.org_id}`}
-                        style={{ fontSize: 12, color: '#60a5fa' }}
+                        style={{ fontSize: 12, color: 'var(--accent-info-fg)' }}
                         onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.opacity = '0.75'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.opacity = '1'; }}
                       >
                         {user.org_name}
                       </Link>
                     ) : user.deleted_org_name ? (
-                      <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 7px', fontWeight: 600 }}>
+                      <span style={{ fontSize: 11, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.1)', padding: '2px 7px', fontWeight: 600 }}>
                         {user.deleted_org_name} [Deleted]
                       </span>
                     ) : (
-                      <span style={{ fontSize: 11, color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '2px 7px', fontWeight: 600 }}>
+                      <span style={{ fontSize: 11, color: 'var(--accent-danger-fg)', background: 'rgba(239,68,68,0.1)', padding: '2px 7px', fontWeight: 600 }}>
                         Unattached
                       </span>
                     )}
@@ -225,7 +225,7 @@ export default function ClientUsersPage() {
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)', width: '100%', maxWidth: 380 }}>
             <div style={{ padding: '20px 20px 16px' }}>
               <div className="flex items-center gap-3 mb-3">
-                <AlertCircle size={20} style={{ color: '#f87171', flexShrink: 0 }} />
+                <AlertCircle size={20} style={{ color: 'var(--accent-danger-fg)', flexShrink: 0 }} />
                 <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Delete User?</p>
               </div>
               <p style={{ fontSize: 13, color: 'var(--text-3)', lineHeight: 1.6 }}>

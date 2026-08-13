@@ -7,13 +7,13 @@ import { useKBArticles, useDeleteKBArticle, type KBArticle } from '@/hooks/useKB
 import { useAuthStore } from '@/store/useAuthStore';
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  published: { label: 'Published', color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
-  draft:     { label: 'Draft',     color: '#fbbf24', bg: 'rgba(245,158,11,0.12)' },
+  published: { label: 'Published', color: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
+  draft:     { label: 'Draft',     color: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
 };
 
 const VIS_CFG: Record<string, { label: string; color: string }> = {
-  internal: { label: 'Internal', color: '#818cf8' },
-  public:   { label: 'Public',   color: '#60a5fa' },
+  internal: { label: 'Internal', color: 'var(--accent-indigo-fg)' },
+  public:   { label: 'Public',   color: 'var(--accent-info-fg)' },
 };
 
 export default function KBResolutionsPage() {
@@ -36,7 +36,7 @@ export default function KBResolutionsPage() {
 
       {/* Secondary bar */}
       <div className="secondary-bar">
-        <BookOpen size={13} style={{ color: '#a78bfa' }} />
+        <BookOpen size={13} style={{ color: 'var(--accent-violet-fg)' }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>Knowledge Base</span>
         <span style={{ color: 'var(--border-md)' }}>·</span>
         <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Resolutions</span>
@@ -80,23 +80,23 @@ export default function KBResolutionsPage() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 size={22} className="animate-spin" style={{ color: '#2563eb' }} />
+              <Loader2 size={22} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
             </div>
           ) : isError ? (
             <div className="flex flex-col items-center justify-center py-16 gap-2">
-              <AlertCircle size={24} style={{ color: '#f87171' }} />
+              <AlertCircle size={24} style={{ color: 'var(--accent-danger-fg)' }} />
               <p style={{ fontSize: 13, color: 'var(--text-4)' }}>Failed to load articles.</p>
             </div>
           ) : articles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <BookOpen size={32} style={{ color: 'var(--text-5)' }} />
-              <p style={{ fontSize: 13, color: 'var(--text-5)' }}>
+              <BookOpen size={32} style={{ color: 'var(--text-3)' }} />
+              <p style={{ fontSize: 13, color: 'var(--text-3)' }}>
                 {q ? 'No results match your search.' : 'No resolution articles yet.'}
               </p>
               {isMSP && !q && (
                 <button
                   onClick={() => router.push('/kb/resolutions/new')}
-                  style={{ fontSize: 12, color: '#60a5fa', background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ fontSize: 12, color: 'var(--accent-info-fg)', background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   Create the first one →
                 </button>
@@ -123,7 +123,7 @@ export default function KBResolutionsPage() {
                   return (
                     <tr key={a.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/kb/resolutions/${a.id}`)}>
                       <td>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#60a5fa' }}>{a.title}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-info-fg)' }}>{a.title}</span>
                       </td>
                       <td>
                         <span style={{ fontSize: 11, fontWeight: 600, color: sCfg.color, background: sCfg.bg, padding: '2px 7px' }}>
@@ -137,7 +137,7 @@ export default function KBResolutionsPage() {
                       </td>
                       <td style={{ fontSize: 12, color: 'var(--text-3)' }}>{a.org_name}</td>
                       <td style={{ fontSize: 12, color: 'var(--text-4)' }}>{a.author_name ?? '—'}</td>
-                      <td style={{ fontSize: 12, color: a.linked_tickets.length > 0 ? '#60a5fa' : 'var(--text-5)', fontWeight: a.linked_tickets.length > 0 ? 600 : 400 }}>
+                      <td style={{ fontSize: 12, color: a.linked_tickets.length > 0 ? '#60a5fa' : 'var(--text-3)', fontWeight: a.linked_tickets.length > 0 ? 600 : 400 }}>
                         {a.linked_tickets.length > 0 ? `${a.linked_tickets.length} ticket${a.linked_tickets.length > 1 ? 's' : ''}` : '—'}
                       </td>
                       <td style={{ fontSize: 12, color: 'var(--text-4)' }}>

@@ -49,7 +49,7 @@ export default function EmailSignaturePage() {
 
           <div className="flex items-center gap-3 mb-6">
             <div style={{ width: 40, height: 40, background: 'rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Mail size={18} style={{ color: '#60a5fa' }} />
+              <Mail size={18} style={{ color: 'var(--accent-info-fg)' }} />
             </div>
             <div>
               <h1 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)' }}>Email Signature</h1>
@@ -93,7 +93,7 @@ export default function EmailSignaturePage() {
                         onClick={() => setSig(s => s + v)}
                         style={{
                           fontSize: 11, padding: '2px 8px', background: 'rgba(37,99,235,0.12)',
-                          border: '1px solid rgba(37,99,235,0.25)', color: '#60a5fa', cursor: 'pointer',
+                          border: '1px solid rgba(37,99,235,0.25)', color: 'var(--accent-info-fg)', cursor: 'pointer',
                         }}
                       >
                         {v}
@@ -113,7 +113,7 @@ export default function EmailSignaturePage() {
                     onFocus={e => { e.currentTarget.style.borderColor = '#2563eb'; }}
                     onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-md)'; }}
                   />
-                  <p style={{ fontSize: 11, color: 'var(--text-5)', marginTop: 8 }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>
                     Click a variable above to insert it. Variables are replaced with live values when sending.
                   </p>
                 </>
@@ -137,7 +137,7 @@ export default function EmailSignaturePage() {
               >
                 <Save size={12} /> Save Signature
               </button>
-              <span style={{ fontSize: 11, color: 'var(--text-5)' }}>Backend integration coming soon</span>
+              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Backend integration coming soon</span>
             </div>
           </div>
 

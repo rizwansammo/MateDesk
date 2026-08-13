@@ -65,18 +65,15 @@
      *
      * --text-4 and --text-5 previously sat at 3.5:1 and 2.5:1 here, and --text-4
      * was byte-identical in both themes (i.e. not themed at all). Between them
-     * they own ~695 call sites, which is why secondary copy read as muddy
-     * everywhere. --text-5 and --text-pale are retained as aliases of --text-3 so
-     * existing call sites become readable without touching ~280 files; prefer the
-     * named steps in new code. See docs/DECISIONS.md D18.
+     * they owned ~695 call sites, which is why secondary copy read as muddy
+     * everywhere. --text-5 and --text-pale have been retired entirely — their 277
+     * call sites now reference --text-3 directly. See docs/DECISIONS.md D18.
      */
     --text-0:    #f8fafc;
     --text-1:    #e2e8f0;
     --text-2:    #c8d6e5;
     --text-3:    #94a3b8;
     --text-4:    #7c8ba1;   /* decorative; ~5.2:1 on --bg-base */
-    --text-5:    var(--text-3);
-    --text-pale: var(--text-3);
 
     /* Semantic accents — status, priority and SLA badges.
      *
@@ -95,6 +92,7 @@
     --accent-danger-fg:  #f87171;  --accent-danger-bg:  rgba(239,68,68,0.15);
     --accent-indigo-fg:  #818cf8;  --accent-indigo-bg:  rgba(99,102,241,0.15);
     --accent-orange-fg:  #f97316;  --accent-orange-bg:  rgba(249,115,22,0.15);
+    --accent-violet-fg:  #a78bfa;  --accent-violet-bg:  rgba(167,139,250,0.15);
     --accent-neutral-fg: #9ca3af;  --accent-neutral-bg: rgba(107,114,128,0.15);
 
     /* Scrollbar */
@@ -144,14 +142,12 @@
 
     /* Same four-readable-plus-one-decorative model as the dark block above.
      * --text-5 was #9ca3af here — 2.3:1 on --bg-base, i.e. the "white fonts in
-     * light mode" half of the original complaint. It is now an alias of --text-3. */
+     * light mode" half of the original complaint. Now retired. */
     --text-0:    #0f172a;
     --text-1:    #1e293b;
     --text-2:    #334155;
     --text-3:    #475569;
     --text-4:    #5b6675;   /* decorative; ~5.5:1 on --bg-base */
-    --text-5:    var(--text-3);
-    --text-pale: var(--text-3);
 
     /* Semantic accents — darker foregrounds and lighter tints for a pale ground.
      * All clear 4.5:1 against --bg-card / --bg-base. */
@@ -161,6 +157,7 @@
     --accent-danger-fg:  #991b1b;  --accent-danger-bg:  rgba(185,28,28,0.10);
     --accent-indigo-fg:  #4338ca;  --accent-indigo-bg:  rgba(79,70,229,0.10);
     --accent-orange-fg:  #9a3412;  --accent-orange-bg:  rgba(194,65,12,0.10);
+    --accent-violet-fg:  #6d28d9;  --accent-violet-bg:  rgba(109,40,217,0.10);
     --accent-neutral-fg: #374151;  --accent-neutral-bg: rgba(107,114,128,0.10);
 
     --scrollbar-bg:    #e2e8f0;

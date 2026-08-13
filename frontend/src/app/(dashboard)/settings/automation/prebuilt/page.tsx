@@ -137,7 +137,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
     const actionDef = ACTIONS.find(a => a.type === action.type);
     if (!actionDef) return null;
     if (actionDef.valueType === 'none') {
-      return <span style={{ fontSize: 11, color: 'var(--text-5)', fontStyle: 'italic', flex: 1, padding: '0 8px' }}>No value needed</span>;
+      return <span style={{ fontSize: 11, color: 'var(--text-3)', fontStyle: 'italic', flex: 1, padding: '0 8px' }}>No value needed</span>;
     }
     if (actionDef.valueType === 'choice' && actionDef.choices) {
       return (
@@ -190,9 +190,9 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
 
   const XBtn = ({ onClick }: { onClick: () => void }) => (
     <button type="button" onClick={onClick}
-      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid var(--border-md)', color: 'var(--text-5)', cursor: 'pointer', flexShrink: 0 }}
+      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: '1px solid var(--border-md)', color: 'var(--text-3)', cursor: 'pointer', flexShrink: 0 }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.borderColor = '#f87171'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-5)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}>
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}>
       <X size={11} />
     </button>
   );
@@ -210,7 +210,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border-md)', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-1)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 6px', fontWeight: 600 }}>FROM TEMPLATE</span>
+              <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 6px', fontWeight: 600 }}>FROM TEMPLATE</span>
               New Rule
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>
@@ -239,7 +239,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', marginBottom: 5 }}>Run Order</label>
                 <input type="number" min={1} max={999} value={priorityOrder} onChange={e => setPriorityOrder(Number(e.target.value))} style={INP} onFocus={fi} onBlur={fo} />
-                <p style={{ fontSize: 10, color: 'var(--text-5)', marginTop: 3 }}>Lower = runs first</p>
+                <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>Lower = runs first</p>
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
@@ -296,7 +296,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
               <span style={{ fontSize: 12, color: 'var(--text-4)' }}>of the following conditions</span>
             </div>
             {conditions.length === 0 && (
-              <p style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic', marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 10 }}>
                 No conditions — rule fires on every {TRIGGER_LABELS[trigger].toLowerCase()} event.
               </p>
             )}
@@ -337,7 +337,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
           <div style={{ marginBottom: 8 }}>
             <SectionHdr title="Actions (THEN)" />
             {actions.length === 0 && (
-              <p style={{ fontSize: 12, color: 'var(--text-5)', fontStyle: 'italic', marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 10 }}>
                 Add at least one action to be executed when conditions match.
               </p>
             )}
@@ -364,7 +364,7 @@ function RulePanel({ prefill, onClose, onSaved }: PanelProps) {
         {/* Footer */}
         <div style={{ flexShrink: 0, padding: '14px 20px', borderTop: '1px solid var(--border-md)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {error && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#f87171' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--accent-danger-fg)' }}>
               <AlertCircle size={12} /> {error}
             </div>
           )}
@@ -418,7 +418,7 @@ export default function PreBuiltRulesPage() {
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-4)'; }}>
           <ArrowLeft size={14} />
         </button>
-        <LayoutTemplate size={14} style={{ color: '#f59e0b' }} />
+        <LayoutTemplate size={14} style={{ color: 'var(--accent-warn-fg)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>Pre-Built Rules</span>
         <span style={{ fontSize: 12, color: 'var(--text-4)', marginLeft: 2 }}>— ready-to-use automation templates</span>
 
@@ -464,14 +464,14 @@ export default function PreBuiltRulesPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         {isLoading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+            <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-info-fg)' }} />
           </div>
         ) : filtered.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--text-5)', fontSize: 13, paddingTop: 60 }}>No templates in this category.</p>
+          <p style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: 13, paddingTop: 60 }}>No templates in this category.</p>
         ) : (
           <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
             {filtered.map(t => {
-              const tc          = TRIGGER_COLORS[t.trigger] ?? { color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' };
+              const tc          = TRIGGER_COLORS[t.trigger] ?? { color: 'var(--text-3)', bg: 'var(--accent-neutral-bg)' };
               const needsConfig = t.actions.some(a => ['set_group', 'set_assignee'].includes(a.type) && !a.value);
               const isSaved     = savedNames.has(t.name);
 
@@ -498,24 +498,24 @@ export default function PreBuiltRulesPage() {
                       {t.actions.length} action{t.actions.length !== 1 ? 's' : ''}
                     </span>
                     {t.stop_processing && (
-                      <span style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.12)', padding: '1px 5px' }}>Stop</span>
+                      <span style={{ fontSize: 10, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.12)', padding: '1px 5px' }}>Stop</span>
                     )}
                   </div>
 
                   {needsConfig && !isSaved && (
-                    <div style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', padding: '4px 8px' }}>
+                    <div style={{ fontSize: 11, color: 'var(--accent-warn-fg)', background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', padding: '4px 8px' }}>
                       ⚠ Select a group or agent after applying
                     </div>
                   )}
 
                   {isSaved ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 30, fontSize: 12, fontWeight: 600, color: '#34d399', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 30, fontSize: 12, fontWeight: 600, color: 'var(--accent-ok-fg)', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}>
                       <Check size={11} /> Rule saved
                     </div>
                   ) : (
                     <button
                       onClick={() => handleUse(t)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 30, fontSize: 12, fontWeight: 600, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)', color: '#60a5fa', cursor: 'pointer', transition: 'background 0.12s' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 30, fontSize: 12, fontWeight: 600, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)', color: 'var(--accent-info-fg)', cursor: 'pointer', transition: 'background 0.12s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.2)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.1)'; }}
                     >

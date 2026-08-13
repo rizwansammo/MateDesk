@@ -110,7 +110,7 @@ export default function AppearancePage() {
           <div className="flex items-center gap-3 mb-6">
             <div
               className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--bg-elevated)', color: '#60a5fa' }}
+              style={{ background: 'var(--bg-elevated)', color: 'var(--accent-info-fg)' }}
             >
               <Monitor size={18} />
             </div>
@@ -138,7 +138,7 @@ export default function AppearancePage() {
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
             >
               <div className="text-center">
-                <div style={{ fontSize: 48, fontWeight: 700, color: '#60a5fa', lineHeight: 1 }}>
+                <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--accent-info-fg)', lineHeight: 1 }}>
                   {zoom}<span style={{ fontSize: 22, color: 'var(--text-4)' }}>%</span>
                 </div>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{ZOOM_LABELS[zoom]}</p>
@@ -220,7 +220,7 @@ export default function AppearancePage() {
                     className="px-2.5 py-1 text-2xs font-medium transition-all"
                     style={zoom === level ? {
                       background: 'rgba(37,99,235,0.2)',
-                      color: '#60a5fa',
+                      color: 'var(--accent-info-fg)',
                       border: '1px solid rgba(37,99,235,0.4)',
                     } : {
                       background: 'var(--bg-card)',
@@ -251,7 +251,7 @@ export default function AppearancePage() {
           {/* ── Tickets per page card ─────────────────────────────────── */}
           <div className="panel p-6 mt-4 space-y-4">
             <div className="flex items-center gap-3">
-              <List size={15} style={{ color: '#60a5fa', flexShrink: 0 }} />
+              <List size={15} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />
               <div>
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>Tickets per Page</p>
                 <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 2 }}>
@@ -271,7 +271,7 @@ export default function AppearancePage() {
                     className="px-3 py-1.5 text-2xs font-medium transition-all"
                     style={!customMode && perPage === n ? {
                       background: 'rgba(37,99,235,0.2)',
-                      color: '#60a5fa',
+                      color: 'var(--accent-info-fg)',
                       border: '1px solid rgba(37,99,235,0.4)',
                     } : {
                       background: 'var(--bg-card)',
@@ -287,7 +287,7 @@ export default function AppearancePage() {
                   className="px-3 py-1.5 text-2xs font-medium transition-all"
                   style={customMode ? {
                     background: 'rgba(37,99,235,0.2)',
-                    color: '#60a5fa',
+                    color: 'var(--accent-info-fg)',
                     border: '1px solid rgba(37,99,235,0.4)',
                   } : {
                     background: 'var(--bg-card)',
@@ -339,7 +339,7 @@ export default function AppearancePage() {
               style={{ borderTop: '1px solid var(--border-subtle)' }}
             >
               <span style={{ fontSize: 11, color: 'var(--text-4)' }}>Currently showing</span>
-              <span className="text-xs font-semibold" style={{ color: '#60a5fa' }}>{perPage}</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--accent-info-fg)' }}>{perPage}</span>
               <span style={{ fontSize: 11, color: 'var(--text-4)' }}>tickets per page</span>
             </div>
           </div>
@@ -349,9 +349,9 @@ export default function AppearancePage() {
             className="mt-4 flex items-start gap-3 px-4 py-3"
             style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)' }}
           >
-            <Monitor size={14} style={{ color: '#60a5fa', flexShrink: 0, marginTop: 1 }} />
+            <Monitor size={14} style={{ color: 'var(--accent-info-fg)', flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p className="text-xs font-medium" style={{ color: '#93c5fd' }}>Browser-local settings</p>
+              <p className="text-xs font-medium" style={{ color: 'var(--accent-info-fg)' }}>Browser-local settings</p>
               <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 3 }}>
                 These settings are stored in your browser only. Signing in from a different device or browser will use the defaults until you set them again. Other users on this system are not affected.
               </p>

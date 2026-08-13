@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Saira } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
 import { ThemeProvider } from 'next-themes';
 import { SplashDismiss } from '@/components/SplashDismiss';
@@ -15,13 +15,6 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
-  display: 'swap',
-});
-
-const saira = Saira({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-saira',
   display: 'swap',
 });
 
@@ -118,7 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
       </head>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} ${saira.variable} ${hemiHead.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${hemiHead.variable} font-sans antialiased`}>
 
         {/* ── Pre-hydration splash ────────────────────────────────────────────
             Renders before React JS executes. SplashDismiss fades it out

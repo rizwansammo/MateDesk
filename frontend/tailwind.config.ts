@@ -89,7 +89,6 @@ const config: Config = {
       fontFamily: {
         sans:  ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
         mono:  ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
-        saira: ['var(--font-saira)', 'Saira', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['0.65rem', { lineHeight: '1rem' }],

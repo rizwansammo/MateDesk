@@ -207,7 +207,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
+        {/* disableTransitionOnChange suppresses CSS transitions for the instant the
+            attribute flips, so switching theme is a clean cut rather than every
+            tokenised colour animating independently. */}
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           {children}
         </ThemeProvider>
 

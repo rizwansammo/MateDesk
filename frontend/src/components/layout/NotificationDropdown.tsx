@@ -74,7 +74,7 @@ export function NotificationDropdown({ notifications, unreadCount, onMarkRead, o
           width: 340, zIndex: 200,
           background: 'var(--bg-deep)',
           borderLeft: '1px solid var(--border-panel)',
-          boxShadow: '-8px 0 48px var(--shadow-panel)',
+          boxShadow: 'var(--shadow-panel)',
           display: 'flex', flexDirection: 'column',
         }}
       >

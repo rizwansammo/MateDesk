@@ -38,7 +38,7 @@
     --bg-surface:    #151821;
     --bg-card:       #1a1d27;
     --bg-elevated:   #252936;
-    --bg-hover:      #1e2130;
+    --bg-hover:      #232739;
     --bg-deep:       #0d1020;
     --bg-panel:      #151821;   /* menus/popovers — was consumed at 11 sites, defined at none */
     --bg-input:      #252936;   /* form fields   — was consumed at 3 sites, defined at none  */
@@ -101,6 +101,10 @@
 
     /* Shadow */
     --shadow-panel: -8px 0 48px rgba(0,0,0,0.7);
+
+    /* Native UA widgets — scrollbars, date pickers, autofill, number spinners.
+     * Without this they render in the OS default palette regardless of data-theme. */
+    color-scheme: dark;
   }
 
   /* Light theme overrides */
@@ -129,7 +133,7 @@
     --bg-surface:    #ffffff;
     --bg-card:       #f8fafc;
     --bg-elevated:   #eef2f7;
-    --bg-hover:      #e2e8f0;
+    --bg-hover:      #eaeff5;
     --bg-deep:       #e8ecf2;
     --bg-panel:      #ffffff;
     --bg-input:      #eef2f7;
@@ -164,6 +168,7 @@
     --scrollbar-hover: #64748b;
 
     --shadow-panel: -8px 0 48px rgba(0,0,0,0.15);
+    color-scheme: light;
   }
 
   * { @apply border-border; }
@@ -317,30 +322,40 @@
   }
 }
 
-/* ── Status badges ─────────────────────────────────────────────────────────── */
+/* ── Status badges ─────────────────────────────────────────────────────────────
+ * Each variant is a single rule using the semantic accent pairs, which already
+ * carry a per-theme value — so the duplicate [data-theme="light"] block these
+ * rules used to need is gone.
+ *
+ * .badge (the base) plus .badge-success and .badge-danger were being used by
+ * Settings > Organizations but defined nowhere, so those status pills rendered
+ * as unstyled text. */
 @layer utilities {
-  .badge-open       { background: rgba(59,130,246,0.15);  color: #60a5fa;  }
-  .badge-pending    { background: rgba(99,102,241,0.15);  color: #818cf8;  }
-  .badge-progress   { background: rgba(245,158,11,0.15);  color: #fbbf24;  }
-  .badge-solved     { background: rgba(16,185,129,0.15);  color: #34d399;  }
-  .badge-closed     { background: rgba(107,114,128,0.15); color: #9ca3af;  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
 
-  .badge-low        { background: rgba(34,197,94,0.15);   color: #4ade80;  }
-  .badge-medium     { background: rgba(59,130,246,0.15);  color: #60a5fa;  }
-  .badge-high       { background: rgba(245,158,11,0.15);  color: #fbbf24;  }
-  .badge-critical   { background: rgba(239,68,68,0.15);   color: #f87171;  }
+  .badge-open       { background: var(--accent-info-bg);    color: var(--accent-info-fg);    }
+  .badge-pending    { background: var(--accent-indigo-bg);  color: var(--accent-indigo-fg);  }
+  .badge-progress   { background: var(--accent-warn-bg);    color: var(--accent-warn-fg);    }
+  .badge-solved     { background: var(--accent-ok-bg);      color: var(--accent-ok-fg);      }
+  .badge-closed     { background: var(--accent-neutral-bg); color: var(--accent-neutral-fg); }
+
+  .badge-low        { background: var(--accent-ok-bg);      color: var(--accent-ok-fg);      }
+  .badge-medium     { background: var(--accent-info-bg);    color: var(--accent-info-fg);    }
+  .badge-high       { background: var(--accent-warn-bg);    color: var(--accent-warn-fg);    }
+  .badge-critical   { background: var(--accent-danger-bg);  color: var(--accent-danger-fg);  }
+
+  .badge-success    { background: var(--accent-ok-bg);      color: var(--accent-ok-fg);      }
+  .badge-danger     { background: var(--accent-danger-bg);  color: var(--accent-danger-fg);  }
 }
-
-/* Status badges — light mode: darker text for contrast on white backgrounds */
-[data-theme="light"] .badge-open     { background: rgba(37,99,235,0.10);   color: #1d4ed8; }
-[data-theme="light"] .badge-pending  { background: rgba(79,70,229,0.10);   color: #4338ca; }
-[data-theme="light"] .badge-progress { background: rgba(180,83,9,0.10);    color: #92400e; }
-[data-theme="light"] .badge-solved   { background: rgba(5,150,105,0.10);   color: #047857; }
-[data-theme="light"] .badge-closed   { background: rgba(107,114,128,0.10); color: #374151; }
-[data-theme="light"] .badge-low      { background: rgba(22,163,74,0.10);   color: #15803d; }
-[data-theme="light"] .badge-medium   { background: rgba(37,99,235,0.10);   color: #1d4ed8; }
-[data-theme="light"] .badge-high     { background: rgba(180,83,9,0.10);    color: #92400e; }
-[data-theme="light"] .badge-critical { background: rgba(185,28,28,0.10);   color: #991b1b; }
 
 /* ── Skeleton ──────────────────────────────────────────────────────────────── */
 @keyframes skeleton {
@@ -386,8 +401,8 @@
 .ProseMirror h1 { font-size: 2em; font-weight: 700; margin-top: 1em; margin-bottom: 0.5em; color: var(--text-0); }
 .ProseMirror h2 { font-size: 1.5em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; color: var(--text-0); }
 .ProseMirror h3 { font-size: 1.17em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; color: var(--text-0); }
-.ProseMirror pre { background: #151821; border: 1px solid #1e2130; border-radius: 6px; padding: 12px; font-family: var(--font-mono), 'JetBrains Mono', monospace; font-size: 13px; color: #c8d6e5; overflow-x: auto; margin-top: 0.5em; margin-bottom: 0.5em; }
-.ProseMirror code { background: rgba(37,99,235,0.15); color: #60a5fa; padding: 2px 4px; border-radius: 4px; font-family: var(--font-mono), 'JetBrains Mono', monospace; font-size: 0.9em; }
+.ProseMirror pre { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 12px; font-family: var(--font-mono), 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-2); overflow-x: auto; margin-top: 0.5em; margin-bottom: 0.5em; }
+.ProseMirror code { background: var(--accent-info-bg); color: var(--accent-info-fg); padding: 2px 4px; border-radius: 4px; font-family: var(--font-mono), 'JetBrains Mono', monospace; font-size: 0.9em; }
 .ProseMirror blockquote { border-left: 3px solid #60a5fa; padding-left: 1rem; color: #94a3b8; font-style: italic; margin-left: 0; margin-right: 0; }
 .ProseMirror table { border-collapse: collapse; margin: 1em 0; overflow: hidden; table-layout: fixed; width: 100%; }
 .ProseMirror table td, .ProseMirror table th { border: 1px solid #1e2130; box-sizing: border-box; min-width: 1em; padding: 6px 8px; position: relative; vertical-align: top; }
@@ -402,8 +417,6 @@
 .ProseMirror ol { list-style-type: decimal; }
 
 /* ProseMirror — light mode overrides */
-[data-theme="light"] .ProseMirror pre { background: #f1f5f9; border-color: #cbd5e1; color: #1e293b; }
-[data-theme="light"] .ProseMirror code { background: rgba(37,99,235,0.08); color: #1d4ed8; }
 [data-theme="light"] .ProseMirror blockquote { border-left-color: #2563eb; color: #475569; }
 [data-theme="light"] .ProseMirror table td,
 [data-theme="light"] .ProseMirror table th { border-color: #cbd5e1; }

@@ -89,6 +89,22 @@ export const metadata: Metadata = {
   },
 };
 
+// ── Theme boot script ─────────────────────────────────────────────────────────
+// Runs synchronously in <head>, before any body content is parsed or painted.
+//
+// next-themes injects its own FOUC-prevention script, but that renders inside
+// <body> — after the #app-splash div below it in document order. The browser can
+// therefore paint the splash before next-themes has stamped the attribute, which
+// is why light-mode users saw a full-screen dark splash on every hard load.
+// Setting the attribute here removes the race entirely.
+//
+// Only mutates an attribute on <html>, which React does not own (and <html>
+// already carries suppressHydrationWarning), so this cannot cause a mismatch.
+// Storage key "theme" is next-themes' default; enableSystem is false, so the
+// stored value is only ever "light" or "dark". Anything else falls through to
+// the :root dark defaults, which is the correct fallback.
+const THEME_BOOT = `(function(){try{if(localStorage.getItem('theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();`;
+
 // ── Pre-hydration splash CSS ──────────────────────────────────────────────────
 // Injected directly into <head> so it's available before any JS runs.
 const SPLASH_CSS = `
@@ -109,6 +125,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Must be first: sets data-theme before anything below is painted. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
         <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${hemiHead.variable} font-sans antialiased`}>
@@ -120,7 +138,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           id="app-splash"
           style={{
             position: 'fixed', inset: 0, zIndex: 9999,
-            background: '#0E1117',
+            background: 'var(--bg-base)',
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
             pointerEvents: 'all',
@@ -163,7 +181,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               fontFamily: 'var(--font-hemi), sans-serif',
               fontWeight: 700, fontSize: 18,
               letterSpacing: '0.04em', textTransform: 'uppercase',
-              color: '#ECEEF2', lineHeight: 1,
+              color: 'var(--text-0)', lineHeight: 1,
               position: 'relative', top: 2,
             }}
           >
@@ -174,7 +192,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Subtitle */}
           <div data-splash-sub="md" style={{
             marginTop: 8, fontSize: 10,
-            color: '#374151', letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase',
           }}>
             Loading workspace…
           </div>

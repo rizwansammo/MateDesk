@@ -109,7 +109,7 @@ export default function KBDocumentationPage() {
   const currentSubFolders = useMemo(() => folders.filter(f => f.parent_id === currentFolderId), [folders, currentFolderId]);
 
   const breadcrumbs = useMemo(() => {
-    let crumbs = [];
+    const crumbs = [];
     let curr = folders.find(f => f.id === currentFolderId);
     while (curr) {
       crumbs.unshift(curr);

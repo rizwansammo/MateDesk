@@ -350,6 +350,7 @@ export function CannedPicker({ onSelect, onClose }: Props) {
             fontSize: 10, color: 'var(--text-3)', textAlign: 'center',
           }}
         >
+          {/* eslint-disable-next-line react/jsx-no-comment-textnodes -- "//c" is literal UI text: the slash command a user types, not a comment. */}
           Tip: type <span style={{ fontFamily: 'monospace', background: 'var(--bg-card)', padding: '1px 4px', borderRadius: 3 }}>//c</span> in the reply box to open this picker instantly
         </div>
       </div>

@@ -53,8 +53,7 @@ export function PageTransitionOverlay() {
   // the overlay fades, ensuring the new content is visible underneath.
   useEffect(() => {
     if (!dismissPendingRef.current) return;
-    let raf: number;
-    raf = requestAnimationFrame(() => dismiss());
+    const raf = requestAnimationFrame(() => dismiss());
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]); // intentionally only pathname — see comment above

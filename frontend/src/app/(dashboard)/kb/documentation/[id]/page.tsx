@@ -139,7 +139,7 @@ export default function DocumentEditorPage() {
   }, []);
 
   const breadcrumbs = useMemo(() => {
-    let crumbs = [];
+    const crumbs = [];
     if (article?.folder_id) {
       let curr = folders.find(f => f.id === article.folder_id);
       while (curr) {

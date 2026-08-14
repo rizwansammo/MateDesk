@@ -1795,7 +1795,7 @@ export default function TicketDetailPage() {
               {/* No sla_info but has a status — show minimal info */}
               {!ticket.sla_info && (
                 <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic' }}>
-                  SLA targets not available for this ticket's priority.
+                  SLA targets not available for this ticket&apos;s priority.
                 </div>
               )}
             </div>

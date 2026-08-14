@@ -802,7 +802,7 @@ export default function OrgDetailPage({ params }: { params: Promise<{ id: string
               </div>
 
               <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: -4 }}>
-                A random password will be generated. You'll be shown the credentials after creation.
+                A random password will be generated. You&apos;ll be shown the credentials after creation.
               </p>
             </div>
 

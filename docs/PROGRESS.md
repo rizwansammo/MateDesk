@@ -9,12 +9,53 @@ Session handoff log. Update at the end of every phase. Read with `SPLIT_PLAN.md`
 | M3 — infra | **COMPLETE — DEPLOYED LIVE** | https://matedesk.pro serving over HTTPS with wildcard TLS |
 | M4 — docs | **COMPLETE** | written fresh, not split — see below |
 | M5 — theme + branding | **Stage 1 shipped · rest PAUSED** | paused for beta-tester feedback, not finished — see below |
-| M6 — tests + CI gates | **NEXT — deferred to after the weekly usage reset** | sliced into 6 sessions, see below |
+| M6 — tests + CI gates | **Slice 1 done · slices 2-6 pending** | gates live; test-writing slices remain |
 | M7 — SEO | not started | technical foundation only; see the note on realistic keywords |
 
 ---
 
-## M6 — planned, sliced (start here next session)
+## M6 Slice 1 — COMPLETE (CI gates + ESLint)
+
+**The workflow now gates on quality before it ships anything:**
+
+```
+test-backend  ─┐
+test-frontend ─┴─> build ──> deploy
+```
+
+- `test-backend` — Postgres 16 service container (required: `users/0008_fix_2fa_fields.py`
+  is Postgres-only DDL), then `manage.py check`, `makemigrations --check --dry-run`, and
+  the test suite. The drift check is the one that caught the real `users.role` mismatch
+  during M1.
+- `test-frontend` — `tsc --noEmit` then `eslint .`. Typecheck runs here rather than only
+  inside the Docker build because it fails in seconds instead of minutes.
+
+**ESLint configured for the first time.** `eslint` and `eslint-config-next` were installed
+with no config file, so linting had *never run* on this codebase. Added
+`frontend/eslint.config.mjs` — flat config via `FlatCompat`, since eslint-config-next 15.x
+still ships only the legacy format. Declared `@eslint/eslintrc` explicitly rather than
+relying on it being present transitively (same failure mode as `autoprefixer`).
+
+**First run: 8 errors, 76 warnings** across 30 of 140 files — far cleaner than expected.
+All 8 errors fixed, so CI gates at **zero errors**:
+
+| Fix | Detail |
+|---|---|
+| `prefer-const` ×3 | `crumbs` ×2, and `let raf` immediately assigned in `PageTransitionOverlay` |
+| `react/no-unescaped-entities` ×3 | bare apostrophes in JSX text → `&apos;` |
+| `no-require-imports` | `tailwind.config.ts` used `require('tailwindcss-animate')` in a file that is already an ES module — converted to an import |
+| `jsx-no-comment-textnodes` | **false positive** — `//c` is literal UI text (the slash command a user types), not a comment. Suppressed with a stated reason rather than mangling correct code. |
+
+Warnings are deliberately **not** gated (`--max-warnings` unset): ~34 `any`, ~32 unused
+vars. Real debt, worth paying down, but not worth blocking a release over on day one.
+`react-hooks/rules-of-hooks` and `exhaustive-deps` stay at **error** — a hook-order
+violation is a runtime bug, not style.
+
+All five gates verified passing locally before commit.
+
+---
+
+## M6 — remaining slices (2-6)
 
 Deferred by the owner until after the weekly usage limit resets. **Begin with Slice 1.**
 

@@ -293,7 +293,7 @@ export default function AppearancePage() {
                 className="flex items-center justify-between pt-3"
                 style={{ borderTop: '1px solid var(--border-subtle)' }}
               >
-                <p style={{ fontSize: 11, color: 'var(--text-4)' }}>You've changed zoom from the default (100%)</p>
+                <p style={{ fontSize: 11, color: 'var(--text-4)' }}>You&apos;ve changed zoom from the default (100%)</p>
                 <button className="btn-ghost gap-1.5 text-2xs" onClick={() => setZoom(100)}>
                   <RotateCcw size={11} /> Reset to 100%
                 </button>

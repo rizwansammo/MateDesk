@@ -290,10 +290,24 @@ class TicketViewSet(viewsets.GenericViewSet):
             if field in data:
                 setattr(ticket, field, data[field])
 
+        # resolved_at tracks when the ticket stopped being open work.
+        #
+        # 'closed' counts as resolved, not as reopening. Previously only 'solved'
+        # was handled, so closing a ticket fell into the else branch and NULLed
+        # resolved_at — and since the normal path is solve-then-close, that wiped
+        # the timestamp immediately after it was correctly set. Every closed
+        # ticket ended up with resolved_at=None, which made compute_sla_status
+        # re-measure it against `now` forever (so a ticket resolved on time
+        # eventually flipped to breached), and excluded it from the
+        # resolution-time analytics that filter resolved_at__isnull=False.
+        RESOLVED_STATUSES = ('solved', 'closed')
         new_status = data.get('status')
-        if new_status == 'solved' and old_status != 'solved':
-            ticket.resolved_at = timezone.now()
-        elif new_status and new_status != 'solved':
+        if new_status in RESOLVED_STATUSES:
+            # Preserve the original resolution time across solved -> closed.
+            if ticket.resolved_at is None or old_status not in RESOLVED_STATUSES:
+                ticket.resolved_at = timezone.now()
+        elif new_status:
+            # Genuinely reopened — clear it.
             ticket.resolved_at = None
 
         ticket.save()

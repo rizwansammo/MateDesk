@@ -9,7 +9,7 @@ Session handoff log. Update at the end of every phase. Read with `SPLIT_PLAN.md`
 | M3 — infra | **COMPLETE — DEPLOYED LIVE** | https://matedesk.pro serving over HTTPS with wildcard TLS |
 | M4 — docs | **COMPLETE** | written fresh, not split — see below |
 | M5 — theme + branding | **Stage 1 shipped · rest PAUSED** | paused for beta-tester feedback, not finished — see below |
-| M6 — tests + CI gates | **Slice 1 done · slices 2-6 pending** | gates live; test-writing slices remain |
+| M6 — tests + CI gates | **Slices 1-3 done · 4-6 pending** | 86 tests (was 16); billing + SLA covered |
 | M7 — SEO | not started | technical foundation only; see the note on realistic keywords |
 
 ---
@@ -55,7 +55,51 @@ All five gates verified passing locally before commit.
 
 ---
 
-## M6 — remaining slices (2-6)
+## M6 Slices 2-3 — COMPLETE (billing + SLA)
+
+**Test count: 16 → 86.**
+
+**Slice 2 — billing (31 tests).** Hourly and per-ticket rate modes, tax, rounding,
+invoice numbering, RBAC, validation. Verified by mutation testing: breaking the tax
+divisor, swapping `ROUND_HALF_UP` for `ROUND_DOWN`, and billing `open` tickets each
+produced failures (2, 4 and 5 respectively).
+
+One invariant asserted deliberately: **per-line rounding is intentional.** Three 1-minute
+logs at 0.30/h bill 0.03, not 0.02 — each line is a real charged amount.
+
+**Slice 3 — SLA (39 tests).** Policy matching and scope precedence, breach evaluation on
+both clocks, pause accounting, refresh/notify latching. Five mutations all caught.
+
+### Two SLA bugs found and fixed
+
+Safe to fix at this point because production had zero tickets and zero policies — with
+existing data, fixing #1 would have fired a burst of breach emails about historic tickets
+via `refresh_ticket_sla`.
+
+1. **`closed` wiped `resolved_at`** (`tickets/views.py`). The `elif new_status != 'solved'`
+   branch caught `closed`, and since the normal path is solve → close it cleared the
+   timestamp immediately after it was set. Consequences: every closed ticket had
+   `resolved_at=None`, so `compute_sla_status` re-measured it against `now` and it drifted
+   from `completed` to `breached` as it aged, and it was excluded from the resolution-time
+   analytics that filter `resolved_at__isnull=False`. Now `('solved', 'closed')` are both
+   resolved states, and the original resolution time survives solved → closed.
+2. **First-response breach did not latch** (`sla/services.py`). Only the
+   `first_response_at is None` case was checked, so a late reply made the check fall
+   through: the ticket reverted from `breached` to `on_track` and `sla_breach_notified`
+   reset, undercounting breaches and allowing a second notification. It also disagreed
+   with the solved/closed branch, which always treated a late first response as a breach.
+   **Owner's decision: a missed first response is permanent.**
+
+Also hardened `compute_sla_status` so a missing `resolved_at` degrades to "cannot prove a
+breach" rather than inventing one from `now` — defence in case a future path forgets the
+timestamp.
+
+**Note for beta:** SLA behaviour is now settled. Report whatever the testers hit rather
+than pre-emptively changing it.
+
+---
+
+## M6 — remaining slices (4-6)
 
 Deferred by the owner until after the weekly usage limit resets. **Begin with Slice 1.**
 

@@ -53,13 +53,29 @@ def compute_sla_status(ticket) -> str:
     if ticket.status in ('solved', 'closed'):
         if ticket.first_response_at is None or ticket.first_response_at > first_response_due:
             return 'breached'
-        resolved = ticket.resolved_at or now
-        if resolved > resolution_due:
+        # A finished ticket's verdict must be stable. Falling back to `now` when
+        # resolved_at is missing made the answer depend on when it was asked —
+        # the same ticket read later flipped from completed to breached. The
+        # upstream cause (closing a ticket NULLed resolved_at) is fixed in
+        # tickets/views.py; this guard means a future path that forgets the
+        # timestamp degrades to "cannot prove a breach" rather than inventing one.
+        if ticket.resolved_at is not None and ticket.resolved_at > resolution_due:
             return 'breached'
         return 'completed'
 
-    # Active ticket — check first response breach
-    if ticket.first_response_at is None and now > first_response_due:
+    # Active ticket — first response breach.
+    #
+    # A missed first response is permanent: once the target passes, the SLA was
+    # missed and the record says so for the rest of the ticket's life. Previously
+    # only the `is None` case was checked, so an agent replying late made this
+    # check fall through — the ticket reverted from breached to on_track and
+    # sla_breach_notified was cleared, which undercounted breaches and allowed a
+    # second notification later. It also disagreed with the solved/closed branch
+    # above, which has always treated a late first response as a breach.
+    if ticket.first_response_at is None:
+        if now > first_response_due:
+            return 'breached'
+    elif ticket.first_response_at > first_response_due:
         return 'breached'
 
     # Resolution breach

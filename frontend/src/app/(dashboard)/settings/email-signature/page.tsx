@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, Save, Eye } from 'lucide-react';
+import { useTenant } from '@/hooks/useTenant';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const VARIABLES = [
   '{{agent_name}}', '{{company_name}}', '{{support_email}}', '{{phone}}', '{{portal_url}}',
@@ -18,15 +20,20 @@ Portal: {{portal_url}}`;
 
 export default function EmailSignaturePage() {
   const router = useRouter();
+  const { data: tenant } = useTenant();
+  const user = useAuthStore(s => s.user);
   const [sig,     setSig]     = useState(DEFAULT_SIG);
   const [preview, setPreview] = useState(false);
 
+  // Preview against this tenant's own details — never placeholder company data,
+  // which would show one customer another company's name.
   const rendered = sig
-    .replace(/{{agent_name}}/g, 'John Smith')
-    .replace(/{{company_name}}/g, 'NetSwitch MSP')
-    .replace(/{{support_email}}/g, 'support@netswitch.com')
-    .replace(/{{phone}}/g, '+1 (555) 010-2400')
-    .replace(/{{portal_url}}/g, 'https://support.netswitch.com');
+    .replace(/{{agent_name}}/g,    user?.full_name          || 'Your name')
+    .replace(/{{company_name}}/g,  tenant?.name             || 'Your company')
+    .replace(/{{support_email}}/g, tenant?.support_email    || 'Not set — add it in Company Profile')
+    .replace(/{{phone}}/g,         tenant?.phone            || 'Not set — add it in Company Profile')
+    .replace(/{{portal_url}}/g,
+      tenant?.slug ? `https://${tenant.slug}.matedesk.pro` : 'Your portal URL');
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

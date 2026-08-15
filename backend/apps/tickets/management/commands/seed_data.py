@@ -16,7 +16,7 @@ from django.utils import timezone
 # ── Static seed data ──────────────────────────────────────────────────────────
 
 CLIENT_ORGS = [
-    {'name': 'Netswitch Technologies', 'domain': 'netswitch.io',     'contact_name': 'Marcus Reed',    'contact_email': 'it@netswitch.io',     'phone': '+1 (312) 555-0142', 'address': '200 W Madison St, Chicago, IL 60606'},
+    {'name': 'Ironvale Networks',      'domain': 'ironvale.io',      'contact_name': 'Marcus Reed',    'contact_email': 'it@ironvale.io',      'phone': '+1 (312) 555-0142', 'address': '200 W Madison St, Chicago, IL 60606'},
     {'name': 'ApexNova Solutions',     'domain': 'apexnova.com',     'contact_name': 'Priya Nair',     'contact_email': 'helpdesk@apexnova.com','phone': '+1 (415) 555-0287', 'address': '1 Market St, Suite 300, San Francisco, CA 94105'},
     {'name': 'BluePeak Systems',       'domain': 'bluepeaksys.com',  'contact_name': 'Trevor Okafor',  'contact_email': 'support@bluepeaksys.com','phone': '+1 (212) 555-0374','address': '30 Rockefeller Plaza, New York, NY 10112'},
     {'name': 'VertexCore IT',          'domain': 'vertexcore.net',   'contact_name': 'Cynthia Lam',    'contact_email': 'admin@vertexcore.net', 'phone': '+1 (512) 555-0461', 'address': '500 W 2nd St, Austin, TX 78701'},

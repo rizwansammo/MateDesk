@@ -1,6 +1,6 @@
 /**
  * Tenant detection via subdomain.
- * Production: netswitch.matedesk.com → slug = "netswitch"
+ * Production: acme.matedesk.pro → slug = "acme"
  * Dev:        localhost → slug = null (treated as public / dev mode)
  */
 
@@ -21,7 +21,7 @@ export function getTenantSlug(): string | null {
 
   const parts = hostname.split('.');
 
-  // Expected pattern: [slug].[domain].[tld]  e.g. netswitch.matedesk.com
+  // Expected pattern: [slug].[domain].[tld]  e.g. acme.matedesk.pro
   if (parts.length >= 3) {
     return parts[0];
   }

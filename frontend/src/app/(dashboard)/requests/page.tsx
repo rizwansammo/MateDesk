@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Plus, Search, ChevronLeft, ChevronRight,
   Mail, MailOpen, RefreshCw, Filter, Loader2, User, Building2, Lock,
+  CheckCircle, Trash2, X, AlertTriangle,
 } from 'lucide-react';
 import { getAvatarColor } from '@/lib/utils';
-import { useTickets, useUpdateTicket } from '@/hooks/useTickets';
+import { useTickets, useUpdateTicket, useBulkTicketAction } from '@/hooks/useTickets';
 import { useAgents } from '@/hooks/useAgents';
 import { useClientOrgs } from '@/hooks/useClientOrgs';
 import { useAssignSender } from '@/hooks/useSenders';
@@ -133,6 +134,30 @@ export default function RequestsPage() {
   }
   const allChecked = tickets.length > 0 && selectedIds.size === tickets.length;
 
+  // ── Bulk actions ──────────────────────────────────────────────────────────
+  // Deleting cascades to replies, attachments and time logs, so it is limited to
+  // the roles that own the workspace — the API enforces the same rule.
+  const canDelete   = ['msp_owner', 'msp_manager'].includes(user?.role ?? '');
+  const bulkAction  = useBulkTicketAction();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [bulkError,     setBulkError]     = useState('');
+
+  const selectedRefs = tickets.filter(t => selectedIds.has(t.id)).map(t => t.ref);
+
+  function runBulk(action: 'close' | 'delete') {
+    if (selectedRefs.length === 0) return;
+    setBulkError('');
+    bulkAction.mutate(
+      { refs: selectedRefs, action },
+      {
+        onSuccess: () => { setSelectedIds(new Set()); setConfirmDelete(false); },
+        onError:   err => setBulkError(
+          err instanceof ApiError ? err.message : 'Action failed. Please try again.',
+        ),
+      },
+    );
+  }
+
   function handleSearchCommit(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') { setSearch(searchInput); setPage(1); }
   }
@@ -219,10 +244,52 @@ export default function RequestsPage() {
         </div>
 
         <div className="flex items-center gap-1.5 ml-auto">
-          {selectedIds.size > 0 && (
-            <span className="px-2 py-1" style={{ fontSize: 11, background: 'rgba(37,99,235,0.2)', color: 'var(--accent-info-fg)' }}>
-              {selectedIds.size} selected
-            </span>
+          {selectedIds.size > 0 && isMSP && (
+            <>
+              <span className="px-2 py-1" style={{ fontSize: 11, background: 'var(--accent-info-bg)', color: 'var(--accent-info-fg)' }}>
+                {selectedIds.size} selected
+              </span>
+              <button
+                type="button"
+                onClick={() => runBulk('close')}
+                disabled={bulkAction.isPending}
+                className="flex items-center gap-1 px-2.5 transition-colors disabled:opacity-40"
+                style={{ height: 28, fontSize: 11, color: 'var(--accent-ok-fg)', border: '1px solid var(--border-md)', background: 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-ok-bg)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                title="Close the selected tickets"
+              >
+                {bulkAction.isPending && bulkAction.variables?.action === 'close'
+                  ? <Loader2 size={11} className="animate-spin" />
+                  : <CheckCircle size={11} />}
+                Close
+              </button>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => { setBulkError(''); setConfirmDelete(true); }}
+                  disabled={bulkAction.isPending}
+                  className="flex items-center gap-1 px-2.5 transition-colors disabled:opacity-40"
+                  style={{ height: 28, fontSize: 11, color: 'var(--accent-danger-fg)', border: '1px solid var(--border-md)', background: 'transparent' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-danger-bg)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  title="Delete the selected tickets"
+                >
+                  <Trash2 size={11} /> Delete
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => { setSelectedIds(new Set()); setBulkError(''); }}
+                className="icon-btn w-7 h-7"
+                title="Clear selection"
+              >
+                <X size={12} />
+              </button>
+            </>
+          )}
+          {bulkError && (
+            <span style={{ fontSize: 11, color: 'var(--accent-danger-fg)' }}>{bulkError}</span>
           )}
           <button
             className="btn-primary gap-1"
@@ -258,6 +325,7 @@ export default function RequestsPage() {
               <th style={{ width: 140 }}>ID</th>
               <th>Subject</th>
               <th>Requester</th>
+              <th>Organization</th>
               <th>Assigned To</th>
               <th>Level</th>
               <th>Group</th>
@@ -265,7 +333,6 @@ export default function RequestsPage() {
               <th>Created</th>
               <th>Priority</th>
               <th>SLA</th>
-              <th>Organization</th>
             </tr>
           </thead>
           <tbody>
@@ -383,6 +450,54 @@ export default function RequestsPage() {
           pos={groupPopupState.pos}
           onClose={() => setGroupPopupState(null)}
         />
+      )}
+
+      {/* ── Bulk delete confirmation ──────────────────────────────────────── */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)', zIndex: 100 }}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-delete-title"
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)', width: 420, maxWidth: '90vw' }}
+          >
+            <div className="flex items-center gap-2 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <AlertTriangle size={15} style={{ color: 'var(--accent-danger-fg)' }} />
+              <span id="bulk-delete-title" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>
+                Delete {selectedRefs.length} ticket{selectedRefs.length === 1 ? '' : 's'}?
+              </span>
+            </div>
+            <div className="px-5 py-4" style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.6 }}>
+              This permanently removes the selected tickets along with their replies,
+              attachments and time logs. It cannot be undone.
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 py-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="px-3 py-1.5"
+                style={{ fontSize: 12, color: 'var(--text-2)', border: '1px solid var(--border-md)', background: 'transparent' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => runBulk('delete')}
+                disabled={bulkAction.isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 font-semibold text-white disabled:opacity-40"
+                style={{ fontSize: 12, background: 'var(--accent-danger-fg)' }}
+              >
+                {bulkAction.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -770,6 +885,32 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
         <span className="block truncate">{ticket.requester}</span>
       </td>
 
+      {/* Organization — clickable for Walk-In tickets (MSP only) */}
+      <td style={{ maxWidth: 130 }} onClick={e => e.stopPropagation()}>
+        {ticket.is_internal ? (
+          <div className="flex items-center gap-1" style={{ display: 'inline-flex' }}>
+            <Lock size={10} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-violet-fg)', background: 'rgba(139,92,246,0.12)', padding: '2px 7px', whiteSpace: 'nowrap' }}>Internal</span>
+          </div>
+        ) : isWalkIn && onOpenOrgChange ? (
+          <div
+            className="flex items-center gap-1"
+            style={{ padding: '2px 4px', borderRadius: 3, cursor: 'pointer', display: 'inline-flex' }}
+            onClick={handleOrgClick}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            title="Click to reassign organization"
+          >
+            <Building2 size={11} style={{ color: 'var(--accent-warn-fg)', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: 'var(--accent-warn-fg)' }}>Walk-In</span>
+          </div>
+        ) : (
+          <span className="block truncate" style={{ color: 'var(--text-4)', fontSize: 13 }}>
+            {ticket.client_org ?? '—'}
+          </span>
+        )}
+      </td>
+
       {/* Assigned To */}
       <td style={{ maxWidth: 160 }} onClick={e => e.stopPropagation()}>
         <div
@@ -831,32 +972,6 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
             </span>
           );
         })()}
-      </td>
-
-      {/* Organization — clickable for Walk-In tickets (MSP only) */}
-      <td style={{ maxWidth: 130 }} onClick={e => e.stopPropagation()}>
-        {ticket.is_internal ? (
-          <div className="flex items-center gap-1" style={{ display: 'inline-flex' }}>
-            <Lock size={10} style={{ color: 'var(--accent-violet-fg)', flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-violet-fg)', background: 'rgba(139,92,246,0.12)', padding: '2px 7px', whiteSpace: 'nowrap' }}>Internal</span>
-          </div>
-        ) : isWalkIn && onOpenOrgChange ? (
-          <div
-            className="flex items-center gap-1"
-            style={{ padding: '2px 4px', borderRadius: 3, cursor: 'pointer', display: 'inline-flex' }}
-            onClick={handleOrgClick}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            title="Click to reassign organization"
-          >
-            <Building2 size={11} style={{ color: 'var(--accent-warn-fg)', flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: 'var(--accent-warn-fg)' }}>Walk-In</span>
-          </div>
-        ) : (
-          <span className="block truncate" style={{ color: 'var(--text-4)', fontSize: 13 }}>
-            {ticket.client_org ?? '—'}
-          </span>
-        )}
       </td>
     </tr>
   );

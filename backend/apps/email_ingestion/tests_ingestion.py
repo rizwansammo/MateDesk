@@ -173,6 +173,90 @@ class OrgResolutionTest(TestCase):
         self.assertEqual(_resolve_client_org(self.tenant, '').name, 'Walk-In')
 
 
+class UserOrgResolutionTest(TestCase):
+    """An address belonging to an existing user routes to that user's org.
+
+    Origin: a user added to an org on a free mail provider (gmail.com) had every
+    email land in Walk-In, because routing only consulted KnownSender and the
+    org's domain — never the user list the address was already in.
+    """
+
+    def setUp(self):
+        self.tenant = _tenant()
+        self.org = ClientOrganization.objects.create(
+            tenant=self.tenant, name='NetaMate', domain='netamate.com', is_active=True)
+
+    def _user(self, email, org, tenant=None, role='end_user'):
+        return User.objects.create_user(
+            email=email, password='x', tenant=tenant or self.tenant,
+            first_name='Ai', last_name='Assist', role=role, client_org=org)
+
+    def test_user_on_a_free_mail_provider_routes_to_their_org(self):
+        """The reported case — gmail.com can never domain-match."""
+        self._user('aiassist.netamate@gmail.com', self.org)
+        self.assertEqual(
+            _resolve_client_org(self.tenant, 'aiassist.netamate@gmail.com'), self.org)
+
+    def test_user_lookup_is_case_insensitive(self):
+        self._user('bob@gmail.com', self.org)
+        self.assertEqual(_resolve_client_org(self.tenant, 'BOB@GMAIL.COM'), self.org)
+
+    def test_known_sender_still_outranks_the_user_org(self):
+        """KnownSender stays the explicit override."""
+        self._user('bob@gmail.com', self.org)
+        special = ClientOrganization.objects.create(
+            tenant=self.tenant, name='Special', is_active=True)
+        KnownSender.objects.create(
+            tenant=self.tenant, client_org=special, email='bob@gmail.com')
+        self.assertEqual(_resolve_client_org(self.tenant, 'bob@gmail.com'), special)
+
+    def test_user_org_outranks_domain_match(self):
+        """An explicit assignment beats a domain pattern."""
+        ClientOrganization.objects.create(
+            tenant=self.tenant, name='Acme', domain='acme.com', is_active=True)
+        self._user('contractor@acme.com', self.org)
+        self.assertEqual(
+            _resolve_client_org(self.tenant, 'contractor@acme.com'), self.org)
+
+    def test_user_parked_in_walk_in_falls_through_to_domain(self):
+        """Walk-In is the fallback bucket, not a real assignment."""
+        walkin = ClientOrganization.objects.create(
+            tenant=self.tenant, name='Walk-In', is_active=True)
+        acme = ClientOrganization.objects.create(
+            tenant=self.tenant, name='Acme', domain='acme.com', is_active=True)
+        self._user('bob@acme.com', walkin)
+        self.assertEqual(_resolve_client_org(self.tenant, 'bob@acme.com'), acme)
+
+    def test_user_with_no_org_falls_through(self):
+        """MSP staff carry no client_org."""
+        self._user('agent@gmail.com', None, role='msp_agent')
+        self.assertEqual(_resolve_client_org(self.tenant, 'agent@gmail.com').name, 'Walk-In')
+
+    def test_user_with_an_inactive_org_falls_through(self):
+        dead = ClientOrganization.objects.create(
+            tenant=self.tenant, name='Dead', is_active=False)
+        self._user('bob@gmail.com', dead)
+        self.assertEqual(_resolve_client_org(self.tenant, 'bob@gmail.com').name, 'Walk-In')
+
+    def test_user_lookup_is_tenant_scoped(self):
+        """A neighbour's user with the same address must not pull mail into their org."""
+        other = _tenant('other-co')
+        other_org = ClientOrganization.objects.create(
+            tenant=other, name='Other', is_active=True)
+        self._user('shared@gmail.com', other_org, tenant=other)
+        self.assertEqual(
+            _resolve_client_org(self.tenant, 'shared@gmail.com').name, 'Walk-In')
+
+    def test_ticket_from_a_user_lands_in_their_org(self):
+        """End to end — this is what the Walk-In tickets should have done."""
+        self._user('aiassist.netamate@gmail.com', self.org)
+        _process_email(self.tenant, _msg(frm='NetaMate AI <aiassist.netamate@gmail.com>'))
+
+        ticket = Ticket.objects.get(tenant=self.tenant)
+        self.assertEqual(ticket.client_org, self.org)
+        self.assertEqual(ticket.requester.email, 'aiassist.netamate@gmail.com')
+
+
 class RequesterResolutionTest(TestCase):
     def setUp(self):
         self.tenant = _tenant()

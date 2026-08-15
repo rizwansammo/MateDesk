@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from apps.users.permissions import (
     IsTenantUser, MSP_ROLES,
     ROLE_END_USER, ROLE_CLIENT_OWNER,
+    ROLE_MSP_OWNER, ROLE_MSP_MANAGER,
 )
 from apps.tenants.models import ClientOrganization
 from apps.users.models import User
@@ -326,6 +327,74 @@ class TicketViewSet(viewsets.GenericViewSet):
 
         ticket.refresh_from_db()
         return Response(TicketDetailSerializer(ticket, context={'request': request}).data)
+
+    @action(detail=False, methods=['post'], url_path='bulk')
+    def bulk(self, request):
+        """Apply one action to several tickets at once.
+
+        Body: {"refs": ["T15082026-0001", ...], "action": "close" | "delete"}
+
+        Runs in a transaction so a partial sweep can never be left behind, and
+        resolves refs through get_queryset() so role scoping and tenant
+        isolation apply exactly as they do to a single-ticket call.
+        """
+        action_name = (request.data.get('action') or '').strip().lower()
+        refs = request.data.get('refs') or []
+
+        if action_name not in ('close', 'delete'):
+            return Response({'detail': 'action must be "close" or "delete".'}, status=400)
+        if not isinstance(refs, list) or not refs:
+            return Response({'detail': 'refs must be a non-empty list.'}, status=400)
+        if len(refs) > 200:
+            return Response({'detail': 'Too many tickets — select 200 or fewer.'}, status=400)
+
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied: MSP staff only.'}, status=403)
+        # Deletion is irreversible and cascades to replies, attachments and time
+        # logs, so it stays with the roles that own the workspace.
+        if action_name == 'delete' and request.user.role not in (ROLE_MSP_OWNER, ROLE_MSP_MANAGER):
+            return Response(
+                {'detail': 'Permission denied: only owners and managers can delete tickets.'},
+                status=403,
+            )
+
+        refs = [r for r in refs if isinstance(r, str)]
+        tickets = list(self.get_queryset().filter(ticket_ref__in=refs))
+        if not tickets:
+            return Response({'detail': 'No matching tickets.'}, status=404)
+
+        with transaction.atomic():
+            if action_name == 'delete':
+                count = len(tickets)
+                Ticket.objects.filter(pk__in=[t.pk for t in tickets]).delete()
+                return Response({'action': 'delete', 'count': count})
+
+            # Close — mirrors the single-ticket resolved_at rules in
+            # partial_update: 'closed' counts as resolved, and an already
+            # resolved ticket keeps its original timestamp.
+            now     = timezone.now()
+            changed = []
+            for ticket in tickets:
+                if ticket.status == 'closed':
+                    continue
+                if ticket.resolved_at is None or ticket.status != 'solved':
+                    ticket.resolved_at = now
+                ticket.status = 'closed'
+                changed.append(ticket)
+
+            if changed:
+                Ticket.objects.bulk_update(changed, ['status', 'resolved_at'])
+                Reply.objects.bulk_create([
+                    Reply(
+                        ticket=t,
+                        author=request.user,
+                        type='system_event',
+                        body=f'Status changed to Closed by {request.user.full_name}',
+                    )
+                    for t in changed
+                ])
+
+        return Response({'action': 'close', 'count': len(changed)})
 
     @action(detail=True, methods=['post'], url_path='secondary-agents')
     def add_secondary_agent(self, request, pk=None):

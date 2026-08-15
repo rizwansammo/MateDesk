@@ -419,12 +419,14 @@ def _find_or_create_requester(tenant, email_addr, display_name, org):
 
 def _resolve_client_org(tenant, from_email_addr):
     from apps.tenants.models import ClientOrganization
+    from apps.users.models import User
     from .models import KnownSender
 
     if from_email_addr:
         email_lower = from_email_addr.lower()
 
-        # 1. Exact email match — KnownSender takes priority
+        # 1. Exact email match — KnownSender takes priority. It stays first so it
+        #    can override the rules below for an address that needs re-routing.
         known = (
             KnownSender.objects
             .filter(tenant=tenant, email=email_lower)
@@ -434,7 +436,26 @@ def _resolve_client_org(tenant, from_email_addr):
         if known and known.client_org.is_active:
             return known.client_org
 
-        # 2. Domain match
+        # 2. An existing user's own organisation. Somebody already on the books
+        #    is a stronger signal than a domain pattern, and this is the only
+        #    rule that works for users on shared mail providers (gmail.com,
+        #    outlook.com, …) whose address can never domain-match. Walk-In is
+        #    skipped — it is the fallback bucket, not a real assignment.
+        user = (
+            User.objects
+            .filter(tenant=tenant, email__iexact=email_lower)
+            .select_related('client_org')
+            .first()
+        )
+        if (
+            user
+            and user.client_org
+            and user.client_org.is_active
+            and user.client_org.name != 'Walk-In'
+        ):
+            return user.client_org
+
+        # 3. Domain match
         if '@' in from_email_addr:
             domain = from_email_addr.split('@')[1].lower()
             org = ClientOrganization.objects.filter(
@@ -443,7 +464,7 @@ def _resolve_client_org(tenant, from_email_addr):
             if org:
                 return org
 
-    # 3. Walk-In fallback (auto-created on first use)
+    # 4. Walk-In fallback (auto-created on first use)
     walkin, _ = ClientOrganization.objects.get_or_create(
         tenant=tenant, name='Walk-In',
         defaults={'is_active': True},

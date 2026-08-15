@@ -89,6 +89,21 @@ export function useUpdateTicket(ref: string) {
   });
 }
 
+export function useBulkTicketAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { refs: string[]; action: 'close' | 'delete' }) =>
+      apiFetch<{ action: string; count: number }>('/api/tickets/bulk/', {
+        method: 'POST',
+        body:   JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tickets'] });
+      qc.invalidateQueries({ queryKey: ['ticketStats'] });
+    },
+  });
+}
+
 export function useAgentStats() {
   return useQuery({
     queryKey:  ['agentStats'],

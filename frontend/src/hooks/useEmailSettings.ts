@@ -66,3 +66,16 @@ export function useTestImap() {
       }),
   });
 }
+
+export function useTestSmtp() {
+  return useMutation({
+    mutationFn: (data: {
+      smtp_host: string; smtp_port: number; smtp_username: string;
+      smtp_password: string; smtp_use_tls: boolean;
+    }) =>
+      apiFetch<{ success: boolean; message: string }>('/api/email-settings/test-smtp/', {
+        method: 'POST',
+        body:   JSON.stringify(data),
+      }),
+  });
+}

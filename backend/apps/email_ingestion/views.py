@@ -7,11 +7,28 @@ from rest_framework.views import APIView
 from apps.users.permissions import IsTenantUser, IsMSPUser, MSP_ROLES
 from .models import TenantEmailSettings, KnownSender
 from .serializers import EmailSettingsSerializer, KnownSenderSerializer
-from .services import test_imap_connection
+from .services import test_imap_connection, test_smtp_connection
 
 
 def _resolve_tenant(request):
     return getattr(request, 'tenant', None) or getattr(request.user, 'tenant', None)
+
+
+def _saved_settings(tenant):
+    try:
+        return tenant.email_settings
+    except TenantEmailSettings.DoesNotExist:
+        return None
+
+
+def _port(value, fallback):
+    """Coerce a submitted port, falling back on anything unusable — a blank
+    field used to reach int('') and surface as a 500."""
+    try:
+        port = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return port if 1 <= port <= 65535 else fallback
 
 
 # ── Email settings ────────────────────────────────────────────────────────────
@@ -59,24 +76,52 @@ class TestImapView(APIView):
         if not tenant:
             return Response({'detail': 'No tenant context.'}, status=400)
 
-        saved = None
-        try:
-            saved = tenant.email_settings
-        except TenantEmailSettings.DoesNotExist:
-            pass
+        saved = _saved_settings(tenant)
 
-        class Proxy:
-            pass
+        # Unsaved on purpose — never persisted. It exists so the connection
+        # helper can call get_imap_password() exactly as it does for a real row.
+        probe = TenantEmailSettings(
+            imap_host     = request.data.get('imap_host',     getattr(saved, 'imap_host', '')),
+            imap_port     = _port(request.data.get('imap_port'), getattr(saved, 'imap_port', 993)),
+            imap_username = request.data.get('imap_username', getattr(saved, 'imap_username', '')),
+            imap_use_ssl  = request.data.get('imap_use_ssl',  getattr(saved, 'imap_use_ssl', True)),
+        )
+        # A typed password arrives in plaintext, the fallback comes encrypted
+        # from the DB; decrypt_email_credential() passes plaintext through, so
+        # get_imap_password() resolves both correctly.
+        typed = request.data.get('imap_password', '')
+        probe.imap_password = typed or getattr(saved, 'imap_password', '')
 
-        p = Proxy()
-        p.imap_host     = request.data.get('imap_host',     getattr(saved, 'imap_host',     ''))
-        p.imap_port     = int(request.data.get('imap_port', getattr(saved, 'imap_port',     993)))
-        p.imap_username = request.data.get('imap_username', getattr(saved, 'imap_username', ''))
-        p.imap_use_ssl  = request.data.get('imap_use_ssl',  getattr(saved, 'imap_use_ssl',  True))
-        pwd = request.data.get('imap_password', '')
-        p.imap_password = pwd if pwd else (saved.get_imap_password() if saved else '')
+        if not probe.imap_host:
+            return Response({'success': False, 'message': 'Enter an IMAP host first.'})
 
-        success, message = test_imap_connection(p)
+        success, message = test_imap_connection(probe)
+        return Response({'success': success, 'message': message})
+
+
+class TestSmtpView(APIView):
+    permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
+
+    def post(self, request):
+        tenant = _resolve_tenant(request)
+        if not tenant:
+            return Response({'detail': 'No tenant context.'}, status=400)
+
+        saved = _saved_settings(tenant)
+
+        probe = TenantEmailSettings(
+            smtp_host     = request.data.get('smtp_host',     getattr(saved, 'smtp_host', '')),
+            smtp_port     = _port(request.data.get('smtp_port'), getattr(saved, 'smtp_port', 587)),
+            smtp_username = request.data.get('smtp_username', getattr(saved, 'smtp_username', '')),
+            smtp_use_tls  = request.data.get('smtp_use_tls',  getattr(saved, 'smtp_use_tls', True)),
+        )
+        typed = request.data.get('smtp_password', '')
+        probe.smtp_password = typed or getattr(saved, 'smtp_password', '')
+
+        if not probe.smtp_host:
+            return Response({'success': False, 'message': 'Enter an SMTP host first.'})
+
+        success, message = test_smtp_connection(probe)
         return Response({'success': success, 'message': message})
 
 

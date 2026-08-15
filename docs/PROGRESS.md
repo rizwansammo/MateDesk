@@ -9,7 +9,7 @@ Session handoff log. Update at the end of every phase. Read with `SPLIT_PLAN.md`
 | M3 — infra | **COMPLETE — DEPLOYED LIVE** | https://matedesk.pro serving over HTTPS with wildcard TLS |
 | M4 — docs | **COMPLETE** | written fresh, not split — see below |
 | M5 — theme + branding | **Stage 1 shipped · rest PAUSED** | paused for beta-tester feedback, not finished — see below |
-| M6 — tests + CI gates | **Slices 1-3 done · 4-6 pending** | 86 tests (was 16); billing + SLA covered |
+| M6 — tests + CI gates | **COMPLETE** | **227 tests (was 16)**; all six slices done |
 | M7 — SEO | not started | technical foundation only; see the note on realistic keywords |
 
 ---
@@ -99,7 +99,64 @@ than pre-emptively changing it.
 
 ---
 
-## M6 — remaining slices (4-6)
+## M6 Slices 4-6 — COMPLETE (email, automation, ticket lifecycle)
+
+**Final: 227 tests, up from 16.**
+
+| App | Tests |
+|---|---|
+| tickets | 68 (16 RBAC + 52 lifecycle) |
+| email_ingestion | 54 |
+| automation | 51 |
+| sla | 39 |
+| billing | 31 |
+
+Every suite was mutation-tested: 19 deliberate defects introduced across the five
+apps, all 19 caught. Restores were done with `git checkout --` rather than hand-rolled
+backups.
+
+**Slice 4 — email ingestion.** IMAP is never touched; `_process_email` takes a parsed
+`email.Message`, so the whole pipeline below the network layer is driven by constructing
+messages from strings. Covers threading (reference in subject, In-Reply-To), dedup on
+Message-ID, org resolution precedence (KnownSender > domain > Walk-In), requester
+auto-creation, RFC 2047 header decoding, and multipart body extraction.
+
+**Slice 5 — automation engine.** All condition operators including the numeric and
+boolean branches, `any`/`all` matching, rule ordering, `stop_processing`, org scoping,
+tenant isolation, and the thread-local re-entrancy guard.
+
+**Slice 6 — ticket lifecycle.** Status transitions and `resolved_at` bookkeeping
+(including regression tests for the `closed` fix), merge and absorb in both directions
+with all their guards, and role-based row scoping on the list endpoint.
+
+### Things worth knowing
+
+- **`Ticket.objects.create()` fires a post_save signal that runs the automation engine.**
+  Automation tests must create the ticket *before* the rules, or every action applies
+  twice and every log row doubles. This caused all five initial failures in Slice 5 and
+  is documented in the test class docstring.
+- **`TicketListSerializer` exposes `ticket_ref` as `ref`.** Not `ticket_ref`.
+- **A mutation test that fails to mutate looks identical to a passing one.** Two of mine
+  silently no-op'd: a `sed` regex that failed on escaped brackets, and a `0,/pattern/`
+  range that hit the first of fourteen identical RBAC guards rather than the intended
+  one. Both reported OK. Verify the mutation actually landed.
+
+### Limitations recorded, not fixed
+
+- **Merge chains are permitted.** After `a -> b`, merging `b -> c` is allowed because the
+  guards only refuse a source that is already `secondary`. The result is `a -> b -> c`,
+  where `a.merged_into` points at a ticket that is itself secondary, and nothing resolves
+  the chain to its final primary. The right fix (refuse, or re-point every secondary at
+  the new primary) is a product decision.
+- **`_strip_re_fwd` strips only one prefix.** `Re: Re: X` → `Re: X`. Cosmetic; threading
+  uses the embedded reference, not subject text.
+- **Subject text alone never threads.** A customer composing a fresh mail with the same
+  subject opens a second ticket. Deliberate — subject-similarity matching would merge
+  unrelated conversations — but worth knowing before support meets it.
+
+---
+
+## M6 — original slice plan (all complete)
 
 Deferred by the owner until after the weekly usage limit resets. **Begin with Slice 1.**
 

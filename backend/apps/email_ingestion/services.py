@@ -2,6 +2,7 @@
 
     poll_tenant_mailbox(tenant)          → int (emails processed)
     test_imap_connection(settings_obj)   → (bool, str)
+    test_smtp_connection(settings_obj)   → (bool, str)
     send_reply_email(reply)              → None
 """
 import email
@@ -11,6 +12,8 @@ import imaplib
 import logging
 import re
 import smtplib
+import socket
+import ssl
 import uuid
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -80,14 +83,74 @@ def poll_tenant_mailbox(tenant):
     return processed
 
 
+_AUTH_HINT = ('Authentication failed — check the username and password. '
+              'Gmail and Microsoft 365 require an App Password when 2FA is on.')
+
+
+def _friendly_error(exc, protocol):
+    """Map a connection failure to a message that is safe to show the user.
+
+    The traceback goes to the log; the browser gets a short, actionable string.
+    Returning str(exc) leaked internal Python errors into the settings UI.
+    """
+    logger.warning('%s connection test failed', protocol, exc_info=True)
+
+    if isinstance(exc, (socket.gaierror, socket.herror)):
+        return 'Server not found — check the host name.'
+    if isinstance(exc, ConnectionRefusedError):
+        return 'Connection refused — check the port and the security setting.'
+    if isinstance(exc, TimeoutError):
+        return 'Connection timed out — check the host, port, and any firewall.'
+    if isinstance(exc, ssl.SSLError):
+        return 'TLS handshake failed — the security setting may not match the port.'
+    if isinstance(exc, smtplib.SMTPAuthenticationError):
+        return _AUTH_HINT
+    if isinstance(exc, smtplib.SMTPNotSupportedError):
+        return 'The server rejected that security mode — try the other option.'
+    if isinstance(exc, imaplib.IMAP4.error):
+        text = str(exc).upper()
+        if 'AUTHENTICATIONFAILED' in text or 'INVALID CREDENTIALS' in text:
+            return _AUTH_HINT
+        return 'The mail server rejected the request.'
+    if isinstance(exc, smtplib.SMTPException):
+        return 'The mail server rejected the request.'
+    return 'Could not connect — check the settings and try again.'
+
+
 def test_imap_connection(settings):
     """Test IMAP credentials. Returns (success: bool, message: str)."""
+    conn = None
     try:
         conn = _imap_connect(settings)
-        conn.logout()
         return True, 'Connection successful.'
     except Exception as exc:
-        return False, str(exc)
+        return False, _friendly_error(exc, 'IMAP')
+    finally:
+        if conn is not None:
+            try:
+                conn.logout()
+            except Exception:
+                pass
+
+
+def test_smtp_connection(settings):
+    """Test SMTP credentials. Returns (success: bool, message: str).
+
+    Authenticates only — no message is sent, so testing costs the tenant
+    nothing and cannot deliver a stray email to anyone.
+    """
+    server = None
+    try:
+        server = _smtp_connect(settings)
+        return True, 'Connection successful.'
+    except Exception as exc:
+        return False, _friendly_error(exc, 'SMTP')
+    finally:
+        if server is not None:
+            try:
+                server.quit()
+            except Exception:
+                pass
 
 
 def send_reply_email(reply, *, to_emails=None, cc_emails=None, bcc_emails=None, include_history=False):
@@ -177,13 +240,7 @@ def send_reply_email(reply, *, to_emails=None, cc_emails=None, bcc_emails=None, 
 
         all_recipients = to_emails + cc_emails + bcc_emails
 
-        if settings.smtp_use_tls:
-            server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=15)
-            server.starttls()
-        else:
-            server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=15)
-
-        server.login(settings.smtp_username, settings.get_smtp_password())
+        server = _smtp_connect(settings)
         server.sendmail(from_addr, all_recipients, msg.as_string())
         server.quit()
     except Exception:
@@ -201,6 +258,18 @@ def _imap_connect(settings):
         conn = imaplib.IMAP4(settings.imap_host, int(settings.imap_port))
     conn.login(settings.imap_username, settings.get_imap_password())
     return conn
+
+
+def _smtp_connect(settings):
+    """Open an authenticated SMTP session. Shared by the sender and the test,
+    so Test Connection exercises the same path a real reply takes."""
+    if settings.smtp_use_tls:
+        server = smtplib.SMTP(settings.smtp_host, int(settings.smtp_port), timeout=15)
+        server.starttls()
+    else:
+        server = smtplib.SMTP_SSL(settings.smtp_host, int(settings.smtp_port), timeout=15)
+    server.login(settings.smtp_username, settings.get_smtp_password())
+    return server
 
 
 @transaction.atomic

@@ -7,7 +7,7 @@ import {
   Loader2, RefreshCw, Eye, EyeOff, ExternalLink, Shield, Key,
 } from 'lucide-react';
 import {
-  useEmailSettings, useSaveEmailSettings, useTestImap,
+  useEmailSettings, useSaveEmailSettings, useTestImap, useTestSmtp,
   type EmailSettings,
 } from '@/hooks/useEmailSettings';
 
@@ -26,6 +26,44 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className={lbl}>{label}</label>
       {children}
+    </div>
+  );
+}
+
+function TestConnection({ onTest, pending, disabled, result }: {
+  onTest:   () => void;
+  pending:  boolean;
+  disabled: boolean;
+  result:   { success: boolean; message: string } | null;
+}) {
+  return (
+    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={onTest}
+          disabled={pending || disabled}
+          className="flex items-center gap-1.5 px-4 py-1.5 font-medium transition-all disabled:opacity-40 shrink-0"
+          style={{ fontSize: 12, color: 'var(--accent-info-fg)', border: '1px solid #1e3a6e', background: 'rgba(37,99,235,0.08)' }}
+          onMouseEnter={e => { if (!pending && !disabled) e.currentTarget.style.background = 'rgba(37,99,235,0.15)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; }}
+        >
+          {pending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
+          {pending ? 'Testing…' : 'Test Connection'}
+        </button>
+        {result && (
+          <span
+            role="status"
+            className="flex items-start gap-1.5 pt-1"
+            style={{ fontSize: 12, lineHeight: 1.5, color: result.success ? 'var(--accent-ok-fg)' : 'var(--accent-danger-fg)' }}
+          >
+            {result.success
+              ? <CheckCircle size={13} className="shrink-0 mt-0.5" />
+              : <XCircle     size={13} className="shrink-0 mt-0.5" />}
+            {result.message}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -173,6 +211,7 @@ export default function EmailSettingsPage() {
   const { data: saved, isLoading } = useEmailSettings();
   const save      = useSaveEmailSettings();
   const testImap  = useTestImap();
+  const testSmtp  = useTestSmtp();
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>('basic');
 
@@ -188,7 +227,9 @@ export default function EmailSettingsPage() {
     oauth_provider: 'm365', oauth_client_id: '', oauth_client_secret: '', oauth_tenant_id: '',
   });
 
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  type TestResult = { success: boolean; message: string } | null;
+  const [imapResult, setImapResult] = useState<TestResult>(null);
+  const [smtpResult, setSmtpResult] = useState<TestResult>(null);
   const [saved_ok,   setSavedOk]    = useState(false);
 
   useEffect(() => {
@@ -241,7 +282,7 @@ export default function EmailSettingsPage() {
   }
 
   function handleTestImap() {
-    setTestResult(null);
+    setImapResult(null);
     testImap.mutate(
       {
         imap_host:     imap.imap_host,
@@ -250,7 +291,27 @@ export default function EmailSettingsPage() {
         imap_password: imap.imap_password,
         imap_use_ssl:  imap.imap_use_ssl,
       },
-      { onSuccess: result => setTestResult(result) },
+      {
+        onSuccess: result => setImapResult(result),
+        onError:   () => setImapResult({ success: false, message: 'Could not reach the server. Try again.' }),
+      },
+    );
+  }
+
+  function handleTestSmtp() {
+    setSmtpResult(null);
+    testSmtp.mutate(
+      {
+        smtp_host:     smtp.smtp_host,
+        smtp_port:     smtp.smtp_port,
+        smtp_username: smtp.smtp_username,
+        smtp_password: smtp.smtp_password,
+        smtp_use_tls:  smtp.smtp_use_tls,
+      },
+      {
+        onSuccess: result => setSmtpResult(result),
+        onError:   () => setSmtpResult({ success: false, message: 'Could not reach the server. Try again.' }),
+      },
     );
   }
 
@@ -393,30 +454,12 @@ export default function EmailSettingsPage() {
                       </Field>
                     </div>
 
-                    {/* Test connection */}
-                    <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={handleTestImap}
-                          disabled={testImap.isPending || !imap.imap_host}
-                          className="flex items-center gap-1.5 px-4 py-1.5 font-medium transition-all disabled:opacity-40"
-                          style={{ fontSize: 12, color: 'var(--accent-info-fg)', border: '1px solid #1e3a6e', background: 'rgba(37,99,235,0.08)' }}
-                          onMouseEnter={e => { if (!testImap.isPending) e.currentTarget.style.background = 'rgba(37,99,235,0.15)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(37,99,235,0.08)'; }}
-                        >
-                          {testImap.isPending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
-                          {testImap.isPending ? 'Testing…' : 'Test Connection'}
-                        </button>
-                        {testResult && (
-                          <span className="flex items-center gap-1.5"
-                            style={{ fontSize: 12, color: testResult.success ? '#34d399' : '#f87171' }}>
-                            {testResult.success ? <CheckCircle size={13} /> : <XCircle size={13} />}
-                            {testResult.message}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <TestConnection
+                      onTest={handleTestImap}
+                      pending={testImap.isPending}
+                      disabled={!imap.imap_host}
+                      result={imapResult}
+                    />
 
                     {/* Status footer */}
                     <div className="flex items-center justify-between"
@@ -480,6 +523,13 @@ export default function EmailSettingsPage() {
                       </select>
                     </Field>
 
+                    <TestConnection
+                      onTest={handleTestSmtp}
+                      pending={testSmtp.isPending}
+                      disabled={!smtp.smtp_host}
+                      result={smtpResult}
+                    />
+
                     <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
                       <p className="mb-3" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                         From Address
@@ -492,6 +542,10 @@ export default function EmailSettingsPage() {
                         <Field label="From Email">
                           <input type="email" value={smtp.smtp_from_email} onChange={e => setS('smtp_from_email', e.target.value)}
                             placeholder="support@yourcompany.com" className={inp} />
+                          <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 5, lineHeight: 1.5 }}>
+                            The address your clients see. Usually the same as the username above — they
+                            differ only when you send via a relay (SendGrid, SES) or a verified alias.
+                          </p>
                         </Field>
                       </div>
                     </div>

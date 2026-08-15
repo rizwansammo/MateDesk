@@ -116,6 +116,15 @@ class ProcessedEmail(models.Model):
     from_name    = models.CharField(max_length=500, blank=True)
     subject      = models.CharField(max_length=998, blank=True)
     cc_emails    = models.JSONField(default=list, blank=True)
+
+    # Reply-To handling. The header is attacker-controlled, so it is only acted
+    # on when the address is already a Known Sender or an active user; see
+    # services._trusted_reply_to. Both the accepted address and the raw header
+    # are kept so a ticket can always show who actually sent it versus who the
+    # sender claimed to be replying for.
+    reply_to_email = models.EmailField(blank=True)          # accepted, drives replies
+    reply_to_raw   = models.CharField(max_length=998, blank=True)  # as received
+
     processed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

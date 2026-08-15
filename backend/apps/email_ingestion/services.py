@@ -22,6 +22,7 @@ from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -175,9 +176,15 @@ def send_reply_email(reply, *, to_emails=None, cc_emails=None, bcc_emails=None, 
     source_message_id = source.message_id if source else None
 
     if not to_emails:
-        if not source or not source.from_email:
+        if not source:
             return
-        to_emails = [source.from_email]
+        # A trusted Reply-To recorded at ticket creation is who the conversation
+        # is actually with; fall back to the sender when there was none. Only
+        # addresses that passed _trusted_reply_to ever reach this field.
+        default_to = source.reply_to_email or source.from_email
+        if not default_to:
+            return
+        to_emails = [default_to]
 
     # Strip CR/LF from every recipient to block SMTP header injection.
     to_emails  = _clean_addrs(to_emails)
@@ -319,8 +326,30 @@ def _process_email(tenant, msg):
         )
     else:
         clean_subject = _strip_re_fwd(subject) or '(No subject)'
-        org = _resolve_client_org(tenant, from_email_addr)
-        requester = _find_or_create_requester(tenant, from_email_addr, from_name, org)
+
+        # Reply-To, when the tenant already trusts it, names the person actually
+        # being represented — e.g. a monitoring tool sending on someone's behalf.
+        # It is only read here: a ticket's requester is fixed at creation, so a
+        # later message in the thread can never redirect an established
+        # conversation. Trusted extras join the CC list; the raw header is kept
+        # whether or not anything in it was accepted.
+        raw_reply_to = _decode_header_str(msg.get('Reply-To', '') or '').strip()
+        trusted      = _trusted_reply_to(tenant, raw_reply_to)
+
+        if trusted:
+            primary_addr = trusted[0]
+            primary_name = ''
+            # The sender stays in the loop, alongside any further trusted
+            # Reply-To addresses. Untrusted ones are recorded but never emailed.
+            cc_emails = _dedupe_addrs(
+                cc_emails + trusted[1:] + ([from_email_addr] if from_email_addr else [])
+            )
+        else:
+            primary_addr = from_email_addr
+            primary_name = from_name
+
+        org       = _resolve_client_org(tenant, primary_addr)
+        requester = _find_or_create_requester(tenant, primary_addr, primary_name, org)
 
         seq = Ticket.next_seq(tenant)
         ref = f"T{timezone.now().strftime('%d%m%Y')}-{seq:04d}"
@@ -335,13 +364,20 @@ def _process_email(tenant, msg):
             priority='normal',
             client_org=org,
             requester=requester,
-            requester_name=from_name or from_email_addr,
+            requester_name=(
+                requester.full_name if requester else (primary_name or primary_addr)
+            ),
         )
         Reply.objects.create(
             ticket=ticket,
             author=None,
             type='system_event',
-            body=f'Ticket created from email sent by {from_name or from_email_addr}',
+            body=(
+                f'Ticket created from email sent by {from_name or from_email_addr} '
+                f'on behalf of {primary_addr} (Reply-To)'
+                if trusted else
+                f'Ticket created from email sent by {from_name or from_email_addr}'
+            ),
         )
         for img_file, img_name in images:
             Attachment.objects.create(
@@ -353,7 +389,70 @@ def _process_email(tenant, msg):
             ticket=ticket,
             from_email=from_email_addr, from_name=from_name, subject=subject,
             cc_emails=cc_emails,
+            reply_to_email=trusted[0] if trusted else '',
+            reply_to_raw=raw_reply_to[:998],
         )
+
+
+def _dedupe_addrs(addrs):
+    """Case-insensitive dedupe, first occurrence wins, order preserved."""
+    out, seen = [], set()
+    for a in addrs:
+        key = (a or '').strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            out.append(a)
+    return out
+
+
+def _trusted_reply_to(tenant, raw_header):
+    """Return the Reply-To addresses this tenant is willing to act on.
+
+    Reply-To is set by the sender and authenticated by nothing, so honouring it
+    blindly would let anyone who emails the helpdesk redirect the whole thread —
+    every later agent reply, and whatever it contains — to an address of their
+    choosing. An address is therefore only accepted when the tenant already
+    trusts it: a KnownSender, or an active user in this tenant.
+
+    'Active' matters here in a way it does not for org routing. Filing a ticket
+    under a departed user's company is harmless; delivering mail to a disabled
+    account is not, so a deactivated user is not a trust anchor.
+
+    Order is preserved — the caller takes the first as requester and CCs the
+    rest. Untrusted addresses are dropped from the result and never emailed.
+    """
+    from apps.users.models import User
+    from .models import KnownSender
+
+    if not raw_header:
+        return []
+
+    addrs, seen = [], set()
+    for _, addr in email.utils.getaddresses([_decode_header_str(raw_header)]):
+        addr = (addr or '').strip().lower()
+        if addr and '@' in addr and addr not in seen:
+            seen.add(addr)
+            addrs.append(addr)
+    if not addrs:
+        return []
+
+    # Lower() on both sides — create_user only normalises the domain half, so
+    # 'Bob@acme.com' is stored verbatim and an exact __in would miss it.
+    trusted = set(
+        KnownSender.objects
+        .filter(tenant=tenant, client_org__is_active=True)
+        .annotate(addr=Lower('email'))
+        .filter(addr__in=addrs)
+        .values_list('addr', flat=True)
+    )
+    trusted.update(
+        User.objects
+        .filter(tenant=tenant, is_active=True)
+        .annotate(addr=Lower('email'))
+        .filter(addr__in=addrs)
+        .values_list('addr', flat=True)
+    )
+    return [a for a in addrs if a in trusted]
 
 
 def _find_existing_ticket(tenant, subject, in_reply_to):

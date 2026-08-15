@@ -238,6 +238,21 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             return source.cc_emails or []
         return []
 
+    source_reply_to = serializers.SerializerMethodField()
+
+    def get_source_reply_to(self, obj):
+        """Provenance for a ticket opened via a trusted Reply-To — who actually
+        sent the mail versus who it was sent on behalf of. None when the ticket
+        came in normally, so the UI only shows it where it means something."""
+        source = obj.source_emails.order_by('processed_at').first()
+        if not source or not source.reply_to_email:
+            return None
+        return {
+            'reply_to':   source.reply_to_email,
+            'sent_by':    source.from_email,
+            'raw_header': source.reply_to_raw,
+        }
+
     sla_info = serializers.SerializerMethodField()
 
     def get_sla_info(self, obj):
@@ -266,7 +281,8 @@ class TicketDetailSerializer(serializers.ModelSerializer):
             'category', 'tags', 'due_by', 'requester', 'assignee', 'secondary_agents',
             'client_org', 'group', 'replies', 'attachments', 'timelogs', 'merge_info',
             'linked_articles', 'sla_status', 'first_response_at', 'sla_info',
-            'is_internal', 'source_cc_emails', 'created_at', 'updated_at', 'resolved_at',
+            'is_internal', 'source_cc_emails', 'source_reply_to',
+            'created_at', 'updated_at', 'resolved_at',
         ]
 
 

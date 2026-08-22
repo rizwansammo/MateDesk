@@ -57,8 +57,8 @@ interface LogoSizeStore {
 export const useLogoSizeStore = create<LogoSizeStore>()(
   persist(
     (set) => ({
-      mdIconSize:   32,
-      mdFontSize:   30,
+      mdIconSize:   24,
+      mdFontSize:   19,
       mdLineHeight: 0,
       mcIconSize:   32,
       mcFontSize:   30,
@@ -86,7 +86,7 @@ export const useLogoSizeStore = create<LogoSizeStore>()(
         mcLogoUrl:    cfg.mc_logo_url    ?? '',
       }),
     }),
-    { name: 'matedesk-logo-sizes', version: 4 }
+    { name: 'matedesk-logo-sizes', version: 5 }
   )
 );
 

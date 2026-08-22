@@ -418,7 +418,7 @@ def tenant_detail(request, pk):
     tab = request.GET.get('tab', 'overview')
 
     _branding_defaults = {
-        'md_icon_size': 32, 'md_font_size': 30, 'md_line_height': 0,
+        'md_icon_size': 24, 'md_font_size': 19, 'md_line_height': 0,
         'md_custom_text': '',
     }
     branding = {**_branding_defaults, **(tenant.branding or {})}
@@ -515,8 +515,8 @@ def tenant_update_branding(request, pk):
             return default
 
     branding = {
-        'md_icon_size':    _int('md_icon_size',   32, 16,  64),
-        'md_font_size':    _int('md_font_size',   30, 10,  80),
+        'md_icon_size':    _int('md_icon_size',   24, 16,  64),
+        'md_font_size':    _int('md_font_size',   19, 10,  80),
         'md_line_height':  _int('md_line_height',  0,  0, 120),
         'mc_icon_size':    _int('mc_icon_size',   32, 16,  64),
         'mc_font_size':    _int('mc_font_size',   30, 10,  80),

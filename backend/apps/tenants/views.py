@@ -92,7 +92,7 @@ class TenantBrandingView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     _DEFAULTS = {
-        'md_icon_size': 32, 'md_font_size': 30, 'md_line_height': 0,
+        'md_icon_size': 24, 'md_font_size': 19, 'md_line_height': 0,
         'mc_icon_size': 32, 'mc_font_size': 30, 'mc_line_height': 0,
         'md_custom_text': '', 'mc_custom_text': '',
         'md_logo_url': '', 'mc_logo_url': '',

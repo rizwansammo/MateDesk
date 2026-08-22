@@ -60,7 +60,6 @@ export function Topbar() {
         background:   'var(--bg-surface)',
         borderBottom: '1px solid var(--border-md)',
         zIndex:       50,
-        paddingLeft:  16,
         paddingRight: 16,
       }}
     >
@@ -68,7 +67,21 @@ export function Topbar() {
       <button
         onClick={() => triggerTransition(() => router.push('/home'))}
         className="flex items-center"
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0, gap: 9 }}
+        // The logo occupies the sidebar's column and carries its right border, so the
+        // divider runs unbroken from the top of the viewport down the nav's edge.
+        // Width tracks MainSidebar's expanded width; padding aligns the mark with
+        // the nav icons below it.
+        style={{
+          width:       200,
+          height:      '100%',
+          padding:     '0 16px',
+          background:  'none',
+          border:      'none',
+          borderRight: '1px solid var(--border-subtle)',
+          cursor:      'pointer',
+          flexShrink:  0,
+          gap:         9,
+        }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
       >
@@ -82,7 +95,7 @@ export function Topbar() {
               </svg>
           }
         </div>
-        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: 3, transition: 'font-size 0.15s' }}>
+        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: -1, transition: 'font-size 0.15s' }}>
           {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
         </span>
       </button>

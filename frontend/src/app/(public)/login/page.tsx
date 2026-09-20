@@ -75,8 +75,17 @@ function LoginForm() {
     clearError();
     try {
       await login(email.trim(), password);
-      // Root-domain logins redirect via window.location inside login() —
-      // they never reach this line.  Subdomain / localhost land here.
+
+      if (isSingleTenant) {
+        const signedInUser = useAuthStore.getState().user;
+        const isStaff = ['msp_owner', 'msp_manager', 'msp_agent'].includes(signedInUser?.role ?? '');
+        const dest = searchParams.get('next') ?? (isStaff ? '/home' : '/requests');
+        triggerTransition(() => router.push(dest));
+        return;
+      }
+
+      // Multi-tenant root-domain login hard-navigates to the tenant subdomain
+      // inside login(). Subdomain / localhost sessions land here normally.
       const dest = searchParams.get('next') ?? '/home';
       triggerTransition(() => router.push(dest));
     } catch {

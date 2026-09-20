@@ -18,6 +18,7 @@ const features = [
 interface InstanceConfig {
   product_name: string;
   vendor_name: string;
+  product_logo_url: string;
   tenant_name: string;
   login_headline: string;
   login_subtitle: string;
@@ -99,7 +100,11 @@ function LoginForm() {
         }}
       >
         <TransitionLink href="/" style={{ textDecoration: 'none', color: '#ECEEF2' }}>
-          <BrandLogo size="md" label={isSingleTenant ? productName : undefined} />
+          <BrandLogo
+            size="md"
+            label={isSingleTenant ? productName : undefined}
+            logoUrl={isSingleTenant ? instance?.product_logo_url : undefined}
+          />
         </TransitionLink>
 
         <div>

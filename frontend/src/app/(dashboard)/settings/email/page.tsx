@@ -819,7 +819,7 @@ export default function EmailSettingsPage() {
                       <div className="flex flex-col gap-3">
                         <Field label="Display Name">
                           <input type="text" value={smtp.smtp_from_name} onChange={e => setS('smtp_from_name', e.target.value)}
-                            placeholder="MateDesk Support" className={inp} />
+                            placeholder={`${productWordmark} Support`} className={inp} />
                         </Field>
                         <Field label="From Email">
                           <input type="email" value={smtp.smtp_from_email} onChange={e => setS('smtp_from_email', e.target.value)}

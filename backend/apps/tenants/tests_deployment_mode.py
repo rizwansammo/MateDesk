@@ -16,6 +16,7 @@ class DeploymentModeTenantMiddlewareTests(TestCase):
     @override_settings(
         DEPLOYMENT_MODE='single_tenant',
         SINGLE_TENANT_SLUG='netamate',
+        ALLOWED_HOSTS=['helpdesk.netamate.com'],
     )
     def test_single_tenant_mode_uses_configured_tenant_on_direct_host(self):
         captured = {}
@@ -36,6 +37,7 @@ class DeploymentModeTenantMiddlewareTests(TestCase):
     @override_settings(
         DEPLOYMENT_MODE='multi_tenant',
         NON_TENANT_HOSTS={'matedesk.pro', 'www.matedesk.pro'},
+        ALLOWED_HOSTS=['matedesk.pro', '.matedesk.pro'],
     )
     def test_multi_tenant_mode_still_resolves_subdomain(self):
         captured = {}
@@ -56,6 +58,7 @@ class DeploymentModeTenantMiddlewareTests(TestCase):
     @override_settings(
         DEPLOYMENT_MODE='multi_tenant',
         NON_TENANT_HOSTS={'matedesk.pro', 'www.matedesk.pro'},
+        ALLOWED_HOSTS=['matedesk.pro', '.matedesk.pro'],
     )
     def test_multi_tenant_root_domain_remains_non_tenant(self):
         captured = {}

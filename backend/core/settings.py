@@ -157,6 +157,12 @@ PLATFORM_ADMIN_ENABLED = config(
     default=(DEPLOYMENT_MODE == 'multi_tenant'),
 )
 
+# Public, non-secret product identity used by dedicated login surfaces.
+PRODUCT_NAME = config('PRODUCT_NAME', default='MateDesk').strip() or 'MateDesk'
+PRODUCT_VENDOR_NAME = config('PRODUCT_VENDOR_NAME', default='NetaMate Solutions').strip() or 'NetaMate Solutions'
+LOGIN_HEADLINE = config('LOGIN_HEADLINE', default='').strip()
+LOGIN_SUBTITLE = config('LOGIN_SUBTITLE', default='').strip()
+
 CHANNEL_LAYER_BACKEND = os.environ.get('CHANNEL_LAYER_BACKEND', 'memory')
 CHANNEL_REDIS_URL = os.environ.get('CHANNEL_REDIS_URL', config('CHANNEL_REDIS_URL', default='redis://127.0.0.1:6379/2'))
 if CHANNEL_LAYER_BACKEND == 'redis':

@@ -14,6 +14,7 @@ import { headers } from 'next/headers';
 // polite, human-readable layer on top.
 
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'matedesk.pro';
+const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
 
 const APEX = `User-agent: *
 Allow: /
@@ -41,7 +42,7 @@ export async function GET() {
   const host = (await headers()).get('host')?.split(':')[0] ?? '';
   const isApex = host === APP_DOMAIN || host === `www.${APP_DOMAIN}`;
 
-  return new Response(isApex ? APEX : TENANT, {
+  return new Response(IS_SINGLE_TENANT ? TENANT : (isApex ? APEX : TENANT), {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       // Short cache: a wrong robots.txt cached for a day is expensive to undo.

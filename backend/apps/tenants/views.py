@@ -96,28 +96,126 @@ class TenantBrandingView(APIView):
         'mc_icon_size': 32, 'mc_font_size': 30, 'mc_line_height': 0,
         'md_custom_text': '', 'mc_custom_text': '',
         'md_logo_url': '', 'mc_logo_url': '',
+        'md_logo_variant': '', 'md_logo_theme_aware': False,
     }
 
+    @staticmethod
+    def _clamp_int(value, default, minimum, maximum):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return default
+        return max(minimum, min(maximum, parsed))
+
+    def _response_data(self, tenant):
+        from django.conf import settings
+
+        data = {**self._DEFAULTS, **(tenant.branding or {})}
+        data['md_logo_url'] = tenant.branding_md_logo.url if tenant.branding_md_logo else ''
+        data['mc_logo_url'] = tenant.branding_mc_logo.url if tenant.branding_mc_logo else ''
+
+        if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'single_tenant':
+            if not data.get('md_custom_text'):
+                data['md_custom_text'] = getattr(settings, 'PRODUCT_WORDMARK', 'MateDesk')
+            if not data.get('md_logo_url') and not data.get('md_logo_variant'):
+                data['md_logo_url'] = getattr(settings, 'PRODUCT_LOGO_URL', '')
+                data['md_logo_variant'] = getattr(settings, 'PRODUCT_LOGO_VARIANT', '')
+                data['md_logo_theme_aware'] = getattr(
+                    settings, 'PRODUCT_LOGO_THEME_AWARE', False
+                )
+
+        return data
+
     def get(self, request):
+        tenant = _resolve_tenant(request)
+        if tenant is None:
+            return Response({'detail': 'No tenant context.'}, status=400)
+        return Response(self._response_data(tenant))
+
+    def patch(self, request):
         from django.conf import settings
 
         tenant = _resolve_tenant(request)
         if tenant is None:
             return Response({'detail': 'No tenant context.'}, status=400)
-        data = {**self._DEFAULTS, **(tenant.branding or {})}
-        data['md_logo_url'] = tenant.branding_md_logo.url if tenant.branding_md_logo else ''
-        data['mc_logo_url'] = tenant.branding_mc_logo.url if tenant.branding_mc_logo else ''
 
-        # Dedicated installs can carry their visible product identity in runtime
-        # configuration, so disabling Platform Admin does not leave MateDesk
-        # branding hardcoded in the tenant dashboard.
-        if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'single_tenant':
-            if not data.get('md_custom_text'):
-                data['md_custom_text'] = getattr(settings, 'PRODUCT_NAME', 'MateDesk')
-            if not data.get('md_logo_url'):
-                data['md_logo_url'] = getattr(settings, 'PRODUCT_LOGO_URL', '')
+        if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') != 'single_tenant':
+            return Response(
+                {'detail': 'Branding is managed by the Platform Admin.'},
+                status=403,
+            )
+        if getattr(request.user, 'role', None) != 'msp_owner':
+            return Response(
+                {'detail': 'Only the workspace owner can change branding.'},
+                status=403,
+            )
 
-        return Response(data)
+        current = {**self._DEFAULTS, **(tenant.branding or {})}
+        current['md_custom_text'] = (
+            request.data.get('md_custom_text', current.get('md_custom_text', ''))
+            or ''
+        ).strip()[:80]
+        current['md_icon_size'] = self._clamp_int(
+            request.data.get('md_icon_size', current.get('md_icon_size')),
+            24, 18, 64,
+        )
+        current['md_font_size'] = self._clamp_int(
+            request.data.get('md_font_size', current.get('md_font_size')),
+            19, 12, 48,
+        )
+        current['md_line_height'] = self._clamp_int(
+            request.data.get('md_line_height', current.get('md_line_height')),
+            0, 0, 72,
+        )
+
+        theme_aware_raw = request.data.get(
+            'md_logo_theme_aware', current.get('md_logo_theme_aware', False)
+        )
+        if isinstance(theme_aware_raw, str):
+            current['md_logo_theme_aware'] = theme_aware_raw.lower() in {
+                '1', 'true', 'yes', 'on'
+            }
+        else:
+            current['md_logo_theme_aware'] = bool(theme_aware_raw)
+
+        remove_logo_raw = request.data.get('remove_logo', False)
+        remove_logo = (
+            remove_logo_raw.lower() in {'1', 'true', 'yes', 'on'}
+            if isinstance(remove_logo_raw, str)
+            else bool(remove_logo_raw)
+        )
+
+        upload = request.FILES.get('logo')
+        if upload is not None:
+            if upload.size > 5 * 1024 * 1024:
+                return Response({'detail': 'Logo must be 5 MB or smaller.'}, status=400)
+            allowed_types = {'image/png', 'image/jpeg', 'image/webp'}
+            if upload.content_type not in allowed_types:
+                return Response(
+                    {'detail': 'Logo must be PNG, JPEG, or WebP.'},
+                    status=400,
+                )
+            tenant.branding_md_logo = upload
+            current['md_logo_variant'] = ''
+        elif remove_logo:
+            if tenant.branding_md_logo:
+                tenant.branding_md_logo.delete(save=False)
+            tenant.branding_md_logo = None
+            current['md_logo_variant'] = ''
+
+        # Built-in logo variants are only accepted from the curated allow-list.
+        requested_variant = (request.data.get('md_logo_variant') or '').strip().lower()
+        if requested_variant:
+            if requested_variant not in {'netamate'}:
+                return Response({'detail': 'Unsupported built-in logo variant.'}, status=400)
+            tenant.branding_md_logo = None
+            current['md_logo_variant'] = requested_variant
+
+        tenant.branding = current
+        tenant.save(update_fields=['branding', 'branding_md_logo'])
+        return Response(self._response_data(tenant))
+
+    post = patch
 
 
 class TransferOwnershipView(APIView):

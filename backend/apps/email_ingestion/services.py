@@ -5,6 +5,7 @@
     test_smtp_connection(settings_obj)   → (bool, str)
     send_reply_email(reply)              → None
 """
+import base64
 import email
 import email.header
 import email.utils
@@ -24,6 +25,9 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import transaction
 from django.db.models.functions import Lower
 from django.utils import timezone
+
+from . import matemail
+from .models import AUTH_METHOD_MATEMAIL
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +54,9 @@ def poll_tenant_mailbox(tenant):
         settings = tenant.email_settings
     except Exception:
         return 0
+
+    if settings.auth_method == AUTH_METHOD_MATEMAIL:
+        return _poll_matemail_mailbox(tenant, settings)
 
     if not settings.imap_enabled or not settings.imap_host:
         return 0
@@ -81,6 +88,65 @@ def poll_tenant_mailbox(tenant):
         settings.last_error = str(exc)
         settings.save(update_fields=['last_error'])
 
+    return processed
+
+
+def _poll_matemail_mailbox(tenant, settings):
+    """Poll a connected MateMail mailbox without storing its mailbox password."""
+    if not settings.imap_enabled:
+        return 0
+    token = settings.get_matemail_access_token()
+    if not token or not settings.matemail_tenant_id:
+        return 0
+
+    processed = 0
+    try:
+        page = matemail.messages(
+            token=token,
+            tenant_id=settings.matemail_tenant_id,
+            folder=settings.imap_folder or "INBOX",
+            unread=True,
+            page=1,
+            page_size=100,
+        )
+        uid_validity = page.get("uid_validity")
+        for item in page.get("results", []):
+            uid = item.get("uid")
+            if uid is None:
+                continue
+            try:
+                raw = matemail.raw_message(
+                    token=token,
+                    tenant_id=settings.matemail_tenant_id,
+                    folder=settings.imap_folder or "INBOX",
+                    uid=uid,
+                    uid_validity=uid_validity,
+                )
+                message = email.message_from_bytes(raw)
+                _process_email(tenant, message)
+                matemail.mark_seen(
+                    token=token,
+                    tenant_id=settings.matemail_tenant_id,
+                    folder=settings.imap_folder or "INBOX",
+                    uid=uid,
+                    uid_validity=uid_validity,
+                )
+                processed += 1
+            except Exception:
+                logger.exception(
+                    "Failed to process MateMail UID %s for tenant %s",
+                    uid,
+                    tenant.pk,
+                )
+
+        settings.last_polled_at = timezone.now()
+        settings.emails_processed = (settings.emails_processed or 0) + processed
+        settings.last_error = ""
+        settings.save(update_fields=["last_polled_at", "emails_processed", "last_error"])
+    except Exception as exc:
+        logger.exception("MateMail polling failed for tenant %s", tenant.pk)
+        settings.last_error = "Connected mailbox could not be polled."
+        settings.save(update_fields=["last_error"])
     return processed
 
 
@@ -168,7 +234,10 @@ def send_reply_email(reply, *, to_emails=None, cc_emails=None, bcc_emails=None, 
     except Exception:
         return
 
-    if not settings.smtp_enabled or not settings.smtp_host or not settings.smtp_from_email:
+    if settings.auth_method == AUTH_METHOD_MATEMAIL:
+        if not settings.smtp_enabled or not settings.matemail_mailbox_email:
+            return
+    elif not settings.smtp_enabled or not settings.smtp_host or not settings.smtp_from_email:
         return
 
     # Resolve To recipients and threading headers
@@ -193,14 +262,65 @@ def send_reply_email(reply, *, to_emails=None, cc_emails=None, bcc_emails=None, 
     if not to_emails:
         return
 
-    from_addr = settings.smtp_from_email
-    from_name = settings.smtp_from_name or 'Support'
+    from_addr = (
+        settings.matemail_mailbox_email
+        if settings.auth_method == AUTH_METHOD_MATEMAIL
+        else settings.smtp_from_email
+    )
+    from_name = (
+        settings.matemail_mailbox_name
+        if settings.auth_method == AUTH_METHOD_MATEMAIL
+        else settings.smtp_from_name
+    ) or 'Support'
     # Collapse newlines in the subject too — it is built from user-supplied data.
     subject   = f'Re: [{ticket.ticket_ref}] {ticket.subject}'.replace('\r', ' ').replace('\n', ' ')
 
     body = reply.body
     if include_history:
         body += _build_history_block(ticket, exclude_reply_id=reply.id)
+
+    if settings.auth_method == AUTH_METHOD_MATEMAIL:
+        attachments_payload = []
+        for att in reply.attachments.all():
+            try:
+                with att.file.open("rb") as fh:
+                    payload = fh.read()
+                attachments_payload.append({
+                    "filename": att.filename or "attachment",
+                    "content_type": "application/octet-stream",
+                    "data": base64.b64encode(payload).decode("ascii"),
+                })
+            except Exception:
+                logger.exception("Could not read reply attachment %s", att.pk)
+
+        references = [source_message_id] if source_message_id else []
+        try:
+            result = matemail.send_message(
+                token=settings.get_matemail_access_token(),
+                tenant_id=settings.matemail_tenant_id,
+                payload={
+                    "from_address": settings.matemail_mailbox_email,
+                    "to": to_emails,
+                    "cc": cc_emails,
+                    "bcc": bcc_emails,
+                    "subject": subject,
+                    "text": body,
+                    "html": "",
+                    "in_reply_to": source_message_id or "",
+                    "references": references,
+                    "attachments": attachments_payload,
+                    "idempotency_key": f"matedesk-reply-{reply.id}",
+                },
+            )
+            if not result.get("sent"):
+                raise matemail.MateMailError("MateMail did not confirm the send.")
+        except Exception:
+            logger.exception(
+                "Failed to send MateMail reply %s (ticket %s)",
+                reply.id,
+                ticket.ticket_ref,
+            )
+        return
 
     try:
         attachments = list(reply.attachments.all())

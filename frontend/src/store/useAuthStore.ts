@@ -64,8 +64,9 @@ export const useAuthStore = create<AuthState>()(
           // If we're on the root domain (not a tenant subdomain), the tokens must
           // live in the subdomain's localStorage — redirect there via auth-callback.
           const d = process.env.NEXT_PUBLIC_APP_DOMAIN;
+          const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
           const host = typeof window !== 'undefined' ? window.location.hostname : '';
-          const isRootDomain = d && d !== 'localhost' && host === d;
+          const isRootDomain = mode !== 'single_tenant' && d && d !== 'localhost' && host === d;
 
           if (isRootDomain) {
             // Hard-navigate to the subdomain auth-callback page with tokens in

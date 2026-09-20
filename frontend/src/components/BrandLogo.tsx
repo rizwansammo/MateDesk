@@ -1,4 +1,10 @@
-export function BrandLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+export function BrandLogo({
+  size = 'md',
+  label,
+}: {
+  size?: 'sm' | 'md' | 'lg';
+  label?: string;
+}) {
   const markSz = size === 'lg' ? 36 : size === 'sm' ? 22 : 28;
   const textSz = size === 'lg' ? 24 : size === 'sm' ? 14 : 18;
   return (
@@ -30,7 +36,7 @@ export function BrandLogo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
           whiteSpace: 'nowrap',
         }}
       >
-        Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span>
+        {label ?? <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
       </span>
     </div>
   );

@@ -28,12 +28,17 @@ urlpatterns = [
     path('api/',              include('apps.sla.urls')),
     path('api/',              include('apps.automation.urls')),
     path('api/chat/',         include('apps.chat.urls')),
-    # Platform Admin panel
-    path('admin',         RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
-    path('admin/',        RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
-    path('platform-admin', RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
-    path('platform-admin/', include('apps.platform_admin.urls', namespace='platform_admin')),
 ]
+
+# Platform-level tenant/subscription administration is a SaaS concern. Dedicated
+# single-tenant deployments disable this surface by default.
+if settings.PLATFORM_ADMIN_ENABLED:
+    urlpatterns += [
+        path('admin',          RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
+        path('admin/',         RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
+        path('platform-admin', RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
+        path('platform-admin/', include('apps.platform_admin.urls', namespace='platform_admin')),
+    ]
 
 # Media files: served raw ONLY in local development. In production, attachments are
 # fetched exclusively through the authenticated, tenant-scoped endpoint

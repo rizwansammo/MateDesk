@@ -16,8 +16,11 @@ def public_instance_config(request):
     return JsonResponse({
         'deployment_mode': settings.DEPLOYMENT_MODE,
         'product_name': settings.PRODUCT_NAME,
+        'product_wordmark': settings.PRODUCT_WORDMARK,
         'vendor_name': settings.PRODUCT_VENDOR_NAME,
         'product_logo_url': settings.PRODUCT_LOGO_URL,
+        'product_logo_variant': settings.PRODUCT_LOGO_VARIANT,
+        'product_logo_theme_aware': settings.PRODUCT_LOGO_THEME_AWARE,
         'tenant_name': tenant.name if tenant is not None else '',
         'login_headline': settings.LOGIN_HEADLINE,
         'login_subtitle': settings.LOGIN_SUBTITLE,

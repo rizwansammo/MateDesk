@@ -89,7 +89,7 @@ export function middleware(request: NextRequest) {
       if (AUTH_PAGES.has(pathname) || pathname === '/') return go(request, host, '/home');
       return NextResponse.next();
     }
-    if (pathname === '/login') return NextResponse.next();
+    if (pathname === '/login' || pathname === '/logout-complete') return NextResponse.next();
     const qs = pathname !== '/' ? `?next=${encodeURIComponent(pathname + request.nextUrl.search)}` : '';
     return go(request, host, '/login', qs);
   }

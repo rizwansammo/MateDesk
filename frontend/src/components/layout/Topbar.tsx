@@ -14,6 +14,7 @@ import { useChatStore }         from '@/store/useChatStore';
 import { SupportPopup }         from '@/components/chat/SupportPopup';
 import { AgentSupportPanel }    from '@/components/chat/AgentSupportPanel';
 import { DMInboxPanel }         from '@/components/chat/DMInboxPanel';
+import { NetaMateMark }         from '@/components/NetaMateMark';
 
 const MSP_ROLES = new Set(['msp_owner', 'msp_manager', 'msp_agent']);
 
@@ -31,8 +32,17 @@ export function Topbar() {
   const initials    = getInitials(displayName);
 
   const { notifications, unreadCount, markRead, markAllRead, refetch } = useNotifications();
-  const { mdIconSize, mdFontSize, mdLineHeight, mdCustomText, mdLogoUrl } = useLogoSizeStore();
+  const {
+    mdIconSize,
+    mdFontSize,
+    mdLineHeight,
+    mdCustomText,
+    mdLogoUrl,
+    mdLogoVariant,
+    mdLogoThemeAware,
+  } = useLogoSizeStore();
 
+  const isDedicated = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
   const isAgent    = MSP_ROLES.has(user?.role ?? '');
   const dmUnread   = useChatStore((s) => s.dmUnreadTotal);
   const supportUnread = useChatStore((s) => s.supportUnreadTotal);
@@ -85,18 +95,51 @@ export function Topbar() {
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.85'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
       >
-        <div style={{ width: mdIconSize, height: mdIconSize, background: mdLogoUrl ? 'transparent' : '#1F4ED8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'width 0.15s, height 0.15s' }}>
-          {mdLogoUrl
+        <div style={{
+          width: mdIconSize,
+          height: mdIconSize,
+          background: (mdLogoUrl || mdLogoVariant) ? 'transparent' : '#1F4ED8',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          transition: 'width 0.15s, height 0.15s',
+          color: mdLogoVariant === 'netamate' ? 'var(--brand-monochrome)' : 'var(--text-0)',
+        }}>
+          {mdLogoVariant === 'netamate' ? (
+            <NetaMateMark size={mdIconSize} />
+          ) : mdLogoUrl && mdLogoThemeAware ? (
+            <span
+              aria-hidden="true"
+              style={{
+                width: mdIconSize,
+                height: mdIconSize,
+                display: 'block',
+                background: 'var(--text-0)',
+                WebkitMaskImage: `url("${mdLogoUrl}")`,
+                maskImage: `url("${mdLogoUrl}")`,
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+              }}
+            />
+          ) : mdLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={mdLogoUrl} width={mdIconSize} height={mdIconSize} alt="" style={{ objectFit: 'contain' }} />
-            : <svg viewBox="0 0 24 24" fill="none" width={mdIconSize * 0.625} height={mdIconSize * 0.625}>
-                <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8 -2.5h-4.5z" fill="#fff" />
-                <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" strokeWidth="1.5" fill="none" />
-              </svg>
-          }
+            <img src={mdLogoUrl} width={mdIconSize} height={mdIconSize} alt="" style={{ objectFit: 'contain' }} />
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" width={mdIconSize * 0.625} height={mdIconSize * 0.625}>
+              <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8 -2.5h-4.5z" fill="#fff" />
+              <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" strokeWidth="1.5" fill="none" />
+            </svg>
+          )}
         </div>
         <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: -1, transition: 'font-size 0.15s' }}>
-          {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
+          <span style={{ color: isDedicated ? 'var(--brand-monochrome)' : 'inherit' }}>
+            {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
+          </span>
         </span>
       </button>
 

@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -145,6 +146,7 @@ def send_breach_emails(ticket) -> None:
 
 def send_vip_email(ticket) -> None:
     """Send VIP alert email when a VIP user creates a ticket."""
+    product_name = getattr(settings, 'PRODUCT_NAME', 'MateDesk')
     try:
         vip_rule = ticket.tenant.vip_rule
     except Exception:
@@ -162,13 +164,13 @@ def send_vip_email(ticket) -> None:
         f'A new ticket has arrived from {requester_name} from {org_name}. '
         f'Please respond as early as possible and ensure uninterrupted service.\n\n'
         f'Description:\n'
-        f'VIP user - {requester_name} - Raised a Support Ticket in MATEDESK\n\n'
+        f'VIP user - {requester_name} - Raised a Support Ticket in {product_name}\n\n'
         f'Ticket ID:       {ticket.ticket_ref}\n'
         f'Requester name:  {requester_name}\n'
         f'Subject:         {ticket.subject}\n'
         f'Organization:    {org_name}\n\n'
         f'Regards,\n'
-        f'MATEDESK HELPDESK'
+        f'{product_name}'
     )
 
     for addr in vip_rule.notification_emails:
@@ -189,7 +191,7 @@ def _smtp_send(tenant, to_addr: str, subject: str, body: str) -> None:
         return
 
     from_addr = smtp_cfg.smtp_from_email or smtp_cfg.smtp_username
-    from_name = getattr(smtp_cfg, 'smtp_from_name', None) or 'MATEDESK'
+    from_name = getattr(smtp_cfg, 'smtp_from_name', None) or getattr(settings, 'PRODUCT_NAME', 'MateDesk')
 
     msg             = MIMEText(body, 'plain', 'utf-8')
     msg['Subject']  = subject

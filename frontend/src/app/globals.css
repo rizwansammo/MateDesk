@@ -73,6 +73,7 @@
     --text-2:    #c8d6e5;
     --text-3:    #94a3b8;
     --text-4:    #7c8ba1;   /* decorative; ~5.2:1 on --bg-base */
+    --brand-monochrome: #ffffff;
 
     /* Semantic accents — status, priority and SLA badges.
      *
@@ -151,6 +152,7 @@
     --text-2:    #334155;
     --text-3:    #475569;
     --text-4:    #5b6675;   /* decorative; ~5.5:1 on --bg-base */
+    --brand-monochrome: #000000;
 
     /* Semantic accents — darker foregrounds and lighter tints for a pale ground.
      * All clear 4.5:1 against --bg-card / --bg-base. */

@@ -60,6 +60,10 @@ class TenantRegisterView(APIView):
     throttle_classes   = [RegisterRateThrottle]
 
     def post(self, request):
+        from django.conf import settings
+        if not getattr(settings, 'PUBLIC_REGISTRATION_ENABLED', True):
+            return Response({'detail': 'Not found.'}, status=404)
+
         serializer = TenantRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.create(serializer.validated_data)

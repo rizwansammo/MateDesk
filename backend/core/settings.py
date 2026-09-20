@@ -134,6 +134,39 @@ NON_TENANT_HOSTS = set(
 )
 APP_DOMAIN = config('APP_DOMAIN', default='').strip()
 
+# Deployment topology. Multi-tenant is the existing/default MateDesk behaviour.
+# Dedicated installations can opt into single_tenant without forking the codebase.
+DEPLOYMENT_MODE = config('DEPLOYMENT_MODE', default='multi_tenant').strip().lower()
+if DEPLOYMENT_MODE not in {'multi_tenant', 'single_tenant'}:
+    raise ValueError("DEPLOYMENT_MODE must be 'multi_tenant' or 'single_tenant'.")
+
+SINGLE_TENANT_SLUG = config('SINGLE_TENANT_SLUG', default='').strip().lower()
+if DEPLOYMENT_MODE == 'single_tenant' and not SINGLE_TENANT_SLUG:
+    raise ValueError('SINGLE_TENANT_SLUG is required when DEPLOYMENT_MODE=single_tenant.')
+
+# SaaS/operator surfaces default on for the normal platform and off for a
+# dedicated single-tenant installation. They remain explicitly overridable.
+PUBLIC_REGISTRATION_ENABLED = config(
+    'PUBLIC_REGISTRATION_ENABLED',
+    cast=bool,
+    default=(DEPLOYMENT_MODE == 'multi_tenant'),
+)
+PLATFORM_ADMIN_ENABLED = config(
+    'PLATFORM_ADMIN_ENABLED',
+    cast=bool,
+    default=(DEPLOYMENT_MODE == 'multi_tenant'),
+)
+
+# Public, non-secret product identity used by dedicated login surfaces.
+PRODUCT_NAME = config('PRODUCT_NAME', default='MateDesk').strip() or 'MateDesk'
+PRODUCT_VENDOR_NAME = config('PRODUCT_VENDOR_NAME', default='NetaMate Solutions').strip() or 'NetaMate Solutions'
+PRODUCT_LOGO_URL = config('PRODUCT_LOGO_URL', default='').strip()
+PRODUCT_LOGO_VARIANT = config('PRODUCT_LOGO_VARIANT', default='').strip().lower()
+PRODUCT_LOGO_THEME_AWARE = config('PRODUCT_LOGO_THEME_AWARE', cast=bool, default=False)
+PRODUCT_WORDMARK = config('PRODUCT_WORDMARK', default=PRODUCT_NAME).strip() or PRODUCT_NAME
+LOGIN_HEADLINE = config('LOGIN_HEADLINE', default='').strip()
+LOGIN_SUBTITLE = config('LOGIN_SUBTITLE', default='').strip()
+
 CHANNEL_LAYER_BACKEND = os.environ.get('CHANNEL_LAYER_BACKEND', 'memory')
 CHANNEL_REDIS_URL = os.environ.get('CHANNEL_REDIS_URL', config('CHANNEL_REDIS_URL', default='redis://127.0.0.1:6379/2'))
 if CHANNEL_LAYER_BACKEND == 'redis':

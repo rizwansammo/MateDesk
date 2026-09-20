@@ -103,6 +103,10 @@ export function usePublicAuthStatus(): PublicAuthStatus {
 
   function buildDashboardUrl(): string {
     const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN;
+    const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
+    if (mode === 'single_tenant') {
+      return isAuth ? '/home' : '/login';
+    }
     if (!appDomain || appDomain === 'localhost') {
       return tenantSlug ? '/home' : '/login';
     }

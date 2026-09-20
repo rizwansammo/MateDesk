@@ -25,6 +25,12 @@ export default function EmailSignaturePage() {
   const [sig,     setSig]     = useState(DEFAULT_SIG);
   const [preview, setPreview] = useState(false);
 
+  const isSingleTenant = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'matedesk.pro';
+  const portalUrl = isSingleTenant
+    ? (typeof window !== 'undefined' ? window.location.origin : `https://${appDomain}`)
+    : (tenant?.slug ? `https://${tenant.slug}.${appDomain}` : 'Your portal URL');
+
   // Preview against this tenant's own details — never placeholder company data,
   // which would show one customer another company's name.
   const rendered = sig
@@ -32,8 +38,7 @@ export default function EmailSignaturePage() {
     .replace(/{{company_name}}/g,  tenant?.name             || 'Your company')
     .replace(/{{support_email}}/g, tenant?.support_email    || 'Not set — add it in Company Profile')
     .replace(/{{phone}}/g,         tenant?.phone            || 'Not set — add it in Company Profile')
-    .replace(/{{portal_url}}/g,
-      tenant?.slug ? `https://${tenant.slug}.matedesk.pro` : 'Your portal URL');
+    .replace(/{{portal_url}}/g, portalUrl);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

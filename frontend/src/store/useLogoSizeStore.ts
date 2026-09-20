@@ -34,6 +34,8 @@ export interface BrandingConfig {
   mc_custom_text: string;
   md_logo_url:    string;
   mc_logo_url:    string;
+  md_logo_variant?: string;
+  md_logo_theme_aware?: boolean;
 }
 
 interface LogoSizeStore {
@@ -47,6 +49,8 @@ interface LogoSizeStore {
   mcCustomText: string;
   mdLogoUrl:    string;
   mcLogoUrl:    string;
+  mdLogoVariant: string;
+  mdLogoThemeAware: boolean;
   setMD:             (iconSize: number, fontSize: number, lineHeight?: number) => void;
   setMC:             (iconSize: number, fontSize: number, lineHeight?: number) => void;
   setMDField:        (field: MDField, value: number) => void;
@@ -67,6 +71,8 @@ export const useLogoSizeStore = create<LogoSizeStore>()(
       mcCustomText: '',
       mdLogoUrl:    '',
       mcLogoUrl:    '',
+      mdLogoVariant: '',
+      mdLogoThemeAware: false,
       setMD: (iconSize, fontSize, lineHeight = 0) =>
         set({ mdIconSize: iconSize, mdFontSize: fontSize, mdLineHeight: lineHeight }),
       setMC: (iconSize, fontSize, lineHeight = 0) =>
@@ -82,11 +88,13 @@ export const useLogoSizeStore = create<LogoSizeStore>()(
         mcLineHeight: cfg.mc_line_height,
         mdCustomText: cfg.md_custom_text ?? '',
         mcCustomText: cfg.mc_custom_text ?? '',
-        mdLogoUrl:    cfg.md_logo_url    ?? '',
-        mcLogoUrl:    cfg.mc_logo_url    ?? '',
+        mdLogoUrl:        cfg.md_logo_url ?? '',
+        mcLogoUrl:        cfg.mc_logo_url ?? '',
+        mdLogoVariant:    cfg.md_logo_variant ?? '',
+        mdLogoThemeAware: cfg.md_logo_theme_aware ?? false,
       }),
     }),
-    { name: 'matedesk-logo-sizes', version: 5 }
+    { name: 'matedesk-logo-sizes', version: 6 }
   )
 );
 

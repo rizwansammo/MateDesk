@@ -3,29 +3,53 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Home, HelpCircle } from 'lucide-react';
+import { NetaMateMark } from '@/components/NetaMateMark';
+
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'matedesk.pro';
+const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || (IS_SINGLE_TENANT ? 'NetaMate HelpDesk' : 'MateDesk');
+const PRODUCT_WORDMARK = process.env.NEXT_PUBLIC_PRODUCT_WORDMARK || (IS_SINGLE_TENANT ? 'NetaMate' : 'MateDesk');
 
 export default function NotFound() {
   // On a tenant subdomain → go to /login. On plain domain → go to / (marketing).
   const [homeHref, setHomeHref] = useState('/');
 
   useEffect(() => {
-    const parts = window.location.hostname.split('.');
-    if (parts.length >= 2) setHomeHref('/login');
+    const host = window.location.hostname;
+    if (IS_SINGLE_TENANT) {
+      setHomeHref('/login');
+      return;
+    }
+    const isApex = host === APP_DOMAIN || host === `www.${APP_DOMAIN}`;
+    setHomeHref(isApex ? '/' : '/login');
   }, []);
 
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: '#060810' }}
+      style={{ background: 'var(--bg-base)' }}
     >
       <div
         className="w-full max-w-lg"
-        style={{ background: '#0f1320', border: '1px solid var(--border-panel)' }}
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border-panel)' }}
       >
         {/* Header accent */}
-        <div style={{ height: 3, background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />
+        <div style={{ height: 3, background: 'linear-gradient(90deg, var(--accent-info-fg), #2563eb)' }} />
 
         <div className="p-8">
+          {IS_SINGLE_TENANT && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 24, color: 'var(--brand-monochrome)' }}>
+              <NetaMateMark size={28} />
+              <div>
+                <div style={{ fontFamily: 'var(--font-hemi), sans-serif', fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
+                  {PRODUCT_WORDMARK}
+                </div>
+                <div style={{ marginTop: 4, fontSize: 10, color: 'var(--accent-info-fg)', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+                  HelpDesk
+                </div>
+              </div>
+            </div>
+          )}
           {/* 404 number */}
           <div className="flex items-start gap-4 mb-6">
             <div
@@ -94,9 +118,14 @@ export default function NotFound() {
               }}
             >
               <Home size={13} />
-              Return to home page
+              {IS_SINGLE_TENANT ? 'Return to sign in' : 'Return to home page'}
             </Link>
           </div>
+          {IS_SINGLE_TENANT && (
+            <div style={{ marginTop: 22, fontSize: 10, color: 'var(--text-4)', textAlign: 'center' }}>
+              {PRODUCT_NAME}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Shield, Key, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { Shield, Key, Clock, ArrowRight, Loader2, Mail, Lock, Sun, Moon } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { BrandLogo } from '@/components/BrandLogo';
 import { TransitionLink } from '@/components/TransitionLink';
 import { usePageTransition } from '@/store/usePageTransition';
+import { useTheme } from 'next-themes';
+import { NetaMateMark } from '@/components/NetaMateMark';
 
 const features = [
   { Icon: Shield, text: 'SAML SSO available on the Scale plan.'         },
@@ -15,22 +17,75 @@ const features = [
   { Icon: Clock,  text: 'Sessions expire after 12 hours of inactivity.' },
 ];
 
+interface InstanceConfig {
+  product_name: string;
+  product_wordmark: string;
+  vendor_name: string;
+  product_logo_url: string;
+  product_logo_variant: string;
+  product_logo_theme_aware: boolean;
+  tenant_name: string;
+  login_headline: string;
+  login_subtitle: string;
+}
+
 function LoginForm() {
   const router            = useRouter();
   const searchParams      = useSearchParams();
   const { login, isLoading, error, clearError } = useAuthStore();
   const triggerTransition = usePageTransition((s) => s.trigger);
+  const { resolvedTheme, setTheme } = useTheme();
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const isSingleTenant = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
+  const [instance, setInstance] = useState<InstanceConfig | null>(null);
+
+  useEffect(() => {
+    if (!isSingleTenant) return;
+    fetch('/api/instance/public/')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setInstance(data as InstanceConfig); })
+      .catch(() => {});
+  }, [isSingleTenant]);
+
+  const productName = instance?.product_name
+    || process.env.NEXT_PUBLIC_PRODUCT_NAME
+    || (isSingleTenant ? 'HelpDesk' : 'MateDesk');
+  const productWordmark = instance?.product_wordmark
+    || process.env.NEXT_PUBLIC_PRODUCT_WORDMARK
+    || (isSingleTenant ? 'NetaMate' : 'MateDesk');
+  const vendorName = instance?.vendor_name || 'NetaMate Solutions';
+  const loginHeadline = instance?.login_headline || (isSingleTenant
+    ? `Welcome to ${productName}.`
+    : 'Welcome back.');
+  const loginSubtitle = instance?.login_subtitle || (isSingleTenant
+    ? 'Sign in to access your support workspace.'
+    : "Sign in with your email and password. We'll take you straight to your workspace.");
+  const loginFeatures = isSingleTenant
+    ? [
+        { Icon: Shield, text: 'Secure access to your support workspace.' },
+        { Icon: Key, text: 'Your requests and conversations stay in one place.' },
+        { Icon: Clock, text: instance?.tenant_name ? `Support managed by ${instance.tenant_name}.` : 'Dedicated support portal.' },
+      ]
+    : features;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     try {
       await login(email.trim(), password);
-      // Root-domain logins redirect via window.location inside login() —
-      // they never reach this line.  Subdomain / localhost land here.
+
+      if (isSingleTenant) {
+        const signedInUser = useAuthStore.getState().user;
+        const isStaff = ['msp_owner', 'msp_manager', 'msp_agent'].includes(signedInUser?.role ?? '');
+        const dest = searchParams.get('next') ?? (isStaff ? '/home' : '/requests');
+        triggerTransition(() => router.push(dest));
+        return;
+      }
+
+      // Multi-tenant root-domain login hard-navigates to the tenant subdomain
+      // inside login(). Subdomain / localhost sessions land here normally.
       const dest = searchParams.get('next') ?? '/home';
       triggerTransition(() => router.push(dest));
     } catch {
@@ -49,6 +104,257 @@ function LoginForm() {
     transition: 'border-color 120ms',
   };
 
+  if (isSingleTenant) {
+    const isDark = resolvedTheme !== 'light';
+    const logoVariant = instance?.product_logo_variant || process.env.NEXT_PUBLIC_PRODUCT_LOGO_VARIANT || 'netamate';
+    const logoUrl = instance?.product_logo_url || '';
+    const logoThemeAware = instance?.product_logo_theme_aware ?? true;
+
+    const dedicatedInput: React.CSSProperties = {
+      width: '100%',
+      height: 44,
+      padding: '0 14px 0 40px',
+      fontSize: 13,
+      fontFamily: 'inherit',
+      background: 'var(--bg-input)',
+      border: '1px solid var(--border-md)',
+      color: 'var(--text-0)',
+      outline: 'none',
+      boxSizing: 'border-box',
+    };
+
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          padding: 24,
+          backgroundColor: 'var(--bg-base)',
+          backgroundImage: isDark
+            ? 'radial-gradient(rgba(96,165,250,0.10) 1px, transparent 1px)'
+            : 'radial-gradient(rgba(37,99,235,0.09) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+          color: 'var(--text-1)',
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 430 }}>
+          <div
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-md)',
+              boxShadow: isDark
+                ? '0 22px 70px rgba(0,0,0,0.28)'
+                : '0 22px 70px rgba(15,23,42,0.10)',
+            }}
+          >
+            <div
+              style={{
+                minHeight: 40,
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                padding: '0 12px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                aria-label="Toggle theme"
+                style={{
+                  width: 30,
+                  height: 30,
+                  display: 'grid',
+                  placeItems: 'center',
+                  background: 'transparent',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-2)',
+                  cursor: 'pointer',
+                }}
+              >
+                {isDark ? <Sun size={14} /> : <Moon size={14} />}
+              </button>
+            </div>
+
+            <div style={{ padding: '28px 30px 30px' }}>
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <div
+                  style={{
+                    width: 46,
+                    height: 46,
+                    margin: '0 auto 12px',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: 'var(--brand-monochrome)',
+                  }}
+                >
+                  {logoVariant === 'netamate' ? (
+                    <NetaMateMark size={43} />
+                  ) : logoUrl && logoThemeAware ? (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 43,
+                        height: 43,
+                        display: 'block',
+                        background: 'var(--text-0)',
+                        WebkitMaskImage: `url("${logoUrl}")`,
+                        maskImage: `url("${logoUrl}")`,
+                        WebkitMaskRepeat: 'no-repeat',
+                        maskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskPosition: 'center',
+                        WebkitMaskSize: 'contain',
+                        maskSize: 'contain',
+                      }}
+                    />
+                  ) : logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoUrl} alt="" width={43} height={43} style={{ objectFit: 'contain' }} />
+                  ) : (
+                    <NetaMateMark size={43} />
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 2,
+                    fontFamily: 'var(--font-hemi), sans-serif',
+                    fontSize: 23,
+                    fontWeight: 700,
+                    letterSpacing: '0.025em',
+                    lineHeight: 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span style={{ color: 'var(--brand-monochrome)' }}>{productWordmark}</span>
+                  <span style={{ color: 'var(--accent-info-fg)' }}> HelpDesk</span>
+                </div>
+                <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.55, color: 'var(--text-3)' }}>
+                  Sign in to access your support workspace.
+                </p>
+              </div>
+
+              {error && (
+                <div
+                  style={{
+                    marginBottom: 16,
+                    padding: '10px 12px',
+                    background: 'var(--accent-danger-bg)',
+                    border: '1px solid rgba(239,68,68,0.28)',
+                    color: 'var(--accent-danger-fg)',
+                    fontSize: 12,
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text-3)', marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    Email address
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={14} style={{ position: 'absolute', left: 14, top: 15, color: 'var(--text-4)' }} />
+                    <input
+                      type="email"
+                      placeholder="you@company.com"
+                      required
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      style={dedicatedInput}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                      Password
+                    </label>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={14} style={{ position: 'absolute', left: 14, top: 15, color: 'var(--text-4)' }} />
+                    <input
+                      type="password"
+                      placeholder="Your password"
+                      required
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      style={dedicatedInput}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    height: 44,
+                    marginTop: 3,
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: '1px solid #2563eb',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: '0.045em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'inherit',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    opacity: isLoading ? 0.7 : 1,
+                  }}
+                >
+                  {isLoading
+                    ? <><Loader2 size={14} className="animate-spin" /> Signing in…</>
+                    : <>Sign in <ArrowRight size={14} /></>
+                  }
+                </button>
+              </form>
+
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: '10px 12px',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--bg-card)',
+                  fontSize: 11,
+                  lineHeight: 1.5,
+                  color: 'var(--text-3)',
+                  textAlign: 'center',
+                }}
+              >
+                Secure access for NetaMate staff, agents, and supported clients.
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderTop: '1px solid var(--border-subtle)',
+                padding: '12px 16px',
+                textAlign: 'center',
+                fontSize: 10,
+                letterSpacing: '0.035em',
+                color: 'var(--text-4)',
+              }}
+            >
+              Powered by {vendorName}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, textAlign: 'center', fontSize: 10, color: 'var(--text-4)' }}>
+            {productName}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
@@ -65,7 +371,11 @@ function LoginForm() {
         }}
       >
         <TransitionLink href="/" style={{ textDecoration: 'none', color: '#ECEEF2' }}>
-          <BrandLogo size="md" />
+          <BrandLogo
+            size="md"
+            label={isSingleTenant ? productName : undefined}
+            logoUrl={isSingleTenant ? instance?.product_logo_url : undefined}
+          />
         </TransitionLink>
 
         <div>
@@ -81,15 +391,18 @@ function LoginForm() {
               marginBottom: 16,
             }}
           >
-            Welcome back.<br />
-            Your <span style={{ color: '#1F4ED8' }}>queue is waiting.</span>
+            {isSingleTenant ? (
+              <>{loginHeadline}<br /><span style={{ color: '#1F4ED8' }}>Support, in one place.</span></>
+            ) : (
+              <>Welcome back.<br />Your <span style={{ color: '#1F4ED8' }}>queue is waiting.</span></>
+            )}
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: '#9AA2B1', maxWidth: 380, marginBottom: 32 }}>
-            Sign in with your email and password. We&apos;ll take you straight to your workspace.
+            {loginSubtitle}
           </p>
 
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {features.map(({ Icon, text }) => (
+            {loginFeatures.map(({ Icon, text }) => (
               <li key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: '#9AA2B1' }}>
                 <Icon size={15} style={{ color: '#1F4ED8', flexShrink: 0 }} />
                 {text}
@@ -98,7 +411,7 @@ function LoginForm() {
           </ul>
         </div>
 
-        <p style={{ fontSize: 12, color: '#485168' }}>By NetaMate Solutions</p>
+        <p style={{ fontSize: 12, color: '#485168' }}>By {vendorName}</p>
       </aside>
 
       {/* RIGHT — light form panel */}
@@ -113,16 +426,24 @@ function LoginForm() {
           overflowY: 'auto',
         }}
       >
-        <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
-          New to MateDesk?{' '}
-          <TransitionLink href="/register" style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
-            Create a workspace →
-          </TransitionLink>
-        </p>
+        {isSingleTenant ? (
+          <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
+            Secure support portal
+          </p>
+        ) : (
+          <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
+            New to MateDesk?{' '}
+            <TransitionLink href="/register" style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
+              Create a workspace →
+            </TransitionLink>
+          </p>
+        )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 400, width: '100%', margin: '0 auto' }}>
 
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1220', marginBottom: 6 }}>Sign in</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1220', marginBottom: 6 }}>
+            {isSingleTenant ? `Sign in to ${productName}` : 'Sign in'}
+          </h1>
           <p style={{ fontSize: 14, color: '#6B7385', marginBottom: 28 }}>
             Enter your email and password to access your workspace.
           </p>
@@ -198,6 +519,7 @@ function LoginForm() {
 
           </form>
 
+          {!isSingleTenant && <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0', color: '#9AA2B1', fontSize: 13 }}>
             <div style={{ flex: 1, height: 1, background: '#E2E5EB' }} />
             or continue with
@@ -246,6 +568,7 @@ function LoginForm() {
               </button>
             ))}
           </div>
+          </>}
 
         </div>
       </main>

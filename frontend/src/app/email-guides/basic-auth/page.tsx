@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Copy, Check, Mail, ArrowLeft } from 'lucide-react';
 
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || 'MateDesk';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Step {
@@ -211,7 +213,7 @@ const providers: ProviderConfig[] = [
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>myaccount.google.com → Security → App Passwords</strong>.
             Select app: <strong style={{ color: '#e5e7eb' }}>Mail</strong>, Select device: <strong style={{ color: '#e5e7eb' }}>Other (custom name)</strong>,
-            name it <em>MateDesk</em>. Click <strong style={{ color: '#e5e7eb' }}>Generate</strong>.
+            name it <em>{PRODUCT_NAME}</em>. Click <strong style={{ color: '#e5e7eb' }}>Generate</strong>.
             Copy the 16-character password shown.
           </>
         ),
@@ -226,7 +228,7 @@ const providers: ProviderConfig[] = [
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: your full Gmail address (e.g. <Code>support@yourdomain.com</Code>)<br />
@@ -269,13 +271,13 @@ const providers: ProviderConfig[] = [
         body: (
           <>
             If the account uses MFA, go to <strong style={{ color: '#e5e7eb' }}>mysignins.microsoft.com → Security info → Add sign-in method → App password</strong>.
-            Name it <em>MateDesk</em> and copy the generated password.
+            Name it <em>{PRODUCT_NAME}</em> and copy the generated password.
             If Basic Auth is blocked by a Conditional Access policy, use <strong style={{ color: '#e5e7eb' }}>OAuth2</strong> instead.
           </>
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: full email address (e.g. <Code>support@yourcompany.com</Code>)<br />
@@ -308,13 +310,13 @@ const providers: ProviderConfig[] = [
         body: (
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>accounts.zoho.com → Security → App Passwords</strong>.
-            Click <strong style={{ color: '#e5e7eb' }}>Generate New Password</strong>, name it <em>MateDesk</em>, and copy the password.
+            Click <strong style={{ color: '#e5e7eb' }}>Generate New Password</strong>, name it <em>{PRODUCT_NAME}</em>, and copy the password.
             Use this instead of your account password.
           </>
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: full Zoho email (e.g. <Code>support@yourcompany.com</Code>)<br />
@@ -347,13 +349,13 @@ const providers: ProviderConfig[] = [
         title: 'Generate App Password',
         body: (
           <>
-            At <strong style={{ color: '#e5e7eb' }}>Yahoo Account Security</strong>, select <em>Other app</em>, name it <em>MateDesk</em>,
+            At <strong style={{ color: '#e5e7eb' }}>Yahoo Account Security</strong>, select <em>Other app</em>, name it <em>{PRODUCT_NAME}</em>,
             and click <strong style={{ color: '#e5e7eb' }}>Generate</strong>. Copy the 16-character code.
           </>
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: full Yahoo address<br />
@@ -386,12 +388,12 @@ const providers: ProviderConfig[] = [
         body: (
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>appleid.apple.com → Sign-In and Security → App-Specific Passwords → Generate</strong>.
-            Label it <em>MateDesk</em>. Copy the generated password (format: xxxx-xxxx-xxxx-xxxx).
+            Label it <em>{PRODUCT_NAME}</em>. Copy the generated password (format: xxxx-xxxx-xxxx-xxxx).
           </>
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: your iCloud email (e.g. <Code>you@icloud.com</Code>)<br />
@@ -431,7 +433,7 @@ const providers: ProviderConfig[] = [
         ),
       },
       {
-        title: 'Enter in MateDesk',
+        title: `Enter in ${PRODUCT_NAME}`,
         body: (
           <>
             Username: full email address<br />
@@ -492,7 +494,7 @@ export default function BasicAuthGuidePage() {
             fontSize: 11, fontWeight: 700, color: '#60a5fa',
             textTransform: 'uppercase', letterSpacing: '0.1em',
           }}>
-            MateDesk · Mail Server
+            {PRODUCT_NAME} · Mail Server
           </span>
         </div>
         <h1 style={{
@@ -506,7 +508,7 @@ export default function BasicAuthGuidePage() {
           <span style={{ color: '#60a5fa' }}>Setup Guide</span>
         </h1>
         <p style={{ fontSize: 15, color: '#9ca3af', lineHeight: 1.7, maxWidth: 580 }}>
-          Connect any mailbox to MateDesk using IMAP and SMTP with a username and password.
+          Connect any mailbox to {PRODUCT_NAME} using IMAP and SMTP with a username and password.
           Most providers require an <strong style={{ color: '#e5e7eb' }}>App-Specific Password</strong> when
           two-factor authentication is enabled — your normal login password will not work.
         </p>
@@ -548,7 +550,7 @@ export default function BasicAuthGuidePage() {
         textAlign: 'center',
         fontSize: 12, color: '#374151',
       }}>
-        MateDesk · By NetaMate Solutions · <a href="/settings/email" style={{ color: '#4b5563', textDecoration: 'none' }}>Back to Mail Settings</a>
+        {PRODUCT_NAME} · By NetaMate Solutions · <a href="/settings/email" style={{ color: '#4b5563', textDecoration: 'none' }}>Back to Mail Settings</a>
       </div>
     </div>
   );

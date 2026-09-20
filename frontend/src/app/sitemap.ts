@@ -8,8 +8,11 @@ import type { MetadataRoute } from 'next';
 
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'matedesk.pro';
 const BASE = `https://${APP_DOMAIN}`;
+const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  if (IS_SINGLE_TENANT) return [];
+
   return [
     {
       url: BASE,

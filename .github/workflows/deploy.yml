@@ -8,16 +8,22 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: production-deploy
-  cancel-in-progress: false      # never abort a half-finished deploy
+  # Production main deploys never cancel each other. PR validation uses its own
+  # ref-scoped group and only keeps the newest head revision.
+  group: matedesk-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE:  ghcr.io/rizwansammo/matedesk-backend
-  FRONTEND_IMAGE: ghcr.io/rizwansammo/matedesk-frontend
+  BACKEND_IMAGE:                     ghcr.io/rizwansammo/matedesk-backend
+  FRONTEND_IMAGE:                    ghcr.io/rizwansammo/matedesk-frontend
+  SINGLE_FRONTEND_IMAGE:             ghcr.io/rizwansammo/matedesk-frontend-single-tenant
+  NETAMATE_HELPDESK_FRONTEND_IMAGE:  ghcr.io/rizwansammo/matedesk-frontend-netamate-helpdesk
 
 jobs:
   # ── Gates ───────────────────────────────────────────────────────────────────
@@ -109,6 +115,7 @@ jobs:
   # ── Build ───────────────────────────────────────────────────────────────────
   build:
     name: Build and push images
+    if: github.event_name != 'pull_request'
     needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     permissions:
@@ -147,14 +154,54 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=
             NEXT_PUBLIC_APP_DOMAIN=matedesk.pro
+            NEXT_PUBLIC_DEPLOYMENT_MODE=multi_tenant
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha,scope=frontend
           cache-to:   type=gha,scope=frontend,mode=max
 
+      # Reusable dedicated-install image. The placeholder domain deliberately
+      # keeps production HTTPS behaviour without tying the bundle to a customer
+      # hostname; single-tenant routing and auth use the actual request host.
+      - name: Build and push single-tenant frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push:    true
+          build-args: |
+            NEXT_PUBLIC_API_URL=
+            NEXT_PUBLIC_APP_DOMAIN=dedicated.invalid
+            NEXT_PUBLIC_DEPLOYMENT_MODE=single_tenant
+            NEXT_PUBLIC_PRODUCT_NAME=HelpDesk
+            NEXT_PUBLIC_PRODUCT_WORDMARK=Support
+          tags: |
+            ${{ env.SINGLE_FRONTEND_IMAGE }}:latest
+            ${{ env.SINGLE_FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend-single-tenant
+          cache-to:   type=gha,scope=frontend-single-tenant,mode=max
+
+      - name: Build and push NetaMate HelpDesk frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push:    true
+          build-args: |
+            NEXT_PUBLIC_API_URL=
+            NEXT_PUBLIC_APP_DOMAIN=helpdesk.netamate.com
+            NEXT_PUBLIC_DEPLOYMENT_MODE=single_tenant
+            NEXT_PUBLIC_PRODUCT_NAME=NetaMate HelpDesk
+            NEXT_PUBLIC_PRODUCT_WORDMARK=NetaMate
+            NEXT_PUBLIC_PRODUCT_LOGO_VARIANT=netamate
+          tags: |
+            ${{ env.NETAMATE_HELPDESK_FRONTEND_IMAGE }}:latest
+            ${{ env.NETAMATE_HELPDESK_FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend-netamate-helpdesk
+          cache-to:   type=gha,scope=frontend-netamate-helpdesk,mode=max
+
   deploy:
     name: Deploy to MateServer
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15

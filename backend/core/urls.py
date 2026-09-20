@@ -25,11 +25,8 @@ def public_instance_config(request):
 
 
 urlpatterns = [
-    # Django built-in admin kept at a hidden path — use /platform-admin/ instead
-    path('django-admin/', admin.site.urls),
     path('api/health/', health),
     path('api/instance/public/', public_instance_config),
-    path('api/plans/public/', public_plans_api),
     path('api/',        include('apps.users.urls')),
     path('api/',        include('apps.tickets.urls')),
     path('api/',        include('apps.tenants.urls')),
@@ -44,10 +41,18 @@ urlpatterns = [
     path('api/chat/',         include('apps.chat.urls')),
 ]
 
+# Public pricing/plans only exists when public tenant registration is enabled.
+if settings.PUBLIC_REGISTRATION_ENABLED:
+    urlpatterns += [
+        path('api/plans/public/', public_plans_api),
+    ]
+
 # Platform-level tenant/subscription administration is a SaaS concern. Dedicated
 # single-tenant deployments disable this surface by default.
 if settings.PLATFORM_ADMIN_ENABLED:
     urlpatterns += [
+        # Django built-in admin kept at a hidden path — use /platform-admin/ instead
+        path('django-admin/', admin.site.urls),
         path('admin',          RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
         path('admin/',         RedirectView.as_view(url='/platform-admin/login/', permanent=False)),
         path('platform-admin', RedirectView.as_view(url='/platform-admin/login/', permanent=False)),

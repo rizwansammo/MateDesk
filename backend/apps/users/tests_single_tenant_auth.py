@@ -11,6 +11,8 @@ from apps.users.models import User
     SINGLE_TENANT_SLUG='netamate',
     ALLOWED_HOSTS=['helpdesk.netamate.com'],
     PUBLIC_REGISTRATION_ENABLED=False,
+    PRODUCT_NAME='NetaMate HelpDesk',
+    PRODUCT_LOGO_URL='https://assets.example.com/netamate-logo.png',
 )
 class SingleTenantAuthenticationTests(TestCase):
     def setUp(self):
@@ -54,6 +56,18 @@ class SingleTenantAuthenticationTests(TestCase):
         self.assertEqual(me.status_code, 200)
         self.assertEqual(me.json()['email'], 'owner@netamate.com')
         self.assertEqual(me.json()['tenant_slug'], 'netamate')
+
+        branding = self.client.get(
+            '/api/tenant/branding/',
+            HTTP_HOST='helpdesk.netamate.com',
+            HTTP_AUTHORIZATION=f'Bearer {access}',
+        )
+        self.assertEqual(branding.status_code, 200)
+        self.assertEqual(branding.json()['md_custom_text'], 'NetaMate HelpDesk')
+        self.assertEqual(
+            branding.json()['md_logo_url'],
+            'https://assets.example.com/netamate-logo.png',
+        )
 
     def test_public_registration_is_not_available(self):
         response = self.client.post(

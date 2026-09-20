@@ -192,11 +192,13 @@ class MateMailConnectCompleteView(APIView):
         }
         missing = sorted(self.REQUIRED_SCOPES - granted)
         if missing:
+            from django.conf import settings as django_settings
+            product_name = getattr(django_settings, 'PRODUCT_NAME', 'MateDesk')
             return Response(
                 {
                     'detail': (
                         'This MateMail connected app does not have the Helpdesk '
-                        'permissions required by MateDesk.'
+                        f'permissions required by {product_name}.'
                     ),
                     'missing_scopes': missing,
                 },

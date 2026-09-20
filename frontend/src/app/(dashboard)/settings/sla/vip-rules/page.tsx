@@ -15,6 +15,7 @@ function avatarColor(name: string) {
 
 export default function VIPRulesPage() {
   const router = useRouter();
+  const productName = process.env.NEXT_PUBLIC_PRODUCT_NAME || 'MateDesk';
 
   const { data: rule,  isLoading: ruleLoading }  = useVIPRule();
   const { data: users, isLoading: usersLoading } = useAllClientUsers();
@@ -216,7 +217,7 @@ export default function VIPRulesPage() {
                       <div>Created: <span style={{ color: 'var(--accent-violet-fg)' }}>{'{'}created_at{'}'}</span></div>
                     </div>
                     <div style={{ marginTop: 8 }}>Please ensure this ticket receives priority attention.</div>
-                    <div style={{ marginTop: 12, color: 'var(--text-3)' }}>— MateDesk SLA Monitor</div>
+                    <div style={{ marginTop: 12, color: 'var(--text-3)' }}>— {productName} SLA Monitor</div>
                   </div>
                 </div>
               </div>

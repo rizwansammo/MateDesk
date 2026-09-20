@@ -45,9 +45,24 @@ export const metadata: Metadata = IS_SINGLE_TENANT ? {
   creator: 'NetaMate Solutions',
   publisher: 'NetaMate Solutions',
   robots: { index: false, follow: false },
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: [{ url: '/netamate-logo.png', type: 'image/png' }],
     apple: [{ url: '/netamate-logo.png' }],
+  },
+  openGraph: {
+    type: 'website',
+    siteName: PRODUCT_NAME,
+    url: SITE_URL,
+    title: `${PRODUCT_NAME} — Support Portal`,
+    description: 'Secure support workspace for service requests, conversations, and ticket tracking.',
+    images: [{ url: '/netamate-logo.png', alt: PRODUCT_NAME }],
+  },
+  twitter: {
+    card: 'summary',
+    title: `${PRODUCT_NAME} — Support Portal`,
+    description: 'Secure support workspace for service requests, conversations, and ticket tracking.',
+    images: ['/netamate-logo.png'],
   },
 } : {
   // Required for Open Graph and canonical URLs to resolve to absolute addresses.

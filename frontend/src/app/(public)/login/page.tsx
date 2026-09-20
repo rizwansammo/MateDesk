@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, Key, Clock, ArrowRight, Loader2 } from 'lucide-react';
@@ -15,6 +15,14 @@ const features = [
   { Icon: Clock,  text: 'Sessions expire after 12 hours of inactivity.' },
 ];
 
+interface InstanceConfig {
+  product_name: string;
+  vendor_name: string;
+  tenant_name: string;
+  login_headline: string;
+  login_subtitle: string;
+}
+
 function LoginForm() {
   const router            = useRouter();
   const searchParams      = useSearchParams();
@@ -23,6 +31,32 @@ function LoginForm() {
 
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const isSingleTenant = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
+  const [instance, setInstance] = useState<InstanceConfig | null>(null);
+
+  useEffect(() => {
+    if (!isSingleTenant) return;
+    fetch('/api/instance/public/')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setInstance(data as InstanceConfig); })
+      .catch(() => {});
+  }, [isSingleTenant]);
+
+  const productName = instance?.product_name || (isSingleTenant ? 'HelpDesk' : 'MateDesk');
+  const vendorName = instance?.vendor_name || 'NetaMate Solutions';
+  const loginHeadline = instance?.login_headline || (isSingleTenant
+    ? `Welcome to ${productName}.`
+    : 'Welcome back.');
+  const loginSubtitle = instance?.login_subtitle || (isSingleTenant
+    ? 'Sign in to access your support workspace.'
+    : "Sign in with your email and password. We'll take you straight to your workspace.");
+  const loginFeatures = isSingleTenant
+    ? [
+        { Icon: Shield, text: 'Secure access to your support workspace.' },
+        { Icon: Key, text: 'Your requests and conversations stay in one place.' },
+        { Icon: Clock, text: instance?.tenant_name ? `Support managed by ${instance.tenant_name}.` : 'Dedicated support portal.' },
+      ]
+    : features;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +99,7 @@ function LoginForm() {
         }}
       >
         <TransitionLink href="/" style={{ textDecoration: 'none', color: '#ECEEF2' }}>
-          <BrandLogo size="md" />
+          <BrandLogo size="md" label={isSingleTenant ? productName : undefined} />
         </TransitionLink>
 
         <div>
@@ -81,15 +115,18 @@ function LoginForm() {
               marginBottom: 16,
             }}
           >
-            Welcome back.<br />
-            Your <span style={{ color: '#1F4ED8' }}>queue is waiting.</span>
+            {isSingleTenant ? (
+              <>{loginHeadline}<br /><span style={{ color: '#1F4ED8' }}>Support, in one place.</span></>
+            ) : (
+              <>Welcome back.<br />Your <span style={{ color: '#1F4ED8' }}>queue is waiting.</span></>
+            )}
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: '#9AA2B1', maxWidth: 380, marginBottom: 32 }}>
-            Sign in with your email and password. We&apos;ll take you straight to your workspace.
+            {loginSubtitle}
           </p>
 
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {features.map(({ Icon, text }) => (
+            {loginFeatures.map(({ Icon, text }) => (
               <li key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: '#9AA2B1' }}>
                 <Icon size={15} style={{ color: '#1F4ED8', flexShrink: 0 }} />
                 {text}
@@ -98,7 +135,7 @@ function LoginForm() {
           </ul>
         </div>
 
-        <p style={{ fontSize: 12, color: '#485168' }}>By NetaMate Solutions</p>
+        <p style={{ fontSize: 12, color: '#485168' }}>By {vendorName}</p>
       </aside>
 
       {/* RIGHT — light form panel */}
@@ -113,16 +150,24 @@ function LoginForm() {
           overflowY: 'auto',
         }}
       >
-        <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
-          New to MateDesk?{' '}
-          <TransitionLink href="/register" style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
-            Create a workspace →
-          </TransitionLink>
-        </p>
+        {isSingleTenant ? (
+          <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
+            Secure support portal
+          </p>
+        ) : (
+          <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
+            New to MateDesk?{' '}
+            <TransitionLink href="/register" style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
+              Create a workspace →
+            </TransitionLink>
+          </p>
+        )}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 400, width: '100%', margin: '0 auto' }}>
 
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1220', marginBottom: 6 }}>Sign in</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0B1220', marginBottom: 6 }}>
+            {isSingleTenant ? `Sign in to ${productName}` : 'Sign in'}
+          </h1>
           <p style={{ fontSize: 14, color: '#6B7385', marginBottom: 28 }}>
             Enter your email and password to access your workspace.
           </p>
@@ -198,6 +243,7 @@ function LoginForm() {
 
           </form>
 
+          {!isSingleTenant && <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0', color: '#9AA2B1', fontSize: 13 }}>
             <div style={{ flex: 1, height: 1, background: '#E2E5EB' }} />
             or continue with
@@ -246,6 +292,7 @@ function LoginForm() {
               </button>
             ))}
           </div>
+          </>}
 
         </div>
       </main>

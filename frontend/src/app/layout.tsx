@@ -46,7 +46,8 @@ export const metadata: Metadata = IS_SINGLE_TENANT ? {
   publisher: 'NetaMate Solutions',
   robots: { index: false, follow: false },
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    icon: [{ url: '/netamate-logo.png', type: 'image/png' }],
+    apple: [{ url: '/netamate-logo.png' }],
   },
 } : {
   // Required for Open Graph and canonical URLs to resolve to absolute addresses.

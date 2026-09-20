@@ -2,11 +2,13 @@ from django.db import models
 
 from .crypto import decrypt_email_credential, encrypt_email_credential
 
-AUTH_METHOD_BASIC  = 'basic'
-AUTH_METHOD_OAUTH2 = 'oauth2'
+AUTH_METHOD_BASIC    = 'basic'
+AUTH_METHOD_OAUTH2   = 'oauth2'
+AUTH_METHOD_MATEMAIL = 'matemail'
 AUTH_METHOD_CHOICES = [
-    (AUTH_METHOD_BASIC,  'Basic Auth (App Password)'),
-    (AUTH_METHOD_OAUTH2, 'OAuth2 / Modern Auth'),
+    (AUTH_METHOD_BASIC,    'Basic Auth (App Password)'),
+    (AUTH_METHOD_OAUTH2,   'OAuth2 / Modern Auth'),
+    (AUTH_METHOD_MATEMAIL, 'MateMail Connected App'),
 ]
 
 
@@ -45,6 +47,16 @@ class TenantEmailSettings(models.Model):
     oauth_client_secret = models.CharField(max_length=500, blank=True)
     oauth_tenant_id     = models.CharField(max_length=255, blank=True)  # M365 Directory/Tenant ID
 
+    # MateMail Connected App. The one-time Integration Secret is NEVER stored.
+    # Only the revocable operational access token is encrypted here.
+    matemail_tenant_id    = models.CharField(max_length=64, blank=True)
+    matemail_mailbox_id   = models.CharField(max_length=64, blank=True)
+    matemail_mailbox_email = models.EmailField(blank=True)
+    matemail_mailbox_name = models.CharField(max_length=255, blank=True)
+    matemail_permissions  = models.JSONField(default=list, blank=True)
+    matemail_access_token = models.CharField(max_length=1024, blank=True)
+    matemail_connected_at = models.DateTimeField(null=True, blank=True)
+
     # Status
     last_polled_at   = models.DateTimeField(null=True, blank=True)
     emails_processed = models.PositiveIntegerField(default=0)
@@ -64,9 +76,17 @@ class TenantEmailSettings(models.Model):
     def get_oauth_client_secret(self) -> str:
         return decrypt_email_credential(self.oauth_client_secret)
 
+    def get_matemail_access_token(self) -> str:
+        return decrypt_email_credential(self.matemail_access_token)
+
     def save(self, *args, **kwargs):
         update_fields = kwargs.get('update_fields')
-        for field in ('imap_password', 'smtp_password', 'oauth_client_secret'):
+        for field in (
+            'imap_password',
+            'smtp_password',
+            'oauth_client_secret',
+            'matemail_access_token',
+        ):
             if update_fields is None or field in update_fields:
                 raw = getattr(self, field, '') or ''
                 if raw and not raw.startswith('enc:v1:'):

@@ -13,6 +13,7 @@ class PublicInstanceConfigTests(TestCase):
         PRODUCT_VENDOR_NAME='NetaMate Solutions',
         PUBLIC_REGISTRATION_ENABLED=True,
         NON_TENANT_HOSTS={'matedesk.pro'},
+        ALLOWED_HOSTS=['matedesk.pro', '.matedesk.pro'],
     )
     def test_multi_tenant_root_returns_platform_identity(self):
         response = self.client.get(

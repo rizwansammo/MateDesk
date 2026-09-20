@@ -160,6 +160,7 @@ PLATFORM_ADMIN_ENABLED = config(
 # Public, non-secret product identity used by dedicated login surfaces.
 PRODUCT_NAME = config('PRODUCT_NAME', default='MateDesk').strip() or 'MateDesk'
 PRODUCT_VENDOR_NAME = config('PRODUCT_VENDOR_NAME', default='NetaMate Solutions').strip() or 'NetaMate Solutions'
+PRODUCT_LOGO_URL = config('PRODUCT_LOGO_URL', default='').strip()
 LOGIN_HEADLINE = config('LOGIN_HEADLINE', default='').strip()
 LOGIN_SUBTITLE = config('LOGIN_SUBTITLE', default='').strip()
 

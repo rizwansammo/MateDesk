@@ -42,6 +42,7 @@ export function Topbar() {
     mdLogoThemeAware,
   } = useLogoSizeStore();
 
+  const isDedicated = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
   const isAgent    = MSP_ROLES.has(user?.role ?? '');
   const dmUnread   = useChatStore((s) => s.dmUnreadTotal);
   const supportUnread = useChatStore((s) => s.supportUnreadTotal);
@@ -103,7 +104,7 @@ export function Topbar() {
           justifyContent: 'center',
           flexShrink: 0,
           transition: 'width 0.15s, height 0.15s',
-          color: 'var(--text-0)',
+          color: mdLogoVariant === 'netamate' ? 'var(--brand-monochrome)' : 'var(--text-0)',
         }}>
           {mdLogoVariant === 'netamate' ? (
             <NetaMateMark size={mdIconSize} />
@@ -136,7 +137,9 @@ export function Topbar() {
           )}
         </div>
         <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: -1, transition: 'font-size 0.15s' }}>
-          {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
+          <span style={{ color: isDedicated ? 'var(--brand-monochrome)' : 'inherit' }}>
+            {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
+          </span>
         </span>
       </button>
 

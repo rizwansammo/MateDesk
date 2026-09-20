@@ -1,11 +1,18 @@
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.users.permissions import IsTenantUser, IsMSPUser, MSP_ROLES
-from .models import TenantEmailSettings, KnownSender
+from . import matemail
+from .models import (
+    AUTH_METHOD_BASIC,
+    AUTH_METHOD_MATEMAIL,
+    TenantEmailSettings,
+    KnownSender,
+)
 from .serializers import EmailSettingsSerializer, KnownSenderSerializer
 from .services import test_imap_connection, test_smtp_connection
 
@@ -123,6 +130,144 @@ class TestSmtpView(APIView):
 
         success, message = test_smtp_connection(probe)
         return Response({'success': success, 'message': message})
+
+
+class MateMailConnectStartView(APIView):
+    permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
+
+    def post(self, request):
+        tenant = _resolve_tenant(request)
+        if not tenant:
+            return Response({'detail': 'No tenant context.'}, status=400)
+        tenant_id = str(request.data.get('tenant_id') or '').strip()
+        secret = str(request.data.get('integration_secret') or '')
+        if not tenant_id or not secret:
+            return Response(
+                {'detail': 'Tenant ID and Integration Secret are required.'},
+                status=400,
+            )
+        try:
+            return Response(matemail.start_connection(tenant_id, secret))
+        except matemail.MateMailError as exc:
+            return Response({'detail': str(exc)}, status=502)
+
+
+class MateMailConnectCompleteView(APIView):
+    permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
+
+    REQUIRED_SCOPES = {'mailbox.read', 'mail.read', 'mail.modify', 'mail.send'}
+
+    def post(self, request):
+        tenant = _resolve_tenant(request)
+        if not tenant:
+            return Response({'detail': 'No tenant context.'}, status=400)
+
+        tenant_id = str(request.data.get('tenant_id') or '').strip()
+        poll_token = str(request.data.get('poll_token') or '')
+        if not tenant_id or not poll_token:
+            return Response(
+                {'detail': 'Tenant ID and poll token are required.'},
+                status=400,
+            )
+
+        try:
+            result = matemail.connection_status(tenant_id, poll_token)
+        except matemail.MateMailError as exc:
+            return Response({'detail': str(exc)}, status=502)
+
+        if result.get('status') != 'approved':
+            return Response(result)
+
+        access_token = result.get('access_token')
+        if not access_token:
+            return Response(
+                {'detail': 'MateMail already issued this token. Start again.'},
+                status=409,
+            )
+
+        granted = {
+            item.get('key')
+            for item in result.get('permissions', [])
+            if isinstance(item, dict)
+        }
+        missing = sorted(self.REQUIRED_SCOPES - granted)
+        if missing:
+            return Response(
+                {
+                    'detail': (
+                        'This MateMail connected app does not have the Helpdesk '
+                        'permissions required by MateDesk.'
+                    ),
+                    'missing_scopes': missing,
+                },
+                status=400,
+            )
+
+        settings, _ = TenantEmailSettings.objects.get_or_create(tenant=tenant)
+
+        # Revoke an older MateMail token before replacing it. Failure to reach
+        # MateMail must not leave the tenant unable to finish a new connection.
+        old_token = settings.get_matemail_access_token()
+        if old_token and settings.matemail_tenant_id:
+            try:
+                matemail.disconnect(
+                    token=old_token,
+                    tenant_id=settings.matemail_tenant_id,
+                )
+            except matemail.MateMailError:
+                pass
+
+        settings.auth_method = AUTH_METHOD_MATEMAIL
+        settings.matemail_tenant_id = tenant_id
+        settings.matemail_mailbox_id = str(result.get('mailbox_id') or '')
+        settings.matemail_mailbox_email = str(result.get('mailbox_email') or '')
+        settings.matemail_mailbox_name = str(result.get('mailbox_name') or '')
+        settings.matemail_permissions = result.get('permissions', [])
+        settings.matemail_access_token = access_token
+        settings.matemail_connected_at = timezone.now()
+        settings.imap_folder = settings.imap_folder or 'INBOX'
+        settings.imap_enabled = True
+        settings.smtp_enabled = True
+        settings.smtp_from_email = settings.matemail_mailbox_email
+        settings.smtp_from_name = (
+            settings.matemail_mailbox_name or settings.smtp_from_name or 'Support'
+        )
+        settings.last_error = ''
+        settings.save()
+
+        return Response(EmailSettingsSerializer(settings).data)
+
+
+class MateMailDisconnectView(APIView):
+    permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
+
+    def post(self, request):
+        tenant = _resolve_tenant(request)
+        if not tenant:
+            return Response({'detail': 'No tenant context.'}, status=400)
+        settings, _ = TenantEmailSettings.objects.get_or_create(tenant=tenant)
+        token = settings.get_matemail_access_token()
+        if token and settings.matemail_tenant_id:
+            try:
+                matemail.disconnect(
+                    token=token,
+                    tenant_id=settings.matemail_tenant_id,
+                )
+            except matemail.MateMailError:
+                pass
+
+        settings.auth_method = AUTH_METHOD_BASIC
+        settings.matemail_tenant_id = ''
+        settings.matemail_mailbox_id = ''
+        settings.matemail_mailbox_email = ''
+        settings.matemail_mailbox_name = ''
+        settings.matemail_permissions = []
+        settings.matemail_access_token = ''
+        settings.matemail_connected_at = None
+        settings.imap_enabled = False
+        settings.smtp_enabled = False
+        settings.save()
+        return Response(EmailSettingsSerializer(settings).data)
 
 
 # ── Known senders ─────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Mail, Send, CheckCircle, XCircle,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import {
   useEmailSettings, useSaveEmailSettings, useTestImap, useTestSmtp,
+  useStartMateMailConnection, useCompleteMateMailConnection, useDisconnectMateMail,
   type EmailSettings,
 } from '@/hooks/useEmailSettings';
 
@@ -143,12 +144,12 @@ function SectionHeader({ icon: Icon, title, color }: { icon: React.ElementType; 
 
 // ── Auth method tab ───────────────────────────────────────────────────────────
 
-type AuthMethod = 'basic' | 'oauth2';
+type AuthMethod = 'basic' | 'oauth2' | 'matemail';
 
 function AuthTabs({ active, onChange }: { active: AuthMethod; onChange: (v: AuthMethod) => void }) {
   return (
     <div className="flex gap-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-      {(['basic', 'oauth2'] as AuthMethod[]).map(m => (
+      {(['basic', 'oauth2', 'matemail'] as AuthMethod[]).map(m => (
         <button
           key={m}
           type="button"
@@ -163,7 +164,7 @@ function AuthTabs({ active, onChange }: { active: AuthMethod; onChange: (v: Auth
             transition: 'color 0.15s',
           }}
         >
-          {m === 'basic' ? 'Basic Auth' : 'OAuth2 / Modern Auth'}
+          {m === 'basic' ? 'Basic Auth' : m === 'oauth2' ? 'OAuth2 / Modern Auth' : 'MateMail Connected App'}
         </button>
       ))}
     </div>
@@ -208,10 +209,13 @@ const OAUTH2_PROVIDERS = [
 
 export default function EmailSettingsPage() {
   const router    = useRouter();
-  const { data: saved, isLoading } = useEmailSettings();
+  const { data: saved, isLoading, refetch } = useEmailSettings();
   const save      = useSaveEmailSettings();
   const testImap  = useTestImap();
   const testSmtp  = useTestSmtp();
+  const startMateMail = useStartMateMailConnection();
+  const completeMateMail = useCompleteMateMailConnection();
+  const disconnectMateMail = useDisconnectMateMail();
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>('basic');
 
@@ -231,6 +235,15 @@ export default function EmailSettingsPage() {
   const [imapResult, setImapResult] = useState<TestResult>(null);
   const [smtpResult, setSmtpResult] = useState<TestResult>(null);
   const [saved_ok,   setSavedOk]    = useState(false);
+  const [matemailTenantId, setMateMailTenantId] = useState('');
+  const [matemailSecret, setMateMailSecret] = useState('');
+  const [matemailError, setMateMailError] = useState('');
+  const [matemailPending, setMateMailPending] = useState(false);
+  const matemailTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (matemailTimer.current) window.clearInterval(matemailTimer.current);
+  }, []);
 
   useEffect(() => {
     if (!saved) return;
@@ -279,6 +292,74 @@ export default function EmailSettingsPage() {
         setTimeout(() => setSavedOk(false), 3000);
       },
     });
+  }
+
+  async function handleMateMailConnect(event: React.FormEvent) {
+    event.preventDefault();
+    setMateMailError('');
+    try {
+      const started = await startMateMail.mutateAsync({
+        tenant_id: matemailTenantId.trim(),
+        integration_secret: matemailSecret,
+      });
+      setMateMailSecret('');
+      setMateMailPending(true);
+      const popup = window.open(
+        started.authorization_url,
+        'matedesk-matemail-connect',
+        'popup=yes,width=620,height=760',
+      );
+      if (!popup) {
+        setMateMailPending(false);
+        setMateMailError('Allow pop-ups for MateDesk, then try again.');
+        return;
+      }
+
+      matemailTimer.current = window.setInterval(async () => {
+        try {
+          const result = await completeMateMail.mutateAsync({
+            tenant_id: started.tenant_id,
+            poll_token: started.poll_token,
+          });
+          if ('auth_method' in result && result.auth_method === 'matemail') {
+            if (matemailTimer.current) window.clearInterval(matemailTimer.current);
+            matemailTimer.current = null;
+            setMateMailPending(false);
+            popup.close();
+            await refetch();
+            return;
+          }
+          if ('status' in result && (result.status === 'rejected' || result.status === 'expired')) {
+            if (matemailTimer.current) window.clearInterval(matemailTimer.current);
+            matemailTimer.current = null;
+            setMateMailPending(false);
+            popup.close();
+            setMateMailError(
+              result.status === 'expired'
+                ? 'The MateMail approval expired. Start again.'
+                : 'MateMail access was not approved.',
+            );
+          }
+        } catch {
+          // Authorization may still be waiting in MateMail.
+        }
+      }, 1500);
+    } catch (error) {
+      setMateMailPending(false);
+      setMateMailError(error instanceof Error ? error.message : 'Could not start MateMail connection.');
+    }
+  }
+
+  async function handleMateMailDisconnect() {
+    if (!window.confirm('Disconnect this MateMail mailbox from MateDesk?')) return;
+    setMateMailError('');
+    try {
+      await disconnectMateMail.mutateAsync();
+      setAuthMethod('basic');
+      await refetch();
+    } catch (error) {
+      setMateMailError(error instanceof Error ? error.message : 'Could not disconnect MateMail.');
+    }
   }
 
   function handleTestImap() {
@@ -345,15 +426,17 @@ export default function EmailSettingsPage() {
               <CheckCircle size={12} /> Saved
             </span>
           )}
-          <button
-            onClick={handleSave}
-            disabled={save.isPending}
-            className="flex items-center gap-1.5 px-4 py-1.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: '#2563eb', fontSize: 12 }}
-          >
-            {save.isPending && <Loader2 size={11} className="animate-spin" />}
-            {save.isPending ? 'Saving…' : 'Save Settings'}
-          </button>
+          {authMethod !== 'matemail' && (
+            <button
+              onClick={handleSave}
+              disabled={save.isPending}
+              className="flex items-center gap-1.5 px-4 py-1.5 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: '#2563eb', fontSize: 12 }}
+            >
+              {save.isPending && <Loader2 size={11} className="animate-spin" />}
+              {save.isPending ? 'Saving…' : 'Save Settings'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -378,20 +461,86 @@ export default function EmailSettingsPage() {
                     Authentication Method
                   </span>
                 </div>
-                <GuideButton href={authMethod === 'basic' ? '/email-guides/basic-auth' : '/email-guides/oauth2'} />
+                {authMethod !== 'matemail' && (
+                  <GuideButton href={authMethod === 'basic' ? '/email-guides/basic-auth' : '/email-guides/oauth2'} />
+                )}
               </div>
               <div className="px-5 pt-0 pb-4">
                 <AuthTabs active={authMethod} onChange={setAuthMethod} />
                 <div className="pt-4 pb-1" style={{ fontSize: 13, color: 'var(--text-4)', lineHeight: 1.6 }}>
-                  {authMethod === 'basic' ? (
+                  {authMethod === 'matemail' ? (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
+                <SectionHeader icon={Shield} title="MateMail Connected App" color="#60a5fa" />
+                <div className="p-5 flex flex-col gap-4" style={{ maxWidth: 720 }}>
+                  {saved?.matemail_connected ? (
+                    <>
+                      <div className="px-4 py-4" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                        <div className="flex items-center gap-2" style={{ color: 'var(--accent-ok-fg)', fontWeight: 600 }}>
+                          <CheckCircle size={14} /> Connected
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-1)', marginTop: 10 }}>
+                          {saved.matemail_mailbox_name ? saved.matemail_mailbox_name + ' · ' : ''}{saved.matemail_mailbox_email}
+                        </div>
+                        <div className="mt-3 flex flex-col gap-1" style={{ fontSize: 11, color: 'var(--text-4)' }}>
+                          {(saved.matemail_permissions ?? []).map(scope => (
+                            <span key={scope.key}>✓ {scope.label}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="px-3 py-3" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
+                        Incoming messages are read through the MateMail Connected Apps API and converted into tickets. Public ticket replies are sent through the same approved mailbox. MateDesk never stores the mailbox password or PostBox master credential.
+                      </div>
+                      {matemailError && <div style={{ color: 'var(--accent-danger-fg)', fontSize: 12 }}>{matemailError}</div>}
+                      <button
+                        type="button"
+                        onClick={() => void handleMateMailDisconnect()}
+                        disabled={disconnectMateMail.isPending}
+                        className="self-start px-4 py-2 font-semibold"
+                        style={{ border: '1px solid var(--accent-danger-fg)', color: 'var(--accent-danger-fg)', fontSize: 12 }}
+                      >
+                        {disconnectMateMail.isPending ? 'Disconnecting…' : 'Disconnect MateMail'}
+                      </button>
+                    </>
+                  ) : (
+                    <form onSubmit={handleMateMailConnect} className="flex flex-col gap-4">
+                      <div style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.7 }}>
+                        In MateMail Portal create a <strong style={{ color: 'var(--text-2)' }}>Helpdesk / Ticketing</strong> connected app for the support mailbox. MateMail will preselect read mail, update read status and send mail. Paste the generated Tenant ID and one-time Integration Secret below.
+                      </div>
+                      <Field label="MateMail Tenant ID">
+                        <input className={inp} value={matemailTenantId} onChange={e => setMateMailTenantId(e.target.value)} required />
+                      </Field>
+                      <Field label="Integration Secret">
+                        <PasswordField value={matemailSecret} onChange={setMateMailSecret} placeholder="mmi_..." />
+                      </Field>
+                      {matemailPending && (
+                        <div className="px-3 py-3" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)', fontSize: 11, color: 'var(--accent-info-fg)' }}>
+                          MateMail approval is open in a separate window. Complete login, 2FA when enabled, and approve the exact mailbox.
+                        </div>
+                      )}
+                      {matemailError && <div style={{ color: 'var(--accent-danger-fg)', fontSize: 12 }}>{matemailError}</div>}
+                      <button
+                        type="submit"
+                        disabled={startMateMail.isPending || matemailPending || !matemailTenantId.trim() || !matemailSecret}
+                        className="self-start flex items-center gap-1.5 px-4 py-2 font-semibold text-white disabled:opacity-50"
+                        style={{ background: '#2563eb', fontSize: 12 }}
+                      >
+                        <ExternalLink size={12} /> {startMateMail.isPending ? 'Verifying…' : 'Verify and connect'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            ) : authMethod === 'basic' ? (
                     <>
                       <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>Basic Auth</span> uses a username and password (or app-specific password) to authenticate with IMAP and SMTP.
-                      Supported by all mail providers. For Gmail and M365, you must generate an <strong style={{ color: 'var(--text-2)' }}>App Password</strong> — direct account passwords are blocked by default.
+                    </>
+                  ) : authMethod === 'oauth2' ? (
+                    <>
+                      <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>OAuth2 / Modern Auth</span> configuration is available here, but XOAUTH2 token exchange and IMAP/SMTP token authentication are not enabled in the current mail transport yet.
                     </>
                   ) : (
                     <>
-                      <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>OAuth2 / Modern Auth</span> uses Azure AD, Google OAuth, or Zoho API tokens instead of passwords — no app password required.
-                      More secure and does not break when you change your account password. Requires registering an app in your identity provider.
+                      <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>MateMail Connected App</span> authorizes one exact MateMail mailbox without giving MateDesk its mailbox password. MateMail controls the approved scopes, login and 2FA.
                     </>
                   )}
                 </div>

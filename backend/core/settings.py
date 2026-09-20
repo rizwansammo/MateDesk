@@ -271,3 +271,8 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD           = True
     SECURE_CONTENT_TYPE_NOSNIFF   = True
+
+
+# MateMail Connected Apps API. Override only when using a non-production
+# MateMail environment; no mailbox password or PostBox master secret is used.
+MATEMAIL_BASE_URL = config('MATEMAIL_BASE_URL', default='https://portal.matemail.online').rstrip('/')

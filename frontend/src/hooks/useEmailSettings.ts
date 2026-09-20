@@ -3,7 +3,7 @@ import { apiFetch } from '@/lib/api';
 
 export interface EmailSettings {
   // Auth method
-  auth_method:             'basic' | 'oauth2';
+  auth_method:             'basic' | 'oauth2' | 'matemail';
   // IMAP
   imap_host:               string;
   imap_port:               number;
@@ -29,6 +29,14 @@ export interface EmailSettings {
   oauth_client_secret:     string;
   oauth_client_secret_set: boolean;
   oauth_tenant_id:         string;
+  // MateMail Connected App
+  matemail_connected:       boolean;
+  matemail_tenant_id:       string;
+  matemail_mailbox_id:      string;
+  matemail_mailbox_email:   string;
+  matemail_mailbox_name:    string;
+  matemail_permissions:     { key: string; label: string }[];
+  matemail_connected_at:    string | null;
   // Status
   last_polled_at:          string | null;
   emails_processed:        number;
@@ -77,5 +85,60 @@ export function useTestSmtp() {
         method: 'POST',
         body:   JSON.stringify(data),
       }),
+  });
+}
+
+
+export type MateMailConnectStart = {
+  status?: string;
+  tenant_id: string;
+  mailbox_id?: string;
+  mailbox_email?: string;
+  mailbox_name?: string;
+  permissions?: { key: string; label: string }[];
+  authorization_url: string;
+  poll_token: string;
+  expires_at?: string;
+};
+
+export type MateMailConnectComplete =
+  | EmailSettings
+  | { status: 'pending' | 'rejected' | 'expired' };
+
+export function useStartMateMailConnection() {
+  return useMutation({
+    mutationFn: (data: { tenant_id: string; integration_secret: string }) =>
+      apiFetch<MateMailConnectStart>('/api/email-settings/matemail/start/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  });
+}
+
+export function useCompleteMateMailConnection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { tenant_id: string; poll_token: string }) =>
+      apiFetch<MateMailConnectComplete>('/api/email-settings/matemail/complete/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: data => {
+      if ('auth_method' in data) {
+        qc.invalidateQueries({ queryKey: ['emailSettings'] });
+      }
+    },
+  });
+}
+
+export function useDisconnectMateMail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<EmailSettings>('/api/email-settings/matemail/disconnect/', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['emailSettings'] }),
   });
 }

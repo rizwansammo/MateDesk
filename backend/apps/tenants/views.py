@@ -99,12 +99,24 @@ class TenantBrandingView(APIView):
     }
 
     def get(self, request):
+        from django.conf import settings
+
         tenant = _resolve_tenant(request)
         if tenant is None:
             return Response({'detail': 'No tenant context.'}, status=400)
         data = {**self._DEFAULTS, **(tenant.branding or {})}
         data['md_logo_url'] = tenant.branding_md_logo.url if tenant.branding_md_logo else ''
         data['mc_logo_url'] = tenant.branding_mc_logo.url if tenant.branding_mc_logo else ''
+
+        # Dedicated installs can carry their visible product identity in runtime
+        # configuration, so disabling Platform Admin does not leave MateDesk
+        # branding hardcoded in the tenant dashboard.
+        if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'single_tenant':
+            if not data.get('md_custom_text'):
+                data['md_custom_text'] = getattr(settings, 'PRODUCT_NAME', 'MateDesk')
+            if not data.get('md_logo_url'):
+                data['md_logo_url'] = getattr(settings, 'PRODUCT_LOGO_URL', '')
+
         return Response(data)
 
 

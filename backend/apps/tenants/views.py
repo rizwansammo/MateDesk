@@ -115,6 +115,10 @@ class TenantBrandingView(APIView):
         data['mc_logo_url'] = tenant.branding_mc_logo.url if tenant.branding_mc_logo else ''
 
         if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'single_tenant':
+            if tenant.branding_md_logo:
+                # Raw /media/ is deliberately disabled in production. The public
+                # instance logo endpoint is safe for branding and works on login.
+                data['md_logo_url'] = '/api/instance/branding-logo/'
             if not data.get('md_custom_text'):
                 data['md_custom_text'] = getattr(settings, 'PRODUCT_WORDMARK', 'MateDesk')
             if not data.get('md_logo_url') and not data.get('md_logo_variant'):

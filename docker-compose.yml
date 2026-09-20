@@ -121,8 +121,9 @@ services:
       context:    ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL:    ${NEXT_PUBLIC_API_URL:-}
-        NEXT_PUBLIC_APP_DOMAIN: ${NEXT_PUBLIC_APP_DOMAIN:-matedesk.pro}
+        NEXT_PUBLIC_API_URL:         ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_APP_DOMAIN:      ${NEXT_PUBLIC_APP_DOMAIN:-matedesk.pro}
+        NEXT_PUBLIC_DEPLOYMENT_MODE: ${NEXT_PUBLIC_DEPLOYMENT_MODE:-multi_tenant}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-3005}:3005"

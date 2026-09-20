@@ -11,10 +11,24 @@ def health(request):
     return JsonResponse({'status': 'ok', 'service': 'MateDesk API'})
 
 
+def public_instance_config(request):
+    tenant = getattr(request, 'tenant', None)
+    return JsonResponse({
+        'deployment_mode': settings.DEPLOYMENT_MODE,
+        'product_name': settings.PRODUCT_NAME,
+        'vendor_name': settings.PRODUCT_VENDOR_NAME,
+        'tenant_name': tenant.name if tenant is not None else '',
+        'login_headline': settings.LOGIN_HEADLINE,
+        'login_subtitle': settings.LOGIN_SUBTITLE,
+        'public_registration_enabled': settings.PUBLIC_REGISTRATION_ENABLED,
+    })
+
+
 urlpatterns = [
     # Django built-in admin kept at a hidden path — use /platform-admin/ instead
     path('django-admin/', admin.site.urls),
     path('api/health/', health),
+    path('api/instance/public/', public_instance_config),
     path('api/plans/public/', public_plans_api),
     path('api/',        include('apps.users.urls')),
     path('api/',        include('apps.tickets.urls')),

@@ -12,6 +12,7 @@ from apps.users.models import User
     ALLOWED_HOSTS=['helpdesk.netamate.com'],
     PUBLIC_REGISTRATION_ENABLED=False,
     PRODUCT_NAME='NetaMate HelpDesk',
+    PRODUCT_WORDMARK='NetaMate',
     PRODUCT_LOGO_URL='https://assets.example.com/netamate-logo.png',
 )
 class SingleTenantAuthenticationTests(TestCase):
@@ -63,7 +64,7 @@ class SingleTenantAuthenticationTests(TestCase):
             HTTP_AUTHORIZATION=f'Bearer {access}',
         )
         self.assertEqual(branding.status_code, 200)
-        self.assertEqual(branding.json()['md_custom_text'], 'NetaMate HelpDesk')
+        self.assertEqual(branding.json()['md_custom_text'], 'NetaMate')
         self.assertEqual(
             branding.json()['md_logo_url'],
             'https://assets.example.com/netamate-logo.png',

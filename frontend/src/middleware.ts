@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? '';
-const IS_DEV     = !APP_DOMAIN || APP_DOMAIN === 'localhost';
+const APP_DOMAIN      = process.env.NEXT_PUBLIC_APP_DOMAIN ?? '';
+const DEPLOYMENT_MODE = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
+const IS_SINGLE_TENANT = DEPLOYMENT_MODE === 'single_tenant';
+const IS_DEV            = !APP_DOMAIN || APP_DOMAIN === 'localhost';
 
 // Only allow well-formed tenant slugs in cookies and URL params.
 // Prevents open-redirect via malformed workspace/tenantSlug values.
@@ -72,6 +74,25 @@ export function middleware(request: NextRequest) {
   const tenantSlug = SLUG_RE.test(rawSlug) ? rawSlug : '';
 
   const host = publicHost(request);
+
+  // ── SINGLE-TENANT MODE ────────────────────────────────────────────────────
+  // Dedicated installs live directly on their configured hostname. There is no
+  // workspace subdomain handoff and no public tenant registration surface.
+  if (IS_SINGLE_TENANT) {
+    if (pathname === '/register' || pathname === '/pricing') {
+      return go(request, host, hasAuth ? '/home' : '/login');
+    }
+    if (CALLBACK_ROUTES.has(pathname)) {
+      return go(request, host, hasAuth ? '/home' : '/login');
+    }
+    if (hasAuth) {
+      if (AUTH_PAGES.has(pathname) || pathname === '/') return go(request, host, '/home');
+      return NextResponse.next();
+    }
+    if (pathname === '/login') return NextResponse.next();
+    const qs = pathname !== '/' ? `?next=${encodeURIComponent(pathname + request.nextUrl.search)}` : '';
+    return go(request, host, '/login', qs);
+  }
 
   // ── DEV MODE ────────────────────────────────────────────────────────────────
   if (IS_DEV) {

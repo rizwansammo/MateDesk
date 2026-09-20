@@ -38,8 +38,13 @@ interface AuthState {
 
 function cookieAttrs(maxAge: number): string {
   const d = process.env.NEXT_PUBLIC_APP_DOMAIN;
-  const domain = d && d !== 'localhost' ? `; domain=.${d}` : '';
-  const secure = d && d !== 'localhost' ? '; Secure' : '';
+  const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
+  const isProd = Boolean(d && d !== 'localhost');
+
+  // Dedicated installs never need cross-subdomain cookies. Keeping them
+  // host-only avoids coupling the image to a particular customer domain.
+  const domain = mode !== 'single_tenant' && isProd ? `; domain=.${d}` : '';
+  const secure = isProd ? '; Secure' : '';
   return `path=/${domain}; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
 
@@ -240,6 +245,8 @@ export function clearAuthState(): void {
  */
 export function getLogoutUrl(): string {
   const d = process.env.NEXT_PUBLIC_APP_DOMAIN;
+  const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
+  if (mode === 'single_tenant') return '/logout-complete';
   if (!d || d === 'localhost') return '/login';
   return `https://${d}/logout-complete`;
 }

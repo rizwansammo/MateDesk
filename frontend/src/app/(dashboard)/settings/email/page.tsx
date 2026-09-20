@@ -209,6 +209,9 @@ const OAUTH2_PROVIDERS = [
 
 export default function EmailSettingsPage() {
   const router    = useRouter();
+  const productName = process.env.NEXT_PUBLIC_PRODUCT_NAME || 'MateDesk';
+  const productWordmark = process.env.NEXT_PUBLIC_PRODUCT_WORDMARK || productName;
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'matedesk.pro';
   const { data: saved, isLoading, refetch } = useEmailSettings();
   const save      = useSaveEmailSettings();
   const testImap  = useTestImap();
@@ -311,7 +314,7 @@ export default function EmailSettingsPage() {
       );
       if (!popup) {
         setMateMailPending(false);
-        setMateMailError('Allow pop-ups for MateDesk, then try again.');
+        setMateMailError(`Allow pop-ups for ${productName}, then try again.`);
         return;
       }
 
@@ -351,7 +354,7 @@ export default function EmailSettingsPage() {
   }
 
   async function handleMateMailDisconnect() {
-    if (!window.confirm('Disconnect this MateMail mailbox from MateDesk?')) return;
+    if (!window.confirm(`Disconnect this MateMail mailbox from ${productName}?`)) return;
     setMateMailError('');
     try {
       await disconnectMateMail.mutateAsync();
@@ -488,7 +491,7 @@ export default function EmailSettingsPage() {
                         </div>
                       </div>
                       <div className="px-3 py-3" style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
-                        Incoming messages are read through the MateMail Connected Apps API and converted into tickets. Public ticket replies are sent through the same approved mailbox. MateDesk never stores the mailbox password or PostBox master credential.
+                        Incoming messages are read through the MateMail Connected Apps API and converted into tickets. Public ticket replies are sent through the same approved mailbox. {productName} never stores the mailbox password or PostBox master credential.
                       </div>
                       {matemailError && <div style={{ color: 'var(--accent-danger-fg)', fontSize: 12 }}>{matemailError}</div>}
                       <button
@@ -540,7 +543,7 @@ export default function EmailSettingsPage() {
                     </>
                   ) : (
                     <>
-                      <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>MateMail Connected App</span> authorizes one exact MateMail mailbox without giving MateDesk its mailbox password. MateMail controls the approved scopes, login and 2FA.
+                      <span style={{ fontWeight: 600, color: 'var(--text-2)' }}>MateMail Connected App</span> authorizes one exact MateMail mailbox without giving {productName} its mailbox password. MateMail controls the approved scopes, login and 2FA.
                     </>
                   )}
                 </div>
@@ -686,7 +689,7 @@ export default function EmailSettingsPage() {
                       <div className="flex flex-col gap-3">
                         <Field label="Display Name">
                           <input type="text" value={smtp.smtp_from_name} onChange={e => setS('smtp_from_name', e.target.value)}
-                            placeholder="MateDesk Support" className={inp} />
+                            placeholder={`${productWordmark} Support`} className={inp} />
                         </Field>
                         <Field label="From Email">
                           <input type="email" value={smtp.smtp_from_email} onChange={e => setS('smtp_from_email', e.target.value)}
@@ -702,7 +705,7 @@ export default function EmailSettingsPage() {
                     <div className="px-3 py-3 flex flex-col gap-1"
                       style={{ background: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.15)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.6 }}>
                       <span style={{ fontWeight: 600, color: 'var(--accent-info-fg)' }}>How outbound replies work</span>
-                      <span>When an agent adds a Public Reply to a ticket that was created from an inbound email, MateDesk automatically sends the reply back to the original sender via this SMTP connection.</span>
+                      <span>When an agent adds a Public Reply to a ticket that was created from an inbound email, {productName} automatically sends the reply back to the original sender via this SMTP connection.</span>
                       <span style={{ marginTop: 4 }}>The subject line includes the ticket reference (e.g. <span style={{ fontFamily: 'monospace', color: 'var(--accent-indigo-fg)' }}>Re: [T15052026-0001] Your issue</span>) so that client replies are threaded back into the same ticket.</span>
                     </div>
                   </div>
@@ -768,7 +771,7 @@ export default function EmailSettingsPage() {
                       style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)', fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
                       <span style={{ fontWeight: 600, color: 'var(--accent-violet-fg)' }}>Redirect URI to register in your app</span>
                       <code style={{ fontFamily: 'monospace', color: 'var(--accent-violet-fg)', background: 'rgba(167,139,250,0.1)', padding: '2px 6px' }}>
-                        {typeof window !== 'undefined' ? `${window.location.origin}/api/email-settings/oauth2/callback/` : 'https://your-tenant.matedesk.pro/api/email-settings/oauth2/callback/'}
+                        {typeof window !== 'undefined' ? `${window.location.origin}/api/email-settings/oauth2/callback/` : `https://${appDomain}/api/email-settings/oauth2/callback/`}
                       </code>
                       <span style={{ marginTop: 4 }}>Add this URI to the allowed redirect URIs in your OAuth2 app registration.</span>
                     </div>

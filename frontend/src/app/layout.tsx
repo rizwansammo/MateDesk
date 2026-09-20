@@ -188,7 +188,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 transform: 'translate(-50%,-50%)',
                 width: 48, height: 48,
                 background: IS_SINGLE_TENANT ? 'transparent' : '#1F4ED8',
-                color: 'var(--text-0)',
+                color: IS_SINGLE_TENANT ? 'var(--brand-monochrome)' : 'var(--text-0)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
@@ -212,7 +212,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               fontFamily: 'var(--font-hemi), sans-serif',
               fontWeight: 700, fontSize: 18,
               letterSpacing: '0.04em', textTransform: 'uppercase',
-              color: 'var(--text-0)', lineHeight: 1,
+              color: IS_SINGLE_TENANT ? 'var(--brand-monochrome)' : 'var(--text-0)', lineHeight: 1,
               position: 'relative', top: 2,
             }}
           >

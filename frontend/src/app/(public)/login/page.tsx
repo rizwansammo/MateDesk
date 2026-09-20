@@ -177,7 +177,7 @@ function LoginForm() {
                     margin: '0 auto 12px',
                     display: 'grid',
                     placeItems: 'center',
-                    color: 'var(--text-0)',
+                    color: 'var(--brand-monochrome)',
                   }}
                 >
                   {logoVariant === 'netamate' ? (
@@ -210,27 +210,17 @@ function LoginForm() {
 
                 <div
                   style={{
+                    marginTop: 2,
                     fontFamily: 'var(--font-hemi), sans-serif',
-                    fontSize: 24,
+                    fontSize: 23,
                     fontWeight: 700,
                     letterSpacing: '0.025em',
-                    color: 'var(--text-0)',
                     lineHeight: 1,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  {productWordmark}
-                </div>
-                <div
-                  style={{
-                    marginTop: 7,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'var(--accent-info-fg)',
-                  }}
-                >
-                  HelpDesk
+                  <span style={{ color: 'var(--brand-monochrome)' }}>{productWordmark}</span>
+                  <span style={{ color: 'var(--accent-info-fg)' }}> HelpDesk</span>
                 </div>
                 <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.55, color: 'var(--text-3)' }}>
                   Sign in to access your support workspace.

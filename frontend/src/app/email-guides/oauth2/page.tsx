@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Copy, Check, Key, ArrowLeft } from 'lucide-react';
 
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || 'MateDesk';
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'matedesk.pro';
+const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
+const REDIRECT_URI = IS_SINGLE_TENANT
+  ? `https://${APP_DOMAIN}/api/email-settings/oauth2/callback/`
+  : `https://your-tenant.${APP_DOMAIN}/api/email-settings/oauth2/callback/`;
+
 // ── Copy button ───────────────────────────────────────────────────────────────
 
 function CopyBtn({ text }: { text: string }) {
@@ -176,7 +183,7 @@ function ProviderCard({ provider }: { provider: Provider }) {
           {/* Fields needed summary */}
           <div style={{ marginBottom: 24 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-              Fields you&apos;ll need to enter in MateDesk
+              Fields you&apos;ll need to enter in {PRODUCT_NAME}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
               {provider.fieldsNeeded.map(f => (
@@ -250,9 +257,9 @@ const providers: Provider[] = [
         body: (
           <>
             Navigate to <strong style={{ color: '#e5e7eb' }}>App registrations → New registration</strong>.<br />
-            Name: <em>MateDesk Mail</em><br />
+            Name: <em>{PRODUCT_NAME} Mail</em><br />
             Supported account types: <em>Accounts in this organizational directory only (Single tenant)</em><br />
-            Redirect URI: <em>Web</em> → <Code>https://your-tenant.matedesk.pro/api/email-settings/oauth2/callback/</Code><br />
+            Redirect URI: <em>Web</em> → <Code>{REDIRECT_URI}</Code><br />
             Click <strong style={{ color: '#e5e7eb' }}>Register</strong>.
           </>
         ),
@@ -262,8 +269,8 @@ const providers: Provider[] = [
         body: (
           <>
             On the app&apos;s <strong style={{ color: '#e5e7eb' }}>Overview</strong> page you will see:<br />
-            • <strong style={{ color: '#e5e7eb' }}>Application (client) ID</strong> — paste this into the <em>Client ID</em> field in MateDesk.<br />
-            • <strong style={{ color: '#e5e7eb' }}>Directory (tenant) ID</strong> — paste this into the <em>Tenant ID</em> field in MateDesk.
+            • <strong style={{ color: '#e5e7eb' }}>Application (client) ID</strong> — paste this into the <em>Client ID</em> field in {PRODUCT_NAME}.<br />
+            • <strong style={{ color: '#e5e7eb' }}>Directory (tenant) ID</strong> — paste this into the <em>Tenant ID</em> field in {PRODUCT_NAME}.
           </>
         ),
       },
@@ -272,9 +279,9 @@ const providers: Provider[] = [
         body: (
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>Certificates & secrets → New client secret</strong>.<br />
-            Description: <em>MateDesk</em>, Expires: <em>24 months</em> (or as per your policy).<br />
+            Description: <em>{PRODUCT_NAME}</em>, Expires: <em>24 months</em> (or as per your policy).<br />
             Click <strong style={{ color: '#e5e7eb' }}>Add</strong>. <span style={{ color: '#f87171', fontWeight: 600 }}>Copy the Value immediately</span> — it
-            is only shown once. Paste it into the <em>Client Secret</em> field in MateDesk.
+            is only shown once. Paste it into the <em>Client Secret</em> field in {PRODUCT_NAME}.
           </>
         ),
       },
@@ -301,10 +308,10 @@ const providers: Provider[] = [
         ),
       },
       {
-        title: 'Enter in MateDesk and save',
+        title: `Enter in ${PRODUCT_NAME} and save`,
         body: (
           <>
-            In MateDesk <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
+            In {PRODUCT_NAME} <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
             Provider: <em>Microsoft 365</em><br />
             Client ID: <em>your Application ID</em><br />
             Client Secret: <em>the secret value you copied</em><br />
@@ -334,7 +341,7 @@ const providers: Provider[] = [
         body: (
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>console.cloud.google.com</strong>. Create a new project or
-            select an existing one. Name it something like <em>MateDesk</em>.
+            select an existing one. Name it something like <em>{PRODUCT_NAME}</em>.
           </>
         ),
       },
@@ -353,7 +360,7 @@ const providers: Provider[] = [
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>APIs & Services → OAuth consent screen</strong>.<br />
             User type: <em>Internal</em> (for Google Workspace orgs — limits to your domain only).<br />
-            App name: <em>MateDesk</em>, User support email: your admin email.<br />
+            App name: <em>{PRODUCT_NAME}</em>, User support email: your admin email.<br />
             Add scope: <Code>https://mail.google.com/</Code><br />
             Save and continue through all steps.
           </>
@@ -365,18 +372,18 @@ const providers: Provider[] = [
           <>
             Go to <strong style={{ color: '#e5e7eb' }}>APIs & Services → Credentials → Create Credentials → OAuth client ID</strong>.<br />
             Application type: <em>Web application</em><br />
-            Name: <em>MateDesk Mail</em><br />
-            Authorized redirect URIs: <Code>https://your-tenant.matedesk.pro/api/email-settings/oauth2/callback/</Code><br />
+            Name: <em>{PRODUCT_NAME} Mail</em><br />
+            Authorized redirect URIs: <Code>{REDIRECT_URI}</Code><br />
             Click <strong style={{ color: '#e5e7eb' }}>Create</strong>. Copy the <strong style={{ color: '#e5e7eb' }}>Client ID</strong> and{' '}
             <strong style={{ color: '#e5e7eb' }}>Client Secret</strong> shown in the dialog.
           </>
         ),
       },
       {
-        title: 'Enter in MateDesk and save',
+        title: `Enter in ${PRODUCT_NAME} and save`,
         body: (
           <>
-            In MateDesk <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
+            In {PRODUCT_NAME} <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
             Provider: <em>Google Workspace</em><br />
             Client ID: <em>your OAuth2 Client ID (ends in .apps.googleusercontent.com)</em><br />
             Client Secret: <em>your OAuth2 Client Secret</em><br />
@@ -411,9 +418,9 @@ const providers: Provider[] = [
         body: (
           <>
             Click <strong style={{ color: '#e5e7eb' }}>Add Client → Server-based Applications</strong>.<br />
-            Client Name: <em>MateDesk</em><br />
-            Homepage URL: your MateDesk URL<br />
-            Authorized Redirect URIs: <Code>https://your-tenant.matedesk.pro/api/email-settings/oauth2/callback/</Code><br />
+            Client Name: <em>{PRODUCT_NAME}</em><br />
+            Homepage URL: your {PRODUCT_NAME} URL<br />
+            Authorized Redirect URIs: <Code>{REDIRECT_URI}</Code><br />
             Click <strong style={{ color: '#e5e7eb' }}>Create</strong>. Copy the <strong style={{ color: '#e5e7eb' }}>Client ID</strong> and{' '}
             <strong style={{ color: '#e5e7eb' }}>Client Secret</strong>.
           </>
@@ -430,10 +437,10 @@ const providers: Provider[] = [
         ),
       },
       {
-        title: 'Enter in MateDesk and save',
+        title: `Enter in ${PRODUCT_NAME} and save`,
         body: (
           <>
-            In MateDesk <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
+            In {PRODUCT_NAME} <strong style={{ color: '#e5e7eb' }}>Settings → Mail Server → OAuth2</strong>:<br />
             Provider: <em>Zoho Mail</em><br />
             Client ID: <em>your Zoho Client ID</em><br />
             Client Secret: <em>your Zoho Client Secret</em><br />
@@ -490,7 +497,7 @@ export default function OAuth2GuidePage() {
       <div style={{ padding: '60px 40px 40px', maxWidth: 900, margin: '0 auto' }}>
         <div style={{ marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            MateDesk · Mail Server
+            {PRODUCT_NAME} · Mail Server
           </span>
         </div>
         <h1 style={{
@@ -504,7 +511,7 @@ export default function OAuth2GuidePage() {
           <span style={{ color: '#a78bfa' }}>Setup Guide</span>
         </h1>
         <p style={{ fontSize: 15, color: '#9ca3af', lineHeight: 1.7, maxWidth: 620 }}>
-          Connect MateDesk to your mailbox using <strong style={{ color: '#e5e7eb' }}>OAuth2 token-based authentication</strong>.
+          Connect {PRODUCT_NAME} to your mailbox using <strong style={{ color: '#e5e7eb' }}>OAuth2 token-based authentication</strong>.
           No passwords are stored — access is granted via short-lived tokens that are automatically refreshed.
           Required when Basic Auth is blocked by a Conditional Access policy.
         </p>
@@ -515,8 +522,8 @@ export default function OAuth2GuidePage() {
         }}>
           {[
             { num: '1', label: 'Register App', desc: 'Create an OAuth2 app in your identity provider (Azure, Google, Zoho).' },
-            { num: '2', label: 'Enter Credentials', desc: 'Paste Client ID, Client Secret, and Tenant ID (M365) into MateDesk.' },
-            { num: '3', label: 'Authorize', desc: 'MateDesk completes the OAuth2 flow and stores the refresh token securely.' },
+            { num: '2', label: 'Enter Credentials', desc: `Paste Client ID, Client Secret, and Tenant ID (M365) into ${PRODUCT_NAME}.` },
+            { num: '3', label: 'Authorize', desc: `${PRODUCT_NAME} completes the OAuth2 flow and stores the refresh token securely.` },
           ].map(s => (
             <div key={s.num} style={{
               padding: '16px', borderRadius: 6,
@@ -572,7 +579,7 @@ export default function OAuth2GuidePage() {
         padding: '20px 40px', textAlign: 'center',
         fontSize: 12, color: '#374151',
       }}>
-        MateDesk · By NetaMate Solutions · <a href="/settings/email" style={{ color: '#4b5563', textDecoration: 'none' }}>Back to Mail Settings</a>
+        {PRODUCT_NAME} · By NetaMate Solutions · <a href="/settings/email" style={{ color: '#4b5563', textDecoration: 'none' }}>Back to Mail Settings</a>
       </div>
     </div>
   );

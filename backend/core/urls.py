@@ -17,6 +17,7 @@ def public_instance_config(request):
         'deployment_mode': settings.DEPLOYMENT_MODE,
         'product_name': settings.PRODUCT_NAME,
         'vendor_name': settings.PRODUCT_VENDOR_NAME,
+        'product_logo_url': settings.PRODUCT_LOGO_URL,
         'tenant_name': tenant.name if tenant is not None else '',
         'login_headline': settings.LOGIN_HEADLINE,
         'login_subtitle': settings.LOGIN_SUBTITLE,

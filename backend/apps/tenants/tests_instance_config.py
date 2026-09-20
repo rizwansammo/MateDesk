@@ -33,6 +33,7 @@ class PublicInstanceConfigTests(TestCase):
         SINGLE_TENANT_SLUG='netamate',
         PRODUCT_NAME='NetaMate HelpDesk',
         PRODUCT_VENDOR_NAME='NetaMate Solutions',
+        PRODUCT_LOGO_URL='https://assets.example.com/netamate-logo.png',
         LOGIN_HEADLINE='Welcome to NetaMate HelpDesk',
         LOGIN_SUBTITLE='Sign in to access NetaMate support.',
         PUBLIC_REGISTRATION_ENABLED=False,
@@ -55,5 +56,9 @@ class PublicInstanceConfigTests(TestCase):
         self.assertEqual(data['deployment_mode'], 'single_tenant')
         self.assertEqual(data['product_name'], 'NetaMate HelpDesk')
         self.assertEqual(data['vendor_name'], 'NetaMate Solutions')
+        self.assertEqual(
+            data['product_logo_url'],
+            'https://assets.example.com/netamate-logo.png',
+        )
         self.assertEqual(data['tenant_name'], 'NetaMate Solutions')
         self.assertFalse(data['public_registration_enabled'])

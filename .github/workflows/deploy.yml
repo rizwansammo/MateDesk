@@ -13,8 +13,10 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: production-deploy
-  cancel-in-progress: false      # never abort a half-finished deploy
+  # Production main deploys never cancel each other. PR validation uses its own
+  # ref-scoped group and only keeps the newest head revision.
+  group: matedesk-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   REGISTRY: ghcr.io

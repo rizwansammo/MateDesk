@@ -16,8 +16,9 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE:  ghcr.io/rizwansammo/matedesk-backend
-  FRONTEND_IMAGE: ghcr.io/rizwansammo/matedesk-frontend
+  BACKEND_IMAGE:          ghcr.io/rizwansammo/matedesk-backend
+  FRONTEND_IMAGE:         ghcr.io/rizwansammo/matedesk-frontend
+  SINGLE_FRONTEND_IMAGE:  ghcr.io/rizwansammo/matedesk-frontend-single-tenant
 
 jobs:
   # ── Gates ───────────────────────────────────────────────────────────────────
@@ -147,11 +148,30 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=
             NEXT_PUBLIC_APP_DOMAIN=matedesk.pro
+            NEXT_PUBLIC_DEPLOYMENT_MODE=multi_tenant
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           cache-from: type=gha,scope=frontend
           cache-to:   type=gha,scope=frontend,mode=max
+
+      # Reusable dedicated-install image. The placeholder domain deliberately
+      # keeps production HTTPS behaviour without tying the bundle to a customer
+      # hostname; single-tenant routing and auth use the actual request host.
+      - name: Build and push single-tenant frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push:    true
+          build-args: |
+            NEXT_PUBLIC_API_URL=
+            NEXT_PUBLIC_APP_DOMAIN=dedicated.invalid
+            NEXT_PUBLIC_DEPLOYMENT_MODE=single_tenant
+          tags: |
+            ${{ env.SINGLE_FRONTEND_IMAGE }}:latest
+            ${{ env.SINGLE_FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend-single-tenant
+          cache-to:   type=gha,scope=frontend-single-tenant,mode=max
 
   deploy:
     name: Deploy to MateServer

@@ -382,7 +382,7 @@ function BrandPreview({
   logoUrl: string;
   themeAware: boolean;
 }) {
-  const foreground = dark ? '#f8fafc' : '#0f172a';
+  const foreground = dark ? '#ffffff' : '#000000';
   const muted = dark ? '#94a3b8' : '#64748b';
 
   return (

@@ -21,7 +21,6 @@ export default function BrandingPage() {
   const initFromBranding = useLogoSizeStore((s) => s.initFromBranding);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [config, setConfig] = useState<BrandingState | null>(null);
   const [wordmark, setWordmark] = useState('NetaMate');
   const [iconSize, setIconSize] = useState(24);
   const [fontSize, setFontSize] = useState(19);
@@ -52,7 +51,6 @@ export default function BrandingPage() {
     if (!isSingleTenant) return;
     apiFetch<BrandingState>('/api/tenant/branding/')
       .then((data) => {
-        setConfig(data);
         setWordmark(data.md_custom_text || 'NetaMate');
         setIconSize(data.md_icon_size || 24);
         setFontSize(data.md_font_size || 19);
@@ -97,7 +95,6 @@ export default function BrandingPage() {
         method: 'PATCH',
         body,
       });
-      setConfig(updated);
       setWordmark(updated.md_custom_text || 'NetaMate');
       setIconSize(updated.md_icon_size || 24);
       setFontSize(updated.md_font_size || 19);

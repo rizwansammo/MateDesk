@@ -161,6 +161,9 @@ PLATFORM_ADMIN_ENABLED = config(
 PRODUCT_NAME = config('PRODUCT_NAME', default='MateDesk').strip() or 'MateDesk'
 PRODUCT_VENDOR_NAME = config('PRODUCT_VENDOR_NAME', default='NetaMate Solutions').strip() or 'NetaMate Solutions'
 PRODUCT_LOGO_URL = config('PRODUCT_LOGO_URL', default='').strip()
+PRODUCT_LOGO_VARIANT = config('PRODUCT_LOGO_VARIANT', default='').strip().lower()
+PRODUCT_LOGO_THEME_AWARE = config('PRODUCT_LOGO_THEME_AWARE', cast=bool, default=False)
+PRODUCT_WORDMARK = config('PRODUCT_WORDMARK', default=PRODUCT_NAME).strip() or PRODUCT_NAME
 LOGIN_HEADLINE = config('LOGIN_HEADLINE', default='').strip()
 LOGIN_SUBTITLE = config('LOGIN_SUBTITLE', default='').strip()
 

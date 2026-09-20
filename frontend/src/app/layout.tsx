@@ -4,6 +4,7 @@ import localFont from 'next/font/local';
 import { ThemeProvider } from 'next-themes';
 import { SplashDismiss } from '@/components/SplashDismiss';
 import { PageTransitionOverlay } from '@/components/PageTransitionOverlay';
+import { NetaMateMark } from '@/components/NetaMateMark';
 import './globals.css';
 
 const inter = Inter({
@@ -26,9 +27,28 @@ const hemiHead = localFont({
 });
 
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'matedesk.pro';
+const DEPLOYMENT_MODE = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE || 'multi_tenant';
+const IS_SINGLE_TENANT = DEPLOYMENT_MODE === 'single_tenant';
+const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || (IS_SINGLE_TENANT ? 'HelpDesk' : 'MateDesk');
+const PRODUCT_WORDMARK = process.env.NEXT_PUBLIC_PRODUCT_WORDMARK || (IS_SINGLE_TENANT ? 'NetaMate' : 'MateDesk');
 const SITE_URL = `https://${APP_DOMAIN}`;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = IS_SINGLE_TENANT ? {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${PRODUCT_NAME} — Support Portal`,
+    template: `%s | ${PRODUCT_NAME}`,
+  },
+  description: 'Secure support workspace for service requests, conversations, and ticket tracking.',
+  applicationName: PRODUCT_NAME,
+  authors: [{ name: 'NetaMate Solutions' }],
+  creator: 'NetaMate Solutions',
+  publisher: 'NetaMate Solutions',
+  robots: { index: false, follow: false },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
+} : {
   // Required for Open Graph and canonical URLs to resolve to absolute addresses.
   // Without it Next.js emits relative og:image paths, which crawlers and social
   // scrapers cannot fetch.
@@ -155,29 +175,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           {/* Spinner ring */}
           <div style={{ position: 'relative', width: 88, height: 88 }}>
-            {/* Track ring */}
             <div data-splash-track style={{
               position: 'absolute', inset: 0, borderRadius: '50%',
               border: '2px solid rgba(31,78,216,0.15)',
             }} />
-            {/* Spinning arc */}
             <div className="_md-arc" />
 
-            {/* Brand icon */}
             <div
               data-splash-icon="md"
               style={{
                 position: 'absolute', top: '50%', left: '50%',
                 transform: 'translate(-50%,-50%)',
                 width: 48, height: 48,
-                background: '#1F4ED8',
+                background: IS_SINGLE_TENANT ? 'transparent' : '#1F4ED8',
+                color: 'var(--text-0)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <svg viewBox="0 0 24 24" fill="none" width={30} height={30}>
-                <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8 -2.5h-4.5z" fill="#fff" />
-                <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" strokeWidth="1.5" fill="none" />
-              </svg>
+              {IS_SINGLE_TENANT ? (
+                <NetaMateMark size={40} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" width={30} height={30}>
+                  <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8 -2.5h-4.5z" fill="#fff" />
+                  <path d="M3 13.5v6.5h18v-6.5" stroke="#fff" strokeWidth="1.5" fill="none" />
+                </svg>
+              )}
             </div>
           </div>
 
@@ -194,8 +216,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               position: 'relative', top: 2,
             }}
           >
-            {'Mate'}
-            <span style={{ color: '#1F4ED8' }}>Desk</span>
+            {IS_SINGLE_TENANT ? (
+              PRODUCT_WORDMARK
+            ) : (
+              <>{'Mate'}<span style={{ color: '#1F4ED8' }}>Desk</span></>
+            )}
           </div>
 
           {/* Subtitle */}
@@ -203,7 +228,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             marginTop: 8, fontSize: 10,
             color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase',
           }}>
-            Loading workspace…
+            {IS_SINGLE_TENANT ? 'Loading support workspace…' : 'Loading workspace…'}
           </div>
         </div>
 

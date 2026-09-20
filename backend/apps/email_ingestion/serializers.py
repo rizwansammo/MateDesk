@@ -15,6 +15,7 @@ class EmailSettingsSerializer(serializers.ModelSerializer):
     imap_password_set        = serializers.SerializerMethodField()
     smtp_password_set        = serializers.SerializerMethodField()
     oauth_client_secret_set  = serializers.SerializerMethodField()
+    matemail_connected        = serializers.SerializerMethodField()
 
     def get_imap_password_set(self, obj):
         return bool(obj.imap_password)
@@ -24,6 +25,9 @@ class EmailSettingsSerializer(serializers.ModelSerializer):
 
     def get_oauth_client_secret_set(self, obj):
         return bool(obj.oauth_client_secret)
+
+    def get_matemail_connected(self, obj):
+        return bool(obj.matemail_access_token and obj.matemail_mailbox_email)
 
     class Meta:
         model  = TenantEmailSettings
@@ -42,6 +46,11 @@ class EmailSettingsSerializer(serializers.ModelSerializer):
             'oauth_provider', 'oauth_client_id',
             'oauth_client_secret', 'oauth_client_secret_set',
             'oauth_tenant_id',
+            # MateMail connected app
+            'matemail_connected', 'matemail_tenant_id',
+            'matemail_mailbox_id', 'matemail_mailbox_email',
+            'matemail_mailbox_name', 'matemail_permissions',
+            'matemail_connected_at',
             # Status (read-only)
             'last_polled_at', 'emails_processed', 'last_error',
         ]
@@ -55,4 +64,11 @@ class EmailSettingsSerializer(serializers.ModelSerializer):
             'imap_password_set':       {'read_only': True},
             'smtp_password_set':       {'read_only': True},
             'oauth_client_secret_set': {'read_only': True},
+            'matemail_connected':       {'read_only': True},
+            'matemail_tenant_id':       {'read_only': True},
+            'matemail_mailbox_id':      {'read_only': True},
+            'matemail_mailbox_email':   {'read_only': True},
+            'matemail_mailbox_name':    {'read_only': True},
+            'matemail_permissions':     {'read_only': True},
+            'matemail_connected_at':    {'read_only': True},
         }

@@ -134,6 +134,29 @@ NON_TENANT_HOSTS = set(
 )
 APP_DOMAIN = config('APP_DOMAIN', default='').strip()
 
+# Deployment topology. Multi-tenant is the existing/default MateDesk behaviour.
+# Dedicated installations can opt into single_tenant without forking the codebase.
+DEPLOYMENT_MODE = config('DEPLOYMENT_MODE', default='multi_tenant').strip().lower()
+if DEPLOYMENT_MODE not in {'multi_tenant', 'single_tenant'}:
+    raise ValueError("DEPLOYMENT_MODE must be 'multi_tenant' or 'single_tenant'.")
+
+SINGLE_TENANT_SLUG = config('SINGLE_TENANT_SLUG', default='').strip().lower()
+if DEPLOYMENT_MODE == 'single_tenant' and not SINGLE_TENANT_SLUG:
+    raise ValueError('SINGLE_TENANT_SLUG is required when DEPLOYMENT_MODE=single_tenant.')
+
+# SaaS/operator surfaces default on for the normal platform and off for a
+# dedicated single-tenant installation. They remain explicitly overridable.
+PUBLIC_REGISTRATION_ENABLED = config(
+    'PUBLIC_REGISTRATION_ENABLED',
+    cast=bool,
+    default=(DEPLOYMENT_MODE == 'multi_tenant'),
+)
+PLATFORM_ADMIN_ENABLED = config(
+    'PLATFORM_ADMIN_ENABLED',
+    cast=bool,
+    default=(DEPLOYMENT_MODE == 'multi_tenant'),
+)
+
 CHANNEL_LAYER_BACKEND = os.environ.get('CHANNEL_LAYER_BACKEND', 'memory')
 CHANNEL_REDIS_URL = os.environ.get('CHANNEL_REDIS_URL', config('CHANNEL_REDIS_URL', default='redis://127.0.0.1:6379/2'))
 if CHANNEL_LAYER_BACKEND == 'redis':

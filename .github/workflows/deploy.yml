@@ -200,7 +200,7 @@ jobs:
           cache-to:   type=gha,scope=frontend-netamate-helpdesk,mode=max
 
   deploy:
-    name: Deploy to MateServer
+    name: Deploy MateDesk + NetaMate HelpDesk
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
@@ -267,4 +267,83 @@ jobs:
             docker logout ghcr.io || true
             rm -rf "$DOCKER_CONFIG"
             unset DOCKER_CONFIG
+            docker image prune -f --filter "until=168h" || true
+
+
+      - name: Deploy NetaMate HelpDesk over SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host:            ${{ secrets.VPS_HOST }}
+          username:        ${{ secrets.VPS_USER }}
+          key:             ${{ secrets.VPS_SSH_KEY }}
+          timeout:         30s
+          command_timeout: 15m
+          envs: GITHUB_SHA,GHCR_USER,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+            cd /opt/NetaMate-HelpDesk
+
+            # Keep deployment-only files aligned with the private deployment repo.
+            # Production .env and .release.env are git-ignored and remain local.
+            git checkout main
+            git pull --ff-only origin main
+
+            if [[ ! -f .env ]]; then
+              echo "Missing /opt/NetaMate-HelpDesk/.env"
+              exit 1
+            fi
+
+            # Deploy the exact same MateDesk commit that this workflow just built.
+            # The backend image is shared; the frontend is the NetaMate-specific
+            # single-tenant build from the same source revision.
+            cat > .release.env.tmp <<EOF
+            MATEDESK_BACKEND_IMAGE=ghcr.io/rizwansammo/matedesk-backend:${GITHUB_SHA}
+            MATEDESK_FRONTEND_IMAGE=ghcr.io/rizwansammo/matedesk-frontend-netamate-helpdesk:${GITHUB_SHA}
+            EOF
+            mv .release.env.tmp .release.env
+            chmod 600 .release.env
+
+            export DOCKER_CONFIG=/root/.docker-netamate-helpdesk-ci
+            mkdir -p "$DOCKER_CONFIG"
+            printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+            set -a
+            source ./.release.env
+            set +a
+
+            docker compose config >/dev/null
+            docker compose pull backend frontend celery_worker celery_beat
+            docker compose up -d --remove-orphans
+
+            echo "--- waiting for NetaMate HelpDesk backend health ---"
+            for i in $(seq 1 30); do
+              if curl -fsS --max-time 5 -H "Host: helpdesk.netamate.com" http://127.0.0.1:8050/api/health/ >/dev/null 2>&1; then
+                echo "NetaMate HelpDesk backend healthy after ${i}x5s"
+                break
+              fi
+              if [ "$i" = "30" ]; then
+                echo "NetaMate HelpDesk backend did not become healthy"
+                docker compose logs --tail=150 backend
+                exit 1
+              fi
+              sleep 5
+            done
+
+            echo "--- checking NetaMate HelpDesk frontend ---"
+            curl -fsS --max-time 10 -H "Host: helpdesk.netamate.com" http://127.0.0.1:3050/login >/dev/null
+
+            echo "--- checking NetaMate HelpDesk public identity ---"
+            INSTANCE_JSON="$(curl -fsS --max-time 10 -H "Host: helpdesk.netamate.com" http://127.0.0.1:8050/api/instance/public/)"
+            printf '%s' "$INSTANCE_JSON" | grep -F '"deployment_mode": "single_tenant"' >/dev/null
+            printf '%s' "$INSTANCE_JSON" | grep -F '"product_name": "NetaMate HelpDesk"' >/dev/null
+            printf '%s' "$INSTANCE_JSON" | grep -F '"public_registration_enabled": false' >/dev/null
+
+            echo "--- deployed release ---"
+            echo "MateDesk SHA: $GITHUB_SHA"
+            docker compose ps
+
+            docker logout ghcr.io || true
+            rm -rf "$DOCKER_CONFIG"
+            unset DOCKER_CONFIG
+
             docker image prune -f --filter "until=168h" || true

@@ -17,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#2563eb',
     icons: [
       {
-        src: IS_SINGLE_TENANT ? '/netamate-logo.png' : '/favicon.png',
+        src: IS_SINGLE_TENANT ? '/netamate-logo.png?v=20260921' : '/favicon.png',
         sizes: 'any',
         type: 'image/png',
       },

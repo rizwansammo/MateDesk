@@ -90,6 +90,9 @@ class Ticket(models.Model):
 
     subject     = models.CharField(max_length=500)
     description = models.TextField(blank=True)
+    # Sanitized HTML from inbound email. Plain description remains authoritative
+    # for search, automation, threading and manual editing.
+    description_html = models.TextField(blank=True, default='')
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     priority    = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')
     level       = models.CharField(max_length=10, blank=True, choices=LEVEL_CHOICES)
@@ -169,6 +172,8 @@ class Reply(models.Model):
     )
     type       = models.CharField(max_length=20, choices=REPLY_TYPE_CHOICES, default='public_reply')
     body       = models.TextField()
+    # Sanitized HTML from inbound email only. Manual/agent replies leave this blank.
+    body_html  = models.TextField(blank=True, default='')
     to_emails  = models.JSONField(default=list, blank=True)
     cc_emails  = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

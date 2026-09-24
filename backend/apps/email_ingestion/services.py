@@ -27,6 +27,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 from . import matemail
+from .email_html import extract_sanitized_html
 from .models import AUTH_METHOD_MATEMAIL
 
 logger = logging.getLogger(__name__)
@@ -415,6 +416,7 @@ def _process_email(tenant, msg):
     subject     = _decode_header_str(msg.get('Subject', ''))
     in_reply_to = (msg.get('In-Reply-To') or '').strip()
     body        = _get_body(msg)
+    body_html   = extract_sanitized_html(msg)
     images      = _get_images(msg)
     cc_emails   = [addr for _, addr in email.utils.getaddresses(
                       [_decode_header_str(msg.get('Cc', '') or '')]
@@ -430,6 +432,7 @@ def _process_email(tenant, msg):
             author=email_author,
             type='public_reply',
             body=body or '(no content)',
+            body_html=body_html,
             cc_emails=cc_emails,
         )
         Ticket.objects.filter(pk=existing.pk).update(updated_at=timezone.now())
@@ -480,6 +483,7 @@ def _process_email(tenant, msg):
             seq=seq,
             subject=clean_subject,
             description=body or '',
+            description_html=body_html,
             status='open',
             priority='normal',
             client_org=org,

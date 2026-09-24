@@ -291,6 +291,11 @@ class TicketViewSet(viewsets.GenericViewSet):
             if field in data:
                 setattr(ticket, field, data[field])
 
+        # A manual edit supersedes the inbound formatted copy. Keep the clean
+        # text as the source of truth and never render stale email HTML.
+        if 'description' in data:
+            ticket.description_html = ''
+
         # resolved_at tracks when the ticket stopped being open work.
         #
         # 'closed' counts as resolved, not as reopening. Previously only 'solved'

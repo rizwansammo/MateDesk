@@ -107,6 +107,14 @@ def extract_sanitized_html(message) -> str:
 
         soup = BeautifulSoup(raw, "html.parser")
 
+        # Remove active/hidden document content together with its text before
+        # Bleach strips tags. Otherwise script text could survive as visible text.
+        for node in list(soup.find_all([
+            "script", "style", "noscript", "iframe", "object", "embed",
+            "form", "input", "button", "meta", "link", "head",
+        ])):
+            node.decompose()
+
         # Outlook often places its reply separator in this element and the
         # quoted message after it as siblings.
         for marker in list(soup.select("#divRplyFwdMsg")):

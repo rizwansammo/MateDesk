@@ -84,7 +84,7 @@ class ReplySerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Reply
-        fields = ['id', 'type', 'body', 'author_name', 'author_id', 'author_email', 'author_is_agent', 'to_emails', 'cc_emails', 'created_at', 'attachments']
+        fields = ['id', 'type', 'body', 'body_html', 'author_name', 'author_id', 'author_email', 'author_is_agent', 'to_emails', 'cc_emails', 'created_at', 'attachments']
 
 
 class TicketListSerializer(serializers.ModelSerializer):
@@ -277,7 +277,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Ticket
         fields = [
-            'id', 'ref', 'subject', 'description', 'status', 'priority', 'level',
+            'id', 'ref', 'subject', 'description', 'description_html', 'status', 'priority', 'level',
             'category', 'tags', 'due_by', 'requester', 'assignee', 'secondary_agents',
             'client_org', 'group', 'replies', 'attachments', 'timelogs', 'merge_info',
             'linked_articles', 'sla_status', 'first_response_at', 'sla_info',

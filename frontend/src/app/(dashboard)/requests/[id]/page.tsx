@@ -117,7 +117,7 @@ function AbsorbedTicketCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [loading,  setLoading]  = useState(false);
-  const [fetched,  setFetched]  = useState<{ description: string; replies: TicketReply[] } | null>(null);
+  const [fetched,  setFetched]  = useState<{ description: string; description_html?: string; replies: TicketReply[] } | null>(null);
   const [fetchErr, setFetchErr] = useState(false);
 
   async function toggle() {
@@ -129,6 +129,7 @@ function AbsorbedTicketCard({
       const data = await apiFetch<TicketDetail>(`/api/tickets/${sourceRef}/`);
       setFetched({
         description: data.description,
+        description_html: data.description_html,
         replies: (data.replies ?? []).filter(r => r.type !== 'system_event'),
       });
     } catch {
@@ -190,14 +191,12 @@ function AbsorbedTicketCard({
             <div style={{ fontSize: 12, color: 'var(--accent-danger-fg)', padding: '4px 0' }}>Failed to load ticket data.</div>
           ) : fetched ? (
             <>
-              {fetched.description && (
+              {(fetched.description || fetched.description_html) && (
                 <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-panel)', padding: '10px 14px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-indigo-fg)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
                     Description
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
-                    {fetched.description}
-                  </div>
+                  <EmailContent html={fetched.description_html} text={fetched.description} />
                 </div>
               )}
               {fetched.replies.length > 0 ? (
@@ -210,6 +209,7 @@ function AbsorbedTicketCard({
                       senderEmail={r.author_email ?? null}
                       authorId={r.author_id ?? null}
                       body={r.body}
+                      bodyHtml={r.body_html}
                       timestamp={r.created_at}
                       isAgent={r.author_is_agent}
                       attachments={r.attachments ?? []}
@@ -310,11 +310,43 @@ function InlineImages({ attachments }: { attachments: TicketAttachment[] }) {
   );
 }
 
+function EmailContent({ html, text, mono = false }: { html?: string; text: string; mono?: boolean }) {
+  if (html) {
+    return (
+      <div
+        style={{
+          fontSize: 13,
+          lineHeight: 1.6,
+          color: '#111827',
+          background: '#ffffff',
+          padding: '12px 14px',
+          overflowX: 'auto',
+          wordBreak: 'normal',
+        }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  }
+
+  return (
+    <div style={{
+      ...(mono ? MONO : {}),
+      fontSize: mono ? 15 : 13,
+      lineHeight: 1.65,
+      color: 'var(--text-2)',
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    }}>
+      {text}
+    </div>
+  );
+}
+
 function MessageBubble({
-  type, sender, senderEmail, authorId, body, timestamp, isAgent, attachments, toEmails, ccEmails,
+  type, sender, senderEmail, authorId, body, bodyHtml, timestamp, isAgent, attachments, toEmails, ccEmails,
 }: {
   type: string; sender: string; senderEmail: string | null; authorId: string | null;
-  body: string; timestamp: string; isAgent: boolean; attachments: TicketAttachment[];
+  body: string; bodyHtml?: string; timestamp: string; isAgent: boolean; attachments: TicketAttachment[];
   toEmails?: string[]; ccEmails?: string[];
 }) {
   const router     = useRouter();
@@ -387,7 +419,7 @@ function MessageBubble({
 
       {/* Body */}
       <div style={{ padding: '12px 16px 14px 16px' }}>
-        <div style={{ fontSize: 13, lineHeight: 1.65, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{body}</div>
+        <EmailContent html={bodyHtml} text={body} />
         <InlineImages attachments={attachments} />
       </div>
     </div>
@@ -1056,9 +1088,9 @@ export default function TicketDetailPage() {
                 {/* Meta grid */}
                 <div style={{
                   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 24px',
-                  paddingBottom: ticket.description ? 14 : 0,
-                  marginBottom: ticket.description ? 14 : 0,
-                  borderBottom: ticket.description ? '1px solid var(--border-subtle)' : 'none',
+                  paddingBottom: (ticket.description || ticket.description_html) ? 14 : 0,
+                  marginBottom: (ticket.description || ticket.description_html) ? 14 : 0,
+                  borderBottom: (ticket.description || ticket.description_html) ? '1px solid var(--border-subtle)' : 'none',
                 }}>
                   <div className="flex items-center gap-2 py-0.5">
                     <User size={13} style={{ color: 'var(--text-1)', flexShrink: 0 }} />
@@ -1099,17 +1131,15 @@ export default function TicketDetailPage() {
                 </div>
 
                 {/* Description */}
-                {(ticket.description || ticket.attachments?.length > 0) && (
+                {(ticket.description || ticket.description_html || ticket.attachments?.length > 0) && (
                   <div style={{ border: '1px solid var(--border-panel)', background: 'var(--bg-deep)' }}>
                     <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border-panel)', background: 'var(--bg-surface)' }}>
                       <FileText size={12} style={{ color: 'var(--accent-info-fg)', flexShrink: 0 }} />
                       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-info-fg)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Description</span>
                     </div>
                     <div className="px-4 py-4">
-                      {ticket.description && (
-                        <div className="leading-relaxed" style={{ ...MONO, fontSize: 15, color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>
-                          {ticket.description}
-                        </div>
+                      {(ticket.description || ticket.description_html) && (
+                        <EmailContent html={ticket.description_html} text={ticket.description} mono />
                       )}
                       {ticket.attachments?.length > 0 && (
                         <InlineImages attachments={ticket.attachments} />
@@ -1409,6 +1439,7 @@ export default function TicketDetailPage() {
                           senderEmail={r.author_email ?? null}
                           authorId={r.author_id ?? null}
                           body={r.body}
+                          bodyHtml={r.body_html}
                           timestamp={r.created_at}
                           isAgent={r.author_is_agent}
                           attachments={r.attachments ?? []}

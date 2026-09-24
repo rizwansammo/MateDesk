@@ -111,7 +111,11 @@ def raw_message(*, token, tenant_id, folder, uid, uid_validity):
     request = urllib.request.Request(
         _base_url() + f"/api/integrations/external/messages/raw/?{query}",
         headers={
-            "Accept": "message/rfc822",
+            # MateMail returns message/rfc822 here, but DRF content negotiation
+            # rejects a request that explicitly advertises only that media type
+            # before the raw HttpResponse view runs. Accept any response type;
+            # the endpoint itself still returns Content-Type: message/rfc822.
+            "Accept": "*/*",
             "Authorization": f"Bearer {token}",
             "X-MateMail-Tenant": str(tenant_id),
         },

@@ -57,6 +57,7 @@ export interface TicketReply {
   id:              string;
   type:            ReplyType;
   body:            string;
+  body_html?:      string;
   author_name:     string;
   author_id:       string | null;
   author_email:    string | null;
@@ -101,6 +102,7 @@ export interface TicketDetail {
   ref:              string;
   subject:          string;
   description:      string;
+  description_html?: string;
   status:           TicketStatus;
   priority:         TicketPriority;
   level:            string;

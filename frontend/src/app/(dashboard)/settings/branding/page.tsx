@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import { BrandingConfig, useLogoSizeStore } from '@/store/useLogoSizeStore';
 import { NetaMateMark } from '@/components/NetaMateMark';
+import { MateDeskMark } from '@/components/MateDeskMark';
 
 type BrandingState = BrandingConfig & {
   md_logo_variant?: string;
@@ -26,7 +27,7 @@ export default function BrandingPage() {
   const [fontSize, setFontSize] = useState(19);
   const [lineHeight, setLineHeight] = useState(0);
   const [themeAware, setThemeAware] = useState(true);
-  const [logoVariant, setLogoVariant] = useState('netamate');
+  const [logoVariant, setLogoVariant] = useState('matedesk');
   const [logoUrl, setLogoUrl] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [removeLogo, setRemoveLogo] = useState(false);
@@ -66,11 +67,11 @@ export default function BrandingPage() {
 
   function chooseOfficialBranding() {
     setWordmark('NetaMate');
-    setLogoVariant('netamate');
+    setLogoVariant('matedesk');
     setLogoUrl('');
     setLogoFile(null);
     setRemoveLogo(true);
-    setThemeAware(true);
+    setThemeAware(false);
   }
 
   async function save() {
@@ -86,9 +87,9 @@ export default function BrandingPage() {
     body.set('md_line_height', String(lineHeight));
     body.set('md_logo_theme_aware', String(themeAware));
 
-    if (logoVariant === 'netamate') body.set('md_logo_variant', 'netamate');
+    if (logoVariant === 'matedesk' || logoVariant === 'netamate') body.set('md_logo_variant', logoVariant);
     if (logoFile) body.set('logo', logoFile);
-    if (removeLogo && !logoFile && logoVariant !== 'netamate') body.set('remove_logo', 'true');
+    if (removeLogo && !logoFile && logoVariant !== 'netamate' && logoVariant !== 'matedesk') body.set('remove_logo', 'true');
 
     try {
       const updated = await apiFetch<BrandingState>('/api/tenant/branding/', {
@@ -155,7 +156,7 @@ export default function BrandingPage() {
               NetaMate HelpDesk branding
             </h1>
             <p style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--text-3)', maxWidth: 640 }}>
-              The HelpDesk accent color stays native to the product. Customize the NetaMate mark,
+              The HelpDesk accent color stays native to the product. Customize the original MateDesk mark,
               wordmark, and sizing used in the workspace. Light mode uses dark branding; dark mode
               uses light branding when theme-aware logo rendering is enabled.
             </p>
@@ -205,15 +206,15 @@ export default function BrandingPage() {
                       onClick={chooseOfficialBranding}
                       style={{
                         height: 36, padding: '0 12px',
-                        border: logoVariant === 'netamate' ? '1px solid #2563eb' : '1px solid var(--border-md)',
-                        background: logoVariant === 'netamate' ? 'var(--accent-info-bg)' : 'var(--bg-input)',
-                        color: logoVariant === 'netamate' ? 'var(--accent-info-fg)' : 'var(--text-2)',
+                        border: logoVariant === 'matedesk' ? '1px solid #2563eb' : '1px solid var(--border-md)',
+                        background: logoVariant === 'matedesk' ? 'var(--accent-info-bg)' : 'var(--bg-input)',
+                        color: logoVariant === 'matedesk' ? 'var(--accent-info-fg)' : 'var(--text-2)',
                         fontSize: 11, fontWeight: 700, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 7,
                       }}
                     >
-                      <NetaMateMark size={18} />
-                      Official NetaMate logo
+                      <MateDeskMark size={18} />
+                      Original MateDesk logo
                     </button>
 
                     <button
@@ -278,7 +279,7 @@ export default function BrandingPage() {
                       display: 'flex', alignItems: 'center', gap: 7,
                     }}
                   >
-                    <RotateCcw size={13} /> Restore NetaMate default
+                    <RotateCcw size={13} /> Restore MateDesk icon
                   </button>
 
                   <button
@@ -392,7 +393,9 @@ function BrandPreview({
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: foreground, minHeight: Math.max(iconSize, fontSize) }}>
         <div style={{ width: iconSize, height: iconSize, display: 'grid', placeItems: 'center', color: foreground }}>
-          {logoVariant === 'netamate' ? (
+          {logoVariant === 'matedesk' ? (
+            <MateDeskMark size={iconSize} />
+          ) : logoVariant === 'netamate' ? (
             <NetaMateMark size={iconSize} />
           ) : logoUrl && themeAware ? (
             <span
@@ -415,7 +418,7 @@ function BrandPreview({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logoUrl} alt="" width={iconSize} height={iconSize} style={{ objectFit: 'contain' }} />
           ) : (
-            <NetaMateMark size={iconSize} />
+            <MateDeskMark size={iconSize} />
           )}
         </div>
         <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize, lineHeight: 1, letterSpacing: '0.035em' }}>

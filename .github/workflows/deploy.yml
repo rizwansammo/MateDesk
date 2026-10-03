@@ -192,7 +192,7 @@ jobs:
             NEXT_PUBLIC_DEPLOYMENT_MODE=single_tenant
             NEXT_PUBLIC_PRODUCT_NAME=NetaMate HelpDesk
             NEXT_PUBLIC_PRODUCT_WORDMARK=NetaMate
-            NEXT_PUBLIC_PRODUCT_LOGO_VARIANT=netamate
+            NEXT_PUBLIC_PRODUCT_LOGO_VARIANT=matedesk
           tags: |
             ${{ env.NETAMATE_HELPDESK_FRONTEND_IMAGE }}:latest
             ${{ env.NETAMATE_HELPDESK_FRONTEND_IMAGE }}:${{ github.sha }}

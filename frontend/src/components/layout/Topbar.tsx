@@ -139,7 +139,7 @@ export function Topbar() {
             </svg>
           )}
         </div>
-        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: -1, transition: 'font-size 0.15s' }}>
+        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize: mdFontSize, lineHeight: resolveLH(mdLineHeight), letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-1)', whiteSpace: 'nowrap', position: 'relative', top: isDedicated ? 0 : -1, display: isDedicated ? 'inline-flex' : undefined, alignItems: isDedicated ? 'center' : undefined, height: isDedicated ? mdIconSize : undefined, transition: 'font-size 0.15s' }}>
           <span style={{ color: isDedicated ? 'var(--brand-monochrome)' : 'inherit' }}>
             {mdCustomText || <>Mate<span style={{ color: 'var(--accent-info-fg)' }}>Desk</span></>}
           </span>

@@ -62,7 +62,7 @@ export const useLogoSizeStore = create<LogoSizeStore>()(
   persist(
     (set) => ({
       mdIconSize:   24,
-      mdFontSize:   19,
+      mdFontSize:   process.env.NEXT_PUBLIC_DEPLOYMENT_MODE === 'single_tenant' ? 22 : 19,
       mdLineHeight: 0,
       mcIconSize:   32,
       mcFontSize:   30,

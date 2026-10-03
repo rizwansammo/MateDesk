@@ -49,6 +49,7 @@ class SingleTenantBrandingTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['md_custom_text'], 'NetaMate')
+        self.assertEqual(data['md_font_size'], 22)
         self.assertEqual(data['md_logo_variant'], 'netamate')
         self.assertTrue(data['md_logo_theme_aware'])
 

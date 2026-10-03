@@ -115,6 +115,10 @@ class TenantBrandingView(APIView):
         data['mc_logo_url'] = tenant.branding_mc_logo.url if tenant.branding_mc_logo else ''
 
         if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'single_tenant':
+            # Slightly larger default for the compact dedicated header; a
+            # workspace owner's explicitly saved font size still takes priority.
+            if 'md_font_size' not in (tenant.branding or {}):
+                data['md_font_size'] = 22
             if tenant.branding_md_logo:
                 # Raw /media/ is deliberately disabled in production. The public
                 # instance logo endpoint is safe for branding and works on login.

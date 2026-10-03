@@ -15,6 +15,7 @@ import { SupportPopup }         from '@/components/chat/SupportPopup';
 import { AgentSupportPanel }    from '@/components/chat/AgentSupportPanel';
 import { DMInboxPanel }         from '@/components/chat/DMInboxPanel';
 import { NetaMateMark }         from '@/components/NetaMateMark';
+import { MateDeskMark }         from '@/components/MateDeskMark';
 
 const MSP_ROLES = new Set(['msp_owner', 'msp_manager', 'msp_agent']);
 
@@ -106,7 +107,9 @@ export function Topbar() {
           transition: 'width 0.15s, height 0.15s',
           color: mdLogoVariant === 'netamate' ? 'var(--brand-monochrome)' : 'var(--text-0)',
         }}>
-          {mdLogoVariant === 'netamate' ? (
+          {mdLogoVariant === 'matedesk' ? (
+            <MateDeskMark size={mdIconSize} />
+          ) : mdLogoVariant === 'netamate' ? (
             <NetaMateMark size={mdIconSize} />
           ) : mdLogoUrl && mdLogoThemeAware ? (
             <span

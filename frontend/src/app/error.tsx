@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
-import { NetaMateMark } from '@/components/NetaMateMark';
+import { MateDeskMark } from '@/components/MateDeskMark';
 
 const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
 const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || (IS_SINGLE_TENANT ? 'NetaMate HelpDesk' : 'MateDesk');
@@ -31,7 +31,7 @@ export default function ErrorPage({
         <div style={{ padding: 30 }}>
           {IS_SINGLE_TENANT && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 24, color: 'var(--brand-monochrome)' }}>
-              <NetaMateMark size={28} />
+              <MateDeskMark size={28} />
               <div>
                 <div style={{ fontFamily: 'var(--font-hemi), sans-serif', fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
                   {PRODUCT_WORDMARK}

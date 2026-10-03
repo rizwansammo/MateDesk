@@ -80,6 +80,20 @@ class SingleTenantBrandingTests(APITestCase):
         self.assertEqual(self.tenant.branding['md_custom_text'], 'NetaMate')
         self.assertEqual(self.tenant.branding['md_icon_size'], 30)
 
+    def test_owner_can_select_original_matedesk_mark(self):
+        self.client.force_authenticate(self.owner)
+        response = self.client.patch(
+            '/api/tenant/branding/',
+            {'md_logo_variant': 'matedesk', 'md_logo_theme_aware': 'false'},
+            format='multipart',
+            HTTP_HOST='helpdesk.netamate.com',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['md_logo_variant'], 'matedesk')
+        self.tenant.refresh_from_db()
+        self.assertEqual(self.tenant.branding['md_logo_variant'], 'matedesk')
+
     def test_agent_cannot_change_branding(self):
         self.client.force_authenticate(self.agent)
         response = self.client.patch(

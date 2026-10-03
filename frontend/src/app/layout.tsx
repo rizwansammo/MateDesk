@@ -4,7 +4,7 @@ import localFont from 'next/font/local';
 import { ThemeProvider } from 'next-themes';
 import { SplashDismiss } from '@/components/SplashDismiss';
 import { PageTransitionOverlay } from '@/components/PageTransitionOverlay';
-import { NetaMateMark } from '@/components/NetaMateMark';
+import { MateDeskMark } from '@/components/MateDeskMark';
 import './globals.css';
 
 const inter = Inter({
@@ -32,7 +32,7 @@ const IS_SINGLE_TENANT = DEPLOYMENT_MODE === 'single_tenant';
 const PRODUCT_NAME = process.env.NEXT_PUBLIC_PRODUCT_NAME || (IS_SINGLE_TENANT ? 'HelpDesk' : 'MateDesk');
 const PRODUCT_WORDMARK = process.env.NEXT_PUBLIC_PRODUCT_WORDMARK || (IS_SINGLE_TENANT ? 'NetaMate' : 'MateDesk');
 const SITE_URL = `https://${APP_DOMAIN}`;
-const NETAMATE_LOGO_URL = '/netamate-logo.png?v=20260921';
+const HELPDESK_LOGO_URL = '/favicon.svg?v=20261003';
 
 export const metadata: Metadata = IS_SINGLE_TENANT ? {
   metadataBase: new URL(SITE_URL),
@@ -48,9 +48,9 @@ export const metadata: Metadata = IS_SINGLE_TENANT ? {
   robots: { index: false, follow: false },
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: NETAMATE_LOGO_URL, type: 'image/png' }],
-    shortcut: [NETAMATE_LOGO_URL],
-    apple: [{ url: NETAMATE_LOGO_URL }],
+    icon: [{ url: HELPDESK_LOGO_URL, type: 'image/svg+xml' }],
+    shortcut: [HELPDESK_LOGO_URL],
+    apple: [{ url: HELPDESK_LOGO_URL }],
   },
   openGraph: {
     type: 'website',
@@ -58,13 +58,13 @@ export const metadata: Metadata = IS_SINGLE_TENANT ? {
     url: SITE_URL,
     title: `${PRODUCT_NAME} — Support Portal`,
     description: 'Secure support workspace for service requests, conversations, and ticket tracking.',
-    images: [{ url: NETAMATE_LOGO_URL, alt: PRODUCT_NAME }],
+    images: [{ url: HELPDESK_LOGO_URL, alt: PRODUCT_NAME }],
   },
   twitter: {
     card: 'summary',
     title: `${PRODUCT_NAME} — Support Portal`,
     description: 'Secure support workspace for service requests, conversations, and ticket tracking.',
-    images: [NETAMATE_LOGO_URL],
+    images: [HELPDESK_LOGO_URL],
   },
 } : {
   // Required for Open Graph and canonical URLs to resolve to absolute addresses.
@@ -211,7 +211,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             >
               {IS_SINGLE_TENANT ? (
-                <NetaMateMark size={40} />
+                <MateDeskMark size={40} />
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" width={30} height={30}>
                   <path d="M3 4h18v9.5l-4.5 0-1.8 2.5h-5.4l-1.8 -2.5h-4.5z" fill="#fff" />

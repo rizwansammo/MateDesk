@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Home, HelpCircle } from 'lucide-react';
-import { NetaMateMark } from '@/components/NetaMateMark';
+import { MateDeskMark } from '@/components/MateDeskMark';
 
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? 'matedesk.pro';
 const IS_SINGLE_TENANT = (process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant') === 'single_tenant';
@@ -39,7 +39,7 @@ export default function NotFound() {
         <div className="p-8">
           {IS_SINGLE_TENANT && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 24, color: 'var(--brand-monochrome)' }}>
-              <NetaMateMark size={28} />
+              <MateDeskMark size={28} />
               <div>
                 <div style={{ fontFamily: 'var(--font-hemi), sans-serif', fontSize: 17, fontWeight: 700, lineHeight: 1 }}>
                   {PRODUCT_WORDMARK}

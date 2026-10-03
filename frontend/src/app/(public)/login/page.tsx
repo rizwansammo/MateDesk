@@ -10,6 +10,7 @@ import { TransitionLink } from '@/components/TransitionLink';
 import { usePageTransition } from '@/store/usePageTransition';
 import { useTheme } from 'next-themes';
 import { NetaMateMark } from '@/components/NetaMateMark';
+import { MateDeskMark } from '@/components/MateDeskMark';
 
 const features = [
   { Icon: Shield, text: 'SAML SSO available on the Scale plan.'         },
@@ -106,7 +107,7 @@ function LoginForm() {
 
   if (isSingleTenant) {
     const isDark = resolvedTheme !== 'light';
-    const logoVariant = instance?.product_logo_variant || process.env.NEXT_PUBLIC_PRODUCT_LOGO_VARIANT || 'netamate';
+    const logoVariant = instance?.product_logo_variant || process.env.NEXT_PUBLIC_PRODUCT_LOGO_VARIANT || 'matedesk';
     const logoUrl = instance?.product_logo_url || '';
     const logoThemeAware = instance?.product_logo_theme_aware ?? true;
 
@@ -189,7 +190,9 @@ function LoginForm() {
                     color: 'var(--brand-monochrome)',
                   }}
                 >
-                  {logoVariant === 'netamate' ? (
+                  {logoVariant === 'matedesk' ? (
+                    <MateDeskMark size={43} />
+                  ) : logoVariant === 'netamate' ? (
                     <NetaMateMark size={43} />
                   ) : logoUrl && logoThemeAware ? (
                     <span
@@ -213,7 +216,7 @@ function LoginForm() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={logoUrl} alt="" width={43} height={43} style={{ objectFit: 'contain' }} />
                   ) : (
-                    <NetaMateMark size={43} />
+                    <MateDeskMark size={43} />
                   )}
                 </div>
 

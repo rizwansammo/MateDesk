@@ -210,7 +210,7 @@ class TenantBrandingView(APIView):
         # Built-in logo variants are only accepted from the curated allow-list.
         requested_variant = (request.data.get('md_logo_variant') or '').strip().lower()
         if requested_variant:
-            if requested_variant not in {'netamate'}:
+            if requested_variant not in {'netamate', 'matedesk'}:
                 return Response({'detail': 'Unsupported built-in logo variant.'}, status=400)
             tenant.branding_md_logo = None
             current['md_logo_variant'] = requested_variant

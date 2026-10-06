@@ -1173,10 +1173,119 @@ select option {
 
 .tenant-header-inner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
   flex-wrap: wrap;
+}
+
+.tenant-header-main {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.tenant-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 0 1 auto;
+}
+
+.tenant-header-action-form,
+.tenant-plan-form {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.tenant-plan-form {
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.tenant-plan-select {
+  box-sizing: border-box;
+  height: 32px;
+  min-width: 146px;
+  padding: 0 30px 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  line-height: 1;
+  outline: none;
+}
+
+.tenant-plan-select:hover,
+.tenant-plan-select:focus {
+  border-color: var(--fg-4);
+}
+
+.tenant-header-actions .btn {
+  box-sizing: border-box;
+  min-height: 32px;
+  height: 32px;
+  padding: 0 11px;
+  justify-content: center;
+  align-self: center;
+}
+
+.tenant-delete-btn {
+  background: #1a0505;
+  color: #f87171;
+  border-color: #7f1d1d;
+}
+
+.tenant-delete-btn:hover {
+  background: #2a0808;
+  color: #fca5a5;
+  border-color: #991b1b;
+}
+
+@media (max-width: 1180px) {
+  .tenant-header-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .tenant-header {
+    padding: 16px;
+  }
+
+  .tenant-header-inner {
+    gap: 16px;
+  }
+
+  .tenant-header-actions {
+    align-items: stretch;
+  }
+
+  .tenant-plan-form {
+    width: 100%;
+  }
+
+  .tenant-plan-select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .tenant-header-action-form {
+    flex: 1 1 auto;
+  }
+
+  .tenant-header-action-form .btn,
+  .tenant-delete-btn {
+    width: 100%;
+  }
 }
 
 .tenant-name {

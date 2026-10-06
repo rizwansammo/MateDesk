@@ -7,7 +7,7 @@
 <!-- Tenant Header -->
 <div class="tenant-header">
   <div class="tenant-header-inner">
-    <div>
+    <div class="tenant-header-main">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <div class="tenant-name">{{ tenant.name }}</div>
         <span class="pill pill-{{ tenant.status }}">{{ tenant.get_status_display }}</span>
@@ -24,20 +24,20 @@
         {% endif %}
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;">
+    <div class="tenant-header-actions">
       <!-- Change Plan -->
-      <form id="plan-change-form" method="post" action="{% url 'platform_admin:tenant_change_plan' pk=tenant.pk %}">
+      <form id="plan-change-form" class="tenant-plan-form" method="post" action="{% url 'platform_admin:tenant_change_plan' pk=tenant.pk %}">
         {% csrf_token %}
-        <select name="plan" style="padding:6px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius);color:var(--fg-2);font-size:12px;">
+        <select name="plan" class="tenant-plan-select" aria-label="Tenant plan">
           <option value="starter" {% if tenant.plan == 'starter' %}selected{% endif %}>Starter</option>
           <option value="professional" {% if tenant.plan == 'professional' %}selected{% endif %}>Professional</option>
           <option value="enterprise" {% if tenant.plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
         </select>
-        <button type="submit" class="btn btn-secondary btn-sm" style="margin-left:4px;">Change Plan</button>
+        <button type="submit" class="btn btn-secondary btn-sm">Change Plan</button>
       </form>
 
       <!-- Reset Password -->
-      <form method="post" action="{% url 'platform_admin:tenant_reset_password' pk=tenant.pk %}"
+      <form class="tenant-header-action-form" method="post" action="{% url 'platform_admin:tenant_reset_password' pk=tenant.pk %}"
             data-confirm="Reset the MSP Owner password for {{ tenant.name }}? The new temporary password will be shown once."
             data-confirm-title="Reset Owner Password"
             data-confirm-btn="Reset Password"
@@ -48,7 +48,7 @@
 
       <!-- Suspend / Reactivate -->
       {% if tenant.status != 'suspended' %}
-      <form method="post" action="{% url 'platform_admin:tenant_deactivate' pk=tenant.pk %}"
+      <form class="tenant-header-action-form" method="post" action="{% url 'platform_admin:tenant_deactivate' pk=tenant.pk %}"
             data-confirm="Suspend {{ tenant.name }}? All users will lose access immediately."
             data-confirm-title="Suspend Tenant"
             data-confirm-btn="Suspend"
@@ -57,7 +57,7 @@
         <button type="submit" class="btn btn-danger btn-sm">Suspend Tenant</button>
       </form>
       {% else %}
-      <form method="post" action="{% url 'platform_admin:tenant_reactivate' pk=tenant.pk %}"
+      <form class="tenant-header-action-form" method="post" action="{% url 'platform_admin:tenant_reactivate' pk=tenant.pk %}"
             data-confirm="Reactivate {{ tenant.name }}?"
             data-confirm-title="Reactivate Tenant"
             data-confirm-btn="Reactivate">
@@ -67,8 +67,7 @@
       {% endif %}
 
       <!-- Delete Tenant -->
-      <button type="button" class="btn btn-sm"
-              style="background:#1a0505;color:#f87171;border:1px solid #7f1d1d;"
+      <button type="button" class="btn btn-sm tenant-delete-btn"
               onclick="document.getElementById('delete-tenant-modal').style.display='flex'">
         Delete Tenant
       </button>

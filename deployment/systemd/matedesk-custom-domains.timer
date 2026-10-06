@@ -1,0 +1,11 @@
+[Unit]
+Description=Run MateDesk custom-domain provisioner
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Persistent=true
+Unit=matedesk-custom-domains.service
+
+[Install]
+WantedBy=timers.target

@@ -110,6 +110,7 @@ class SingleTenantBrandingTests(APITestCase):
 class MultiTenantBrandingWriteProtectionTests(APITestCase):
     @override_settings(
         DEPLOYMENT_MODE='multi_tenant',
+        APP_DOMAIN='matedesk.pro',
         NON_TENANT_HOSTS={'matedesk.pro'},
         ALLOWED_HOSTS=['matedesk.pro', '.matedesk.pro'],
     )

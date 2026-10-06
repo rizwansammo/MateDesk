@@ -21,3 +21,4 @@ cryptography==45.0.4
 bleach==6.2.0
 beautifulsoup4==4.12.3
 tinycss2==1.4.0
+dnspython==2.7.0

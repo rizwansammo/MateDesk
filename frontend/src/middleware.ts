@@ -30,6 +30,11 @@ function go(request: NextRequest, hostname: string, pathname: string, search = '
   return NextResponse.redirect(`${proto}://${h}${pathname}${search}`);
 }
 
+function isCustomDomainHost(host: string): boolean {
+  if (IS_DEV || !APP_DOMAIN) return false;
+  return host !== APP_DOMAIN && !host.endsWith(`.${APP_DOMAIN}`);
+}
+
 function extractSubdomain(request: NextRequest): string | null {
   if (IS_DEV) return null;
   const host   = publicHost(request);
@@ -75,6 +80,12 @@ export function middleware(request: NextRequest) {
 
   const host = publicHost(request);
 
+  // domains.<APP_DOMAIN> is a DNS-only CNAME target for customer hostnames. It
+  // must never render a workspace of its own or become a tenant slug.
+  if (!IS_DEV && APP_DOMAIN && host === `domains.${APP_DOMAIN}`) {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   // ── SINGLE-TENANT MODE ────────────────────────────────────────────────────
   // Dedicated installs live directly on their configured hostname. There is no
   // workspace subdomain handoff and no public tenant registration surface.
@@ -106,6 +117,25 @@ export function middleware(request: NextRequest) {
   }
 
   // ── PRODUCTION ──────────────────────────────────────────────────────────────
+  // A configured external hostname is a workspace origin of its own. Nginx and
+  // the backend TenantDomain mapping decide whether the hostname is authorized;
+  // the frontend must not rewrite it back to <slug>.matedesk.pro.
+  if (isCustomDomainHost(host)) {
+    if (pathname === '/register' || pathname === '/pricing') {
+      return go(request, host, hasAuth ? '/home' : '/login');
+    }
+    if (CALLBACK_ROUTES.has(pathname)) return NextResponse.next();
+
+    if (hasAuth) {
+      if (AUTH_PAGES.has(pathname) || pathname === '/') return go(request, host, '/home');
+      return NextResponse.next();
+    }
+
+    if (pathname === '/login' || pathname === '/logout-complete') return NextResponse.next();
+    const qs = pathname !== '/' ? `?next=${encodeURIComponent(pathname + request.nextUrl.search)}` : '';
+    return go(request, host, '/login', qs);
+  }
+
   const subdomain = extractSubdomain(request);
 
   // ── Tenant subdomain (netamate.matedesk.pro) ────────────────────────────────

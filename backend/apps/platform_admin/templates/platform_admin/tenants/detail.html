@@ -196,6 +196,7 @@
   <a href="#organizations" class="tab-btn" data-tab-target="organizations">Organizations <span class="badge-count">{{ orgs|length }}</span></a>
   <a href="#users" class="tab-btn" data-tab-target="users">Users <span class="badge-count">{{ users|length }}</span></a>
   <a href="#tickets" class="tab-btn" data-tab-target="tickets">Tickets</a>
+  <a href="#domains" class="tab-btn" data-tab-target="domains">Domains <span class="badge-count">{{ custom_domains|length }}</span></a>
   <a href="#branding" class="tab-btn" data-tab-target="branding">Branding</a>
   <a href="#activity" class="tab-btn" data-tab-target="activity">Activity</a>
 </div>
@@ -436,6 +437,174 @@
         {% endfor %}
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- Tab: Custom Domains -->
+<div id="domains" class="tab-panel">
+  <div style="display:grid;grid-template-columns:minmax(320px,0.8fr) minmax(420px,1.4fr);gap:16px;align-items:start;">
+    <div class="panel">
+      <div class="panel-title" style="margin-bottom:6px;">Add Custom Domain</div>
+      <div class="panel-subtitle" style="margin-bottom:16px;">
+        Attach a customer-owned hostname such as <span class="text-mono">helpdesk.example.com</span>.
+        Ownership is verified by DNS before TLS provisioning can start.
+      </div>
+
+      {% if not custom_domains_enabled %}
+      <div style="background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#fbbf24;line-height:1.5;">
+        Runtime routing is currently disabled. Domains can be prepared here, but they will not serve traffic until
+        <span class="text-mono">CUSTOM_DOMAINS_ENABLED=True</span> and the host provisioner are enabled.
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'platform_admin:tenant_domain_add' pk=tenant.pk %}">
+        {% csrf_token %}
+        <div class="field" style="margin-bottom:12px;">
+          <label>Hostname</label>
+          <input type="text" name="domain" required
+                 placeholder="helpdesk.example.com"
+                 autocomplete="off" spellcheck="false"
+                 style="font-family:monospace;" />
+          <div class="field-hint">Hostname only — no https://, path, wildcard, or IP address.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Add Domain</button>
+      </form>
+
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border-soft);">
+        <div class="nav-section-label" style="padding:0 0 8px;">Routing target</div>
+        <div style="font-size:12px;color:var(--fg-3);line-height:1.65;">
+          For a subdomain, create a CNAME to:
+          <div class="text-mono" style="margin-top:5px;color:var(--fg-1);">{{ custom_domain_target }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      {% for domain in custom_domains %}
+      <div class="panel" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="text-mono" style="font-size:14px;font-weight:700;color:var(--fg-1);">{{ domain.domain }}</div>
+              {% if domain.is_primary %}
+              <span class="pill pill-active">Primary</span>
+              {% endif %}
+              <span class="pill {% if domain.status == 'active' %}pill-active{% elif domain.status == 'pending' or domain.status == 'verified' or domain.status == 'provisioning' %}pill-trial{% elif domain.status == 'failed' %}pill-suspended{% else %}pill-disabled{% endif %}">
+                {{ domain.get_status_display }}
+              </span>
+            </div>
+            {% if domain.ssl_issued_at %}
+            <div class="text-muted text-sm" style="margin-top:5px;">TLS issued {{ domain.ssl_issued_at|date:"M j, Y H:i" }} UTC</div>
+            {% endif %}
+          </div>
+          {% if domain.status == 'active' %}
+          <a href="https://{{ domain.domain }}" target="_blank" rel="noopener noreferrer"
+             class="btn btn-secondary btn-sm">Open ↗</a>
+          {% endif %}
+        </div>
+
+        {% if domain.status == 'pending' %}
+        <div style="background:var(--bg-page);border:1px solid var(--border-soft);padding:12px;margin-bottom:12px;">
+          <div class="nav-section-label" style="padding:0 0 8px;">1. Publish ownership TXT record</div>
+          <div style="display:grid;grid-template-columns:90px 1fr;gap:6px 10px;font-size:12px;">
+            <div class="text-muted">Type</div><div class="text-mono">TXT</div>
+            <div class="text-muted">Name</div><div class="text-mono" style="word-break:break-all;">{{ domain.verification_name }}</div>
+            <div class="text-muted">Value</div><div class="text-mono" style="word-break:break-all;">{{ domain.verification_value }}</div>
+          </div>
+          <div class="nav-section-label" style="padding:14px 0 8px;">2. Route the hostname</div>
+          <div style="font-size:12px;color:var(--fg-3);">
+            Preferred for subdomains: <span class="text-mono">{{ domain.domain }} CNAME {{ custom_domain_target }}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <form method="post" action="{% url 'platform_admin:tenant_domain_verify' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm">Verify Ownership</button>
+          </form>
+          <form method="post" action="{% url 'platform_admin:tenant_domain_remove' pk=tenant.pk domain_id=domain.pk %}"
+                data-confirm="Remove {{ domain.domain }}? This only removes the pending domain record."
+                data-confirm-title="Remove Custom Domain"
+                data-confirm-btn="Remove"
+                data-confirm-danger>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Remove</button>
+          </form>
+        </div>
+
+        {% elif domain.status == 'verified' %}
+        <div style="font-size:12px;color:var(--fg-3);line-height:1.6;">
+          Ownership verified. The MateServer provisioner will create the isolated Nginx host and request a dedicated Let's Encrypt certificate.
+        </div>
+
+        {% elif domain.status == 'provisioning' %}
+        <div style="font-size:12px;color:var(--fg-3);line-height:1.6;">
+          Nginx/TLS provisioning is in progress. Existing <span class="text-mono">*.matedesk.pro</span> routing is unaffected.
+        </div>
+
+        {% elif domain.status == 'failed' %}
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.28);padding:10px 12px;margin-bottom:10px;font-size:12px;color:#fca5a5;">
+          {{ domain.last_error|default:"Provisioning failed. Check DNS routing and the MateServer provisioner log." }}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <form method="post" action="{% url 'platform_admin:tenant_domain_retry' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm">Retry Provisioning</button>
+          </form>
+          <form method="post" action="{% url 'platform_admin:tenant_domain_disable' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Disable</button>
+          </form>
+        </div>
+
+        {% elif domain.status == 'active' %}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          {% if not domain.is_primary %}
+          <form method="post" action="{% url 'platform_admin:tenant_domain_set_primary' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Set Primary</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'platform_admin:tenant_domain_disable' pk=tenant.pk domain_id=domain.pk %}"
+                data-confirm="Disable {{ domain.domain }}? The default {{ tenant.slug }}.matedesk.pro workspace remains available."
+                data-confirm-title="Disable Custom Domain"
+                data-confirm-btn="Disable"
+                data-confirm-danger>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+          </form>
+        </div>
+
+        {% elif domain.status == 'disabled' %}
+        <div style="font-size:12px;color:var(--fg-3);line-height:1.6;margin-bottom:10px;">
+          {% if domain.deprovisioned_at %}
+            MateDesk routing removed {{ domain.deprovisioned_at|date:"M j, Y H:i" }} UTC. Certificate files are retained temporarily for rollback.
+          {% else %}
+            Waiting for the host provisioner to remove the MateDesk Nginx route.
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <form method="post" action="{% url 'platform_admin:tenant_domain_reenable' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Re-enable & Re-verify</button>
+          </form>
+          {% if domain.deprovisioned_at and not domain.ssl_issued_at %}
+          <form method="post" action="{% url 'platform_admin:tenant_domain_remove' pk=tenant.pk domain_id=domain.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary btn-sm">Remove Record</button>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="panel">
+        <div class="empty-state">
+          <div class="empty-state-icon">🌐</div>
+          <div class="empty-state-text">No custom domains configured for this tenant.</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </div>
 

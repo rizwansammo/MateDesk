@@ -5,6 +5,8 @@ from rest_framework import serializers, exceptions
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.tenants.domains import RESERVED_PLATFORM_SLUGS
+
 
 class TenantTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
@@ -95,7 +97,10 @@ class TenantRegisterSerializer(serializers.Serializer):
         from apps.tenants.models import Tenant
         slug = slugify(base)[:60] or 'workspace'
         candidate, n = slug, 2
-        while Tenant.objects.filter(slug=candidate).exists():
+        while (
+            candidate in RESERVED_PLATFORM_SLUGS
+            or Tenant.objects.filter(slug=candidate).exists()
+        ):
             candidate = f'{slug}-{n}'
             n += 1
         return candidate
@@ -109,6 +114,8 @@ class TenantRegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Slug must be 3–30 characters: lowercase letters, digits, and hyphens only.'
             )
+        if value in RESERVED_PLATFORM_SLUGS:
+            raise serializers.ValidationError('This workspace slug is reserved by the platform.')
         from apps.tenants.models import Tenant
         if Tenant.objects.filter(slug=value).exists():
             raise serializers.ValidationError('This workspace slug is already taken.')

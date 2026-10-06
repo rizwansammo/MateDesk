@@ -36,14 +36,21 @@ interface AuthState {
   hydrateFromCallback:(access: string, refresh: string) => Promise<void>;
 }
 
+function isCustomDomainHost(host: string, appDomain?: string): boolean {
+  if (!appDomain || appDomain === 'localhost') return false;
+  return host !== appDomain && !host.endsWith(`.${appDomain}`);
+}
+
 function cookieAttrs(maxAge: number): string {
   const d = process.env.NEXT_PUBLIC_APP_DOMAIN;
   const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
   const isProd = Boolean(d && d !== 'localhost');
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const customHost = isCustomDomainHost(host, d);
 
-  // Dedicated installs never need cross-subdomain cookies. Keeping them
-  // host-only avoids coupling the image to a particular customer domain.
-  const domain = mode !== 'single_tenant' && isProd ? `; domain=.${d}` : '';
+  // Shared .matedesk.pro cookies are valid only on the platform domain tree.
+  // Customer-owned hostnames always receive host-only cookies.
+  const domain = mode !== 'single_tenant' && isProd && !customHost ? `; domain=.${d}` : '';
   const secure = isProd ? '; Secure' : '';
   return `path=/${domain}; max-age=${maxAge}; SameSite=Lax${secure}`;
 }
@@ -142,9 +149,13 @@ export const useAuthStore = create<AuthState>()(
           const host   = window.location.hostname;
           const suffix = `.${d}`;
           const slug   = host.endsWith(suffix) ? host.slice(0, -suffix.length) : '';
-          if (slug) {
+          const customHost = isCustomDomainHost(host, d);
+
+          if (slug || customHost) {
             document.cookie = `matedesk_auth=1; ${cookieAttrs(60 * 60 * 24 * 7)}`;
-            document.cookie = `matedesk_tenant=${slug}; ${cookieAttrs(60 * 60 * 24 * 7)}`;
+            if (slug) {
+              document.cookie = `matedesk_tenant=${slug}; ${cookieAttrs(60 * 60 * 24 * 7)}`;
+            }
           }
         }
 
@@ -248,5 +259,11 @@ export function getLogoutUrl(): string {
   const mode = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE ?? 'multi_tenant';
   if (mode === 'single_tenant') return '/logout-complete';
   if (!d || d === 'localhost') return '/login';
+
+  if (typeof window !== 'undefined' && isCustomDomainHost(window.location.hostname, d)) {
+    // localStorage is origin-scoped, so custom-domain logout must complete on
+    // the same hostname to clear the persisted access/refresh tokens.
+    return '/logout-complete';
+  }
   return `https://${d}/logout-complete`;
 }

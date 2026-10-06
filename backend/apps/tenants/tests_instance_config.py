@@ -1,6 +1,6 @@
 from django.test import Client, TestCase, override_settings
 
-from apps.tenants.models import Tenant
+from apps.tenants.models import Tenant, TenantDomain
 
 
 class PublicInstanceConfigTests(TestCase):
@@ -27,6 +27,41 @@ class PublicInstanceConfigTests(TestCase):
         self.assertEqual(data['product_name'], 'MateDesk')
         self.assertEqual(data['tenant_name'], '')
         self.assertTrue(data['public_registration_enabled'])
+
+    @override_settings(
+        DEPLOYMENT_MODE='multi_tenant',
+        APP_DOMAIN='matedesk.pro',
+        PRODUCT_NAME='MateDesk',
+        PRODUCT_WORDMARK='MateDesk',
+        PRODUCT_VENDOR_NAME='NetaMate Solutions',
+        PUBLIC_REGISTRATION_ENABLED=True,
+        CUSTOM_DOMAINS_ENABLED=True,
+        NON_TENANT_HOSTS={'matedesk.pro'},
+        ALLOWED_HOSTS=['*'],
+    )
+    def test_custom_domain_returns_tenant_branding(self):
+        tenant = Tenant.objects.create(
+            name='Example Support',
+            slug='example',
+            is_active=True,
+            branding={'md_custom_text': 'Example HelpDesk'},
+        )
+        TenantDomain.objects.create(
+            tenant=tenant,
+            domain='helpdesk.example.com',
+            status='active',
+        )
+
+        response = self.client.get(
+            '/api/instance/public/',
+            HTTP_HOST='helpdesk.example.com',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['deployment_mode'], 'multi_tenant')
+        self.assertEqual(data['tenant_name'], 'Example Support')
+        self.assertEqual(data['product_wordmark'], 'Example HelpDesk')
 
     @override_settings(
         DEPLOYMENT_MODE='single_tenant',

@@ -1,0 +1,10 @@
+[Unit]
+Description=MateDesk custom-domain Nginx and TLS provisioner
+After=docker.service nginx.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/MateDesk
+ExecStart=/usr/bin/bash /opt/MateDesk/deployment/scripts/sync-custom-domains.sh

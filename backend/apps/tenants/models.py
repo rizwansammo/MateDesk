@@ -1,5 +1,7 @@
+import secrets
 import uuid
 from django.db import models
+from django.db.models import Q
 
 PLAN_STARTER      = 'starter'
 PLAN_PROFESSIONAL = 'professional'
@@ -64,6 +66,74 @@ class Tenant(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.slug})'
+
+
+DOMAIN_STATUS_CHOICES = [
+    ('pending',      'Pending DNS'),
+    ('verified',     'Verified'),
+    ('provisioning', 'Provisioning SSL'),
+    ('active',       'Active'),
+    ('failed',       'Provisioning Failed'),
+    ('disabled',     'Disabled'),
+]
+
+
+def generate_domain_verification_token():
+    return secrets.token_urlsafe(24)
+
+
+class TenantDomain(models.Model):
+    """A customer-owned hostname that routes to one MateDesk tenant."""
+
+    id                 = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant             = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='custom_domains')
+    domain             = models.CharField(max_length=253, unique=True)
+    verification_token = models.CharField(
+        max_length=64,
+        unique=True,
+        default=generate_domain_verification_token,
+        editable=False,
+    )
+    status             = models.CharField(max_length=20, choices=DOMAIN_STATUS_CHOICES, default='pending')
+    is_primary         = models.BooleanField(default=False)
+    verified_at        = models.DateTimeField(null=True, blank=True)
+    ssl_issued_at      = models.DateTimeField(null=True, blank=True)
+    deprovisioned_at   = models.DateTimeField(null=True, blank=True)
+    last_error         = models.TextField(blank=True)
+    created_at         = models.DateTimeField(auto_now_add=True)
+    updated_at         = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tenant_domains'
+        ordering = ['-is_primary', 'domain']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tenant'],
+                condition=Q(is_primary=True),
+                name='one_primary_custom_domain_per_tenant',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['status'], name='tenant_domain_status_idx'),
+        ]
+
+    def save(self, *args, **kwargs):
+        from .domains import normalize_custom_domain, validate_custom_domain
+
+        self.domain = normalize_custom_domain(self.domain)
+        validate_custom_domain(self.domain)
+        super().save(*args, **kwargs)
+
+    @property
+    def verification_name(self):
+        return f'_matedesk-verify.{self.domain}'
+
+    @property
+    def verification_value(self):
+        return f'matedesk-verification={self.verification_token}'
+
+    def __str__(self):
+        return f'{self.domain} → {self.tenant.slug}'
 
 
 class ClientOrganization(models.Model):

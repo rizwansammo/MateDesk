@@ -42,6 +42,11 @@ class TenantMiddleware:
             if h.strip()
         }
         app_domain = (getattr(settings, 'APP_DOMAIN', '') or '').strip().lower().rstrip('.')
+        custom_domain_origin = (
+            getattr(settings, 'CUSTOM_DOMAIN_CNAME_TARGET', '') or ''
+        ).strip().lower().rstrip('.')
+        if custom_domain_origin:
+            non_tenant_hosts.add(custom_domain_origin)
 
         # Operator surfaces are valid only on the MateDesk platform/root host.
         # This is also enforced by generated custom-domain nginx configs.

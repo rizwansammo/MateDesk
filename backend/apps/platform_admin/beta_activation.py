@@ -1,3 +1,4 @@
+from html import escape
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -101,6 +102,8 @@ def activation_expiry_label():
 
 def send_beta_receipt_email(application, support_email=''):
     subject = 'We received your MateDesk Private Beta application'
+    owner_html = escape(application.owner_name)
+    workspace_html = escape(f'{application.requested_slug}.matedesk.pro')
     text_body = (
         f'Hi {application.owner_name},\n\n'
         'Thanks for applying to the MateDesk Private Beta. '
@@ -118,10 +121,10 @@ def send_beta_receipt_email(application, support_email=''):
 </td></tr>
 <tr><td style="padding:30px 28px;">
 <h1 style="margin:0 0 14px;font-size:22px;color:#111827;">Application received</h1>
-<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#4b5563;">Hi {application.owner_name},</p>
+<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#4b5563;">Hi {owner_html},</p>
 <p style="margin:0 0 20px;font-size:14px;line-height:1.65;color:#4b5563;">Thanks for applying to the MateDesk Private Beta. Our team will review your workspace request and email you again when access is approved.</p>
 <div style="padding:14px 16px;background:#f8fafc;border:1px solid #e5e7eb;font-size:13px;color:#4b5563;">
-Requested workspace<br><strong style="color:#111827;">{application.requested_slug}.matedesk.pro</strong>
+Requested workspace<br><strong style="color:#111827;">{workspace_html}</strong>
 </div>
 </td></tr>
 <tr><td style="padding:16px 28px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;">MateDesk · NetaMate Solutions</td></tr>
@@ -143,6 +146,9 @@ def send_beta_activation_email(application, activation_url, support_email=''):
 
     expiry = activation_expiry_label()
     workspace = f'{application.provisioned_tenant.slug}.matedesk.pro'
+    owner_html = escape(application.owner_name)
+    workspace_html = escape(workspace)
+    activation_url_html = escape(activation_url, quote=True)
     subject = "You're approved for the MateDesk Private Beta"
     text_body = (
         f'Hi {application.owner_name},\n\n'
@@ -161,14 +167,14 @@ def send_beta_activation_email(application, activation_url, support_email=''):
 </td></tr>
 <tr><td style="padding:32px 30px;">
 <h1 style="margin:0 0 16px;font-size:24px;color:#f0f6fc;">You're approved.</h1>
-<p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#9da7b3;">Hi {application.owner_name},</p>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:#9da7b3;">Hi {owner_html},</p>
 <p style="margin:0 0 22px;font-size:14px;line-height:1.65;color:#9da7b3;">Your MateDesk Private Beta application has been approved. Your workspace is ready for account activation.</p>
 <div style="padding:14px 16px;background:#0d1117;border:1px solid #30363d;margin-bottom:22px;">
 <div style="font-size:11px;color:#6e7681;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Workspace</div>
-<div style="font-size:14px;color:#f0f6fc;font-family:monospace;">{workspace}</div>
+<div style="font-size:14px;color:#f0f6fc;font-family:monospace;">{workspace_html}</div>
 </div>
-<a href="{activation_url}" style="display:inline-block;padding:12px 18px;background:#1f4ed8;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">Set up your password</a>
-<p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#6e7681;">This is a one-time activation link and expires in {expiry}. If the button does not work, copy this link into your browser:<br><span style="word-break:break-all;color:#8b949e;">{activation_url}</span></p>
+<a href="{activation_url_html}" style="display:inline-block;padding:12px 18px;background:#1f4ed8;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">Set up your password</a>
+<p style="margin:20px 0 0;font-size:12px;line-height:1.6;color:#6e7681;">This is a one-time activation link and expires in {expiry}. If the button does not work, copy this link into your browser:<br><span style="word-break:break-all;color:#8b949e;">{activation_url_html}</span></p>
 </td></tr>
 <tr><td style="padding:16px 30px;border-top:1px solid #21262d;font-size:11px;color:#6e7681;">MateDesk · NetaMate Solutions</td></tr>
 </table></td></tr></table></body></html>"""

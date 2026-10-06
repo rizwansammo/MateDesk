@@ -10,6 +10,14 @@ from apps.users.models import User
     PLATFORM_ADMIN_ENABLED=True,
     DEPLOYMENT_MODE='multi_tenant',
     ALLOWED_HOSTS=['matedesk.pro', 'testserver'],
+    STORAGES={
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    },
 )
 class BetaApplicationAdminReviewTests(TestCase):
     def setUp(self):

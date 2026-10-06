@@ -173,6 +173,34 @@ class PlatformAdminCustomDomainTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(TenantDomain.objects.filter(pk=mapping.pk).exists())
 
+    def test_tenant_delete_is_blocked_while_custom_domain_is_active(self):
+        TenantDomain.objects.create(
+            tenant=self.tenant,
+            domain='helpdesk.example.com',
+            status='active',
+        )
+        response = self.client.post(
+            reverse('platform_admin:tenant_delete', args=[self.tenant.pk]),
+            {'confirm_password': 'StrongPassword-123!'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Tenant.objects.filter(pk=self.tenant.pk).exists())
+
+    def test_scheduled_delete_is_blocked_until_domain_deprovisioned(self):
+        TenantDomain.objects.create(
+            tenant=self.tenant,
+            domain='helpdesk.example.com',
+            status='disabled',
+            deprovisioned_at=None,
+        )
+        response = self.client.post(
+            reverse('platform_admin:tenant_schedule_delete', args=[self.tenant.pk]),
+            {'confirm_password': 'StrongPassword-123!'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.tenant.refresh_from_db()
+        self.assertIsNone(self.tenant.deletion_scheduled_at)
+
     def test_previously_provisioned_domain_is_not_hard_deleted(self):
         from django.utils import timezone
 

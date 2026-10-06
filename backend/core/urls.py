@@ -30,6 +30,7 @@ def public_instance_branding_logo(request):
 def public_instance_config(request):
     tenant = getattr(request, 'tenant', None)
 
+    product_name = settings.PRODUCT_NAME
     product_wordmark = settings.PRODUCT_WORDMARK
     product_logo_url = settings.PRODUCT_LOGO_URL
     product_logo_variant = settings.PRODUCT_LOGO_VARIANT
@@ -38,6 +39,8 @@ def public_instance_config(request):
     if tenant is not None:
         branding = tenant.branding or {}
         product_wordmark = branding.get('md_custom_text') or product_wordmark
+        if branding.get('md_custom_text'):
+            product_name = f'{product_wordmark} HelpDesk'
         product_logo_theme_aware = branding.get(
             'md_logo_theme_aware',
             product_logo_theme_aware,
@@ -52,7 +55,7 @@ def public_instance_config(request):
 
     return JsonResponse({
         'deployment_mode': settings.DEPLOYMENT_MODE,
-        'product_name': settings.PRODUCT_NAME,
+        'product_name': product_name,
         'product_wordmark': product_wordmark,
         'vendor_name': settings.PRODUCT_VENDOR_NAME,
         'product_logo_url': product_logo_url,

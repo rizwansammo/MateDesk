@@ -98,6 +98,7 @@ class TenantDomain(models.Model):
     is_primary         = models.BooleanField(default=False)
     verified_at        = models.DateTimeField(null=True, blank=True)
     ssl_issued_at      = models.DateTimeField(null=True, blank=True)
+    deprovisioned_at   = models.DateTimeField(null=True, blank=True)
     last_error         = models.TextField(blank=True)
     created_at         = models.DateTimeField(auto_now_add=True)
     updated_at         = models.DateTimeField(auto_now=True)

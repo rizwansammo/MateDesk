@@ -68,7 +68,9 @@
             <div style="font-size:12px;font-weight:650;color:var(--fg-1);">Workspace subdomain</div>
             <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">{{ application.requested_slug }}.matedesk.pro</div>
           </div>
-          {% if slug_conflict %}
+          {% if application.provisioned_tenant %}
+            <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Provisioned</span>
+          {% elif slug_conflict %}
             <span style="font-size:10px;font-weight:700;color:#f87171;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);padding:3px 8px;">Conflict</span>
           {% else %}
             <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Available</span>
@@ -79,7 +81,13 @@
             <div style="font-size:12px;font-weight:650;color:var(--fg-1);">Owner email</div>
             <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">{{ application.email }}</div>
           </div>
-          {% if email_conflict %}
+          {% if application.owner_user %}
+            {% if application.owner_user.is_active %}
+              <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Active</span>
+            {% else %}
+              <span style="font-size:10px;font-weight:700;color:#fbbf24;background:var(--accent-yellow-tint);border:1px solid rgba(245,158,11,.25);padding:3px 8px;">Awaiting Activation</span>
+            {% endif %}
+          {% elif email_conflict %}
             <span style="font-size:10px;font-weight:700;color:#f87171;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);padding:3px 8px;">In Use</span>
           {% else %}
             <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Available</span>
@@ -109,8 +117,19 @@
                   style="width:100%;resize:vertical;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border-soft);color:var(--fg-1);font-family:inherit;font-size:12px;line-height:1.55;outline:none;margin-bottom:14px;"></textarea>
 
         <div style="padding:10px 12px;background:rgba(59,109,255,.07);border:1px solid rgba(59,109,255,.20);font-size:11px;color:var(--fg-3);line-height:1.55;margin-bottom:14px;">
-          Approving records the review decision only. Tenant provisioning, password setup, and the activation email are handled by the activation workflow.
+          Approving creates the tenant and inactive MSP Owner account, then sends a one-time password activation link. SMTP failure will not roll back the workspace; the email can be resent safely.
         </div>
+
+        {% if not platform_email_configured %}
+        <div style="padding:10px 12px;background:var(--accent-yellow-tint);border:1px solid rgba(245,158,11,.26);font-size:11px;color:#fbbf24;line-height:1.55;margin-bottom:14px;">
+          Platform Email SMTP is not configured. Approval will still provision the workspace, but the activation email will need to be resent after SMTP is configured.
+        </div>
+        {% else %}
+        <div style="padding:9px 11px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:10.5px;color:var(--fg-3);line-height:1.5;margin-bottom:14px;">
+          Activation email sender: <strong style="color:var(--fg-2);">{{ platform_from_email }}</strong>
+          · Reply-To: <strong style="color:var(--fg-2);">{{ platform_support_email }}</strong>
+        </div>
+        {% endif %}
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="submit" name="decision" value="approve" class="btn btn-success"
@@ -126,9 +145,15 @@
     {% else %}
       <div style="padding:16px;">
         {% if application.status == 'approved' %}
-          <div style="padding:11px 12px;background:var(--accent-blue-tint);border:1px solid rgba(59,109,255,.25);color:var(--accent-blue-hi);font-size:12px;font-weight:650;margin-bottom:14px;">
-            Approved · Awaiting Activation
-          </div>
+          {% if application.provisioned_tenant %}
+            <div style="padding:11px 12px;background:var(--accent-blue-tint);border:1px solid rgba(59,109,255,.25);color:var(--accent-blue-hi);font-size:12px;font-weight:650;margin-bottom:14px;">
+              Approved · Awaiting Owner Activation
+            </div>
+          {% else %}
+            <div style="padding:11px 12px;background:var(--accent-yellow-tint);border:1px solid rgba(245,158,11,.25);color:#fbbf24;font-size:12px;font-weight:650;margin-bottom:14px;">
+              Approved · Provisioning Pending
+            </div>
+          {% endif %}
         {% elif application.status == 'rejected' %}
           <div style="padding:11px 12px;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);color:#f87171;font-size:12px;font-weight:650;margin-bottom:14px;">
             Application Rejected
@@ -156,7 +181,63 @@
             <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Review Note</div>
             <div style="font-size:12px;color:var(--fg-2);line-height:1.6;white-space:pre-wrap;">{{ application.review_note|default:"No review note." }}</div>
           </div>
+
+          {% if application.provisioned_tenant %}
+          <div style="padding-top:12px;border-top:1px solid var(--border-subtle);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Provisioned Workspace</div>
+            <a href="{% url 'platform_admin:tenant_detail' pk=application.provisioned_tenant.pk %}"
+               style="font-family:var(--font-mono);font-size:12px;color:var(--accent-blue-hi);text-decoration:none;">
+              {{ application.provisioned_tenant.slug }}.matedesk.pro
+            </a>
+          </div>
+          {% endif %}
+
+          {% if application.status == 'approved' and application.provisioned_tenant %}
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Activation Email</div>
+            {% if application.activation_email_sent_at %}
+              <div style="font-size:12px;color:#4ade80;">Sent {{ application.activation_email_sent_at|date:"M j, Y H:i" }}</div>
+            {% elif application.activation_email_last_error %}
+              <div style="font-size:12px;color:#f87171;">Delivery failed</div>
+            {% else %}
+              <div style="font-size:12px;color:var(--fg-3);">Not sent yet</div>
+            {% endif %}
+          </div>
+          {% if application.activation_email_last_error %}
+          <div style="padding:9px 10px;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.22);color:#fca5a5;font-size:10.5px;line-height:1.5;word-break:break-word;">
+            {{ application.activation_email_last_error }}
+          </div>
+          {% endif %}
+          {% endif %}
+
+          {% if application.activated_at %}
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Activated At</div>
+            <div style="font-size:12px;color:#4ade80;">{{ application.activated_at|date:"M j, Y H:i" }}</div>
+          </div>
+          {% endif %}
         </div>
+
+        {% if application.status == 'approved' %}
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+            {% if not application.provisioned_tenant %}
+              <form method="post" action="{% url 'platform_admin:beta_application_provision' pk=application.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;"
+                        {% if slug_conflict or email_conflict %}disabled title="Resolve provisioning conflicts first"{% endif %}>
+                  Provision Workspace & Send Activation
+                </button>
+              </form>
+            {% elif application.owner_user and not application.owner_user.is_active %}
+              <form method="post" action="{% url 'platform_admin:beta_application_resend_activation' pk=application.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary" style="width:100%;justify-content:center;">
+                  Resend Activation Email
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
     {% endif %}
   </aside>

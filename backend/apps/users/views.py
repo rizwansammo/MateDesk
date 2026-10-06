@@ -24,6 +24,10 @@ class BetaApplicationRateThrottle(AnonRateThrottle):
     scope = 'beta_apply'
 
 
+class BetaActivationRateThrottle(AnonRateThrottle):
+    scope = 'beta_activate'
+
+
 class TenantLoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class   = TenantTokenObtainPairSerializer
@@ -120,6 +124,21 @@ class PrivateBetaApplicationView(APIView):
                 status=409,
             )
 
+        from django.utils import timezone
+        from apps.platform_admin.beta_activation import send_beta_receipt_email
+        ps = PlatformSettings.load()
+        sent, error = send_beta_receipt_email(application, ps.support_email)
+        if sent:
+            application.receipt_email_sent_at = timezone.now()
+            application.receipt_email_last_error = ''
+        else:
+            application.receipt_email_last_error = error
+        application.save(update_fields=[
+            'receipt_email_sent_at',
+            'receipt_email_last_error',
+            'updated_at',
+        ])
+
         return Response(
             {
                 'id': str(application.id),
@@ -129,6 +148,142 @@ class PrivateBetaApplicationView(APIView):
             },
             status=201,
         )
+
+
+class PrivateBetaActivationView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [BetaActivationRateThrottle]
+
+    @staticmethod
+    def _resolve(uid, token):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
+        from apps.platform_admin.models import BetaApplication
+        from apps.users.models import User
+
+        if not uid or not token:
+            return None, None
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.select_related('tenant').get(
+                pk=user_id,
+                tenant__isnull=False,
+            )
+            application = BetaApplication.objects.select_related(
+                'provisioned_tenant',
+                'owner_user',
+            ).get(
+                owner_user=user,
+                status=BetaApplication.STATUS_APPROVED,
+            )
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist, BetaApplication.DoesNotExist):
+            return None, None
+
+        if user.is_active or not default_token_generator.check_token(user, token):
+            return None, None
+
+        return application, user
+
+    def get(self, request):
+        application, _user = self._resolve(
+            request.query_params.get('uid', ''),
+            request.query_params.get('token', ''),
+        )
+        if not application:
+            return Response(
+                {'detail': 'This activation link is invalid or has expired.'},
+                status=400,
+            )
+
+        return Response({
+            'company_name': application.company_name,
+            'owner_name': application.owner_name,
+            'workspace': f'{application.requested_slug}.matedesk.pro',
+        })
+
+    def post(self, request):
+        uid = str(request.data.get('uid', '')).strip()
+        token = str(request.data.get('token', '')).strip()
+        password = str(request.data.get('password', ''))
+        password_confirm = str(request.data.get('password_confirm', ''))
+
+        if len(password) < 8:
+            return Response(
+                {'detail': 'Password must be at least 8 characters.'},
+                status=400,
+            )
+        if password != password_confirm:
+            return Response(
+                {'detail': 'Passwords do not match.'},
+                status=400,
+            )
+
+        application, user = self._resolve(uid, token)
+        if not application or not user:
+            return Response(
+                {'detail': 'This activation link is invalid or has expired.'},
+                status=400,
+            )
+
+        from django.contrib.auth.tokens import default_token_generator
+        from django.db import transaction
+        from django.utils import timezone
+        from apps.platform_admin.beta_activation import workspace_url
+        from apps.platform_admin.models import AdminActionLog, BetaApplication
+        from apps.users.models import User
+
+        with transaction.atomic():
+            locked_application = BetaApplication.objects.select_for_update().get(
+                pk=application.pk,
+            )
+            locked_user = User.objects.select_for_update().get(pk=user.pk)
+
+            if (
+                locked_application.status != BetaApplication.STATUS_APPROVED
+                or locked_user.is_active
+                or not default_token_generator.check_token(locked_user, token)
+            ):
+                return Response(
+                    {'detail': 'This activation link is invalid or has expired.'},
+                    status=400,
+                )
+
+            locked_user.set_password(password)
+            locked_user.is_active = True
+            locked_user.save(update_fields=['password', 'is_active'])
+
+            locked_application.status = BetaApplication.STATUS_ACTIVATED
+            locked_application.activated_at = timezone.now()
+            locked_application.activation_email_last_error = ''
+            locked_application.save(update_fields=[
+                'status',
+                'activated_at',
+                'activation_email_last_error',
+                'updated_at',
+            ])
+
+            AdminActionLog.objects.create(
+                actor=None,
+                actor_email='system',
+                action='beta_application_activated',
+                target_type='beta_application',
+                target_id=str(locked_application.pk),
+                target_label=locked_application.company_name,
+                target_tenant=locked_application.provisioned_tenant,
+                details={
+                    'email': locked_application.email,
+                    'requested_slug': locked_application.requested_slug,
+                },
+            )
+
+        origin = request.build_absolute_uri('/').rstrip('/')
+        return Response({
+            'status': 'activated',
+            'workspace_url': workspace_url(locked_application, origin),
+            'workspace': f'{locked_application.requested_slug}.matedesk.pro',
+        })
 
 
 class LogoutView(APIView):

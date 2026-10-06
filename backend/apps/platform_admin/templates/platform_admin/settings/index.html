@@ -260,27 +260,27 @@
               </svg>
             </div>
             <div class="sc-head-text">
-              <div class="sc-head-title">Sender Configuration</div>
-              <div class="sc-head-desc">From name and reply-to address.</div>
+              <div class="sc-head-title">Transactional Sender</div>
+              <div class="sc-head-desc">Identity used for platform-generated email.</div>
             </div>
           </div>
           <div class="sc-body">
             <div class="sc-field">
               <div class="sc-field-label">From Name</div>
-              <span class="sc-field-val">MateDesk Platform</span>
+              <span class="sc-field-val">MateDesk</span>
             </div>
             <div class="sc-field">
               <div class="sc-field-label">From Address</div>
-              <span class="sc-field-val">no-reply@matedesk.app</span>
+              <span class="sc-field-val">{% if ps.admin_smtp_from_email %}{{ ps.admin_smtp_from_email }}{% else %}Not configured{% endif %}</span>
             </div>
             <div class="sc-field">
               <div class="sc-field-label">Reply-To</div>
-              <span class="sc-field-val">support@netamate.com</span>
+              <span class="sc-field-val">{{ ps.support_email }}</span>
             </div>
           </div>
         </div>
 
-        <!-- SMTP card — Platform Admin outbound mail (for 2FA OTP emails) -->
+        <!-- SMTP card — platform-level authentication and transactional mail -->
         <div class="sc-card">
           <div class="sc-head">
             <div class="sc-head-icon">
@@ -291,8 +291,8 @@
               </svg>
             </div>
             <div class="sc-head-text">
-              <div class="sc-head-title">Platform Admin SMTP</div>
-              <div class="sc-head-desc">Used for admin 2FA OTP emails.</div>
+              <div class="sc-head-title">Platform Email SMTP</div>
+              <div class="sc-head-desc">Used for platform authentication and transactional emails.</div>
             </div>
             {% if ps.admin_smtp_host and ps.admin_smtp_from_email %}
             <span class="sc-head-badge on">Configured</span>
@@ -331,7 +331,7 @@
                 <div>
                   <div class="sc-kv-key">Username</div>
                   <input type="text" name="admin_smtp_username" value="{{ ps.admin_smtp_username }}"
-                         placeholder="you@gmail.com"
+                         placeholder="notifications@matedesk.pro"
                          style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
                 </div>
                 <div>
@@ -343,13 +343,13 @@
                 <div>
                   <div class="sc-kv-key">From Email</div>
                   <input type="email" name="admin_smtp_from_email" value="{{ ps.admin_smtp_from_email }}"
-                         placeholder="no-reply@yourdomain.com"
+                         placeholder="notifications@matedesk.pro"
                          style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
                 </div>
                 <div>
                   <div class="sc-kv-key">From Name</div>
                   <input type="text" name="admin_smtp_from_name" value="{{ ps.admin_smtp_from_name }}"
-                         placeholder="MateDesk Admin"
+                         placeholder="MateDesk"
                          style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;margin-top:4px;">
                 </div>
               </div>
@@ -416,7 +416,7 @@
       </div>
 
       <div class="sc-notice muted">
-        Platform Admin SMTP is used for 2FA OTP emails sent during login. Tenant outbound mail is configured separately per tenant in their email settings.
+        Platform Email SMTP is used for admin 2FA and platform transactional mail, including Private Beta receipt and activation emails. Tenant outbound mail is configured separately per tenant.
       </div>
 
     </div><!-- /email -->

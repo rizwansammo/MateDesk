@@ -19,6 +19,11 @@ from apps.users.models import User
 from apps.tickets.models import Ticket
 from .auth_utils import platform_admin_required, get_platform_admin, SESSION_KEY, log_action
 from .models import AdminActionLog, BetaApplication, PlatformSettings, PlatformPlan
+from .beta_activation import (
+    build_activation_url,
+    provision_beta_application,
+    send_beta_activation_email,
+)
 from .two_fa_utils import (
     create_email_otp, verify_email_otp, send_otp_email,
     generate_totp_secret, get_totp_provisioning_uri, verify_totp_code, generate_qr_svg,
@@ -332,19 +337,36 @@ def beta_applications_list(request):
 @platform_admin_required
 def beta_application_detail(request, pk):
     application = get_object_or_404(
-        BetaApplication.objects.select_related('reviewed_by'),
+        BetaApplication.objects.select_related(
+            'reviewed_by',
+            'provisioned_tenant',
+            'owner_user',
+        ),
         pk=pk,
     )
     slug_conflict = (
         application.requested_slug in RESERVED_PLATFORM_SLUGS
-        or Tenant.objects.filter(slug=application.requested_slug).exists()
+        or Tenant.objects.filter(slug=application.requested_slug)
+        .exclude(pk=application.provisioned_tenant_id)
+        .exists()
     )
-    email_conflict = User.objects.filter(email__iexact=application.email).exists()
+    email_conflict = (
+        User.objects.filter(email__iexact=application.email)
+        .exclude(pk=application.owner_user_id)
+        .exists()
+    )
+    platform_settings = PlatformSettings.load()
 
     return render(request, 'platform_admin/beta_applications/detail.html', {
         'application': application,
         'slug_conflict': slug_conflict,
         'email_conflict': email_conflict,
+        'platform_email_configured': bool(
+            platform_settings.admin_smtp_host
+            and platform_settings.admin_smtp_from_email
+        ),
+        'platform_from_email': platform_settings.admin_smtp_from_email,
+        'platform_support_email': platform_settings.support_email,
         'page': 'beta_applications',
     })
 
@@ -359,79 +381,260 @@ def beta_application_decide(request, pk):
         messages.error(request, 'Invalid review decision.')
         return redirect('platform_admin:beta_application_detail', pk=pk)
 
-    with transaction.atomic():
-        application = get_object_or_404(
-            BetaApplication.objects.select_for_update(),
-            pk=pk,
-        )
-
-        if application.status != BetaApplication.STATUS_PENDING:
-            messages.warning(
-                request,
-                f'This application has already been reviewed as {application.get_status_display()}.',
+    try:
+        with transaction.atomic():
+            application = get_object_or_404(
+                BetaApplication.objects.select_for_update(),
+                pk=pk,
             )
-            return redirect('platform_admin:beta_application_detail', pk=pk)
 
-        if decision == 'approve':
-            if application.requested_slug in RESERVED_PLATFORM_SLUGS:
-                messages.error(
+            if application.status != BetaApplication.STATUS_PENDING:
+                messages.warning(
                     request,
-                    'Approval blocked: the requested workspace subdomain is reserved by the platform.',
-                )
-                return redirect('platform_admin:beta_application_detail', pk=pk)
-            if Tenant.objects.filter(slug=application.requested_slug).exists():
-                messages.error(
-                    request,
-                    'Approval blocked: the requested workspace subdomain is no longer available.',
-                )
-                return redirect('platform_admin:beta_application_detail', pk=pk)
-            if User.objects.filter(email__iexact=application.email).exists():
-                messages.error(
-                    request,
-                    'Approval blocked: an account with this email now exists on the platform.',
+                    f'This application has already been reviewed as {application.get_status_display()}.',
                 )
                 return redirect('platform_admin:beta_application_detail', pk=pk)
 
-            application.status = BetaApplication.STATUS_APPROVED
-            action = 'beta_application_approved'
-            verb = 'approved'
-        else:
-            application.status = BetaApplication.STATUS_REJECTED
-            action = 'beta_application_rejected'
-            verb = 'rejected'
+            if decision == 'approve':
+                if application.requested_slug in RESERVED_PLATFORM_SLUGS:
+                    raise ValueError(
+                        'Approval blocked: the requested workspace subdomain is reserved by the platform.'
+                    )
+                if Tenant.objects.filter(slug=application.requested_slug).exists():
+                    raise ValueError(
+                        'Approval blocked: the requested workspace subdomain is no longer available.'
+                    )
+                if User.objects.filter(email__iexact=application.email).exists():
+                    raise ValueError(
+                        'Approval blocked: an account with this email now exists on the platform.'
+                    )
 
-        application.review_note = review_note
-        application.reviewed_at = timezone.now()
-        application.reviewed_by = request.platform_admin
+                application.status = BetaApplication.STATUS_APPROVED
+                action = 'beta_application_approved'
+            else:
+                application.status = BetaApplication.STATUS_REJECTED
+                action = 'beta_application_rejected'
+
+            application.review_note = review_note
+            application.reviewed_at = timezone.now()
+            application.reviewed_by = request.platform_admin
+            application.save(update_fields=[
+                'status',
+                'review_note',
+                'reviewed_at',
+                'reviewed_by',
+                'updated_at',
+            ])
+
+            log_action(
+                request,
+                action,
+                'beta_application',
+                application.pk,
+                application.company_name,
+                None,
+                {
+                    'email': application.email,
+                    'requested_slug': application.requested_slug,
+                    'status': application.status,
+                },
+            )
+
+            if decision == 'approve':
+                tenant, owner = provision_beta_application(application)
+                log_action(
+                    request,
+                    'beta_workspace_provisioned',
+                    'tenant',
+                    tenant.pk,
+                    tenant.name,
+                    tenant,
+                    {
+                        'application_id': str(application.pk),
+                        'owner_email': owner.email,
+                    },
+                )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+
+    if decision == 'reject':
+        messages.success(request, f'"{application.company_name}" application rejected.')
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+
+    origin = request.build_absolute_uri('/').rstrip('/')
+    activation_url = build_activation_url(application, origin)
+    ps = PlatformSettings.load()
+    sent, error = send_beta_activation_email(application, activation_url, ps.support_email)
+
+    if sent:
+        application.activation_email_sent_at = timezone.now()
+        application.activation_email_last_error = ''
         application.save(update_fields=[
-            'status',
-            'review_note',
-            'reviewed_at',
-            'reviewed_by',
+            'activation_email_sent_at',
+            'activation_email_last_error',
             'updated_at',
         ])
-
         log_action(
             request,
-            action,
+            'beta_activation_email_sent',
             'beta_application',
             application.pk,
             application.company_name,
-            None,
-            {
-                'email': application.email,
-                'requested_slug': application.requested_slug,
-                'status': application.status,
-            },
+            application.provisioned_tenant,
+            {'email': application.email},
         )
-
-    if decision == 'approve':
         messages.success(
             request,
-            f'"{application.company_name}" approved. Workspace provisioning is awaiting activation.',
+            f'"{application.company_name}" approved. Workspace provisioned and activation email sent.',
         )
     else:
-        messages.success(request, f'"{application.company_name}" application rejected.')
+        application.activation_email_last_error = error
+        application.save(update_fields=[
+            'activation_email_last_error',
+            'updated_at',
+        ])
+        log_action(
+            request,
+            'beta_activation_email_failed',
+            'beta_application',
+            application.pk,
+            application.company_name,
+            application.provisioned_tenant,
+            {'email': application.email, 'error': error},
+        )
+        messages.warning(
+            request,
+            f'"{application.company_name}" was approved and provisioned, but the activation email could not be sent. You can resend it from this page.',
+        )
+
+    return redirect('platform_admin:beta_application_detail', pk=pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def beta_application_provision(request, pk):
+    try:
+        with transaction.atomic():
+            application = get_object_or_404(
+                BetaApplication.objects.select_for_update(),
+                pk=pk,
+            )
+            if application.status != BetaApplication.STATUS_APPROVED:
+                raise ValueError('Only approved applications can be provisioned.')
+            if application.provisioned_tenant_id or application.owner_user_id:
+                raise ValueError('This application has already been provisioned.')
+
+            tenant, owner = provision_beta_application(application)
+            log_action(
+                request,
+                'beta_workspace_provisioned',
+                'tenant',
+                tenant.pk,
+                tenant.name,
+                tenant,
+                {
+                    'application_id': str(application.pk),
+                    'owner_email': owner.email,
+                },
+            )
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+
+    origin = request.build_absolute_uri('/').rstrip('/')
+    activation_url = build_activation_url(application, origin)
+    ps = PlatformSettings.load()
+    sent, error = send_beta_activation_email(application, activation_url, ps.support_email)
+    if sent:
+        application.activation_email_sent_at = timezone.now()
+        application.activation_email_last_error = ''
+        application.save(update_fields=[
+            'activation_email_sent_at',
+            'activation_email_last_error',
+            'updated_at',
+        ])
+        log_action(
+            request,
+            'beta_activation_email_sent',
+            'beta_application',
+            application.pk,
+            application.company_name,
+            application.provisioned_tenant,
+            {'email': application.email},
+        )
+        messages.success(request, 'Workspace provisioned and activation email sent.')
+    else:
+        application.activation_email_last_error = error
+        application.save(update_fields=['activation_email_last_error', 'updated_at'])
+        log_action(
+            request,
+            'beta_activation_email_failed',
+            'beta_application',
+            application.pk,
+            application.company_name,
+            application.provisioned_tenant,
+            {'email': application.email, 'error': error},
+        )
+        messages.warning(request, 'Workspace provisioned, but activation email delivery failed.')
+
+    return redirect('platform_admin:beta_application_detail', pk=pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def beta_application_resend_activation(request, pk):
+    application = get_object_or_404(
+        BetaApplication.objects.select_related('provisioned_tenant', 'owner_user'),
+        pk=pk,
+    )
+
+    if application.status != BetaApplication.STATUS_APPROVED:
+        messages.error(request, 'Activation email can only be sent for approved applications.')
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+    if not application.provisioned_tenant_id or not application.owner_user_id:
+        messages.error(request, 'Provision the workspace before sending an activation email.')
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+    if application.owner_user.is_active:
+        messages.info(request, 'The owner account is already active.')
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+
+    origin = request.build_absolute_uri('/').rstrip('/')
+    activation_url = build_activation_url(application, origin)
+    ps = PlatformSettings.load()
+    sent, error = send_beta_activation_email(application, activation_url, ps.support_email)
+
+    if sent:
+        application.activation_email_sent_at = timezone.now()
+        application.activation_email_last_error = ''
+        application.save(update_fields=[
+            'activation_email_sent_at',
+            'activation_email_last_error',
+            'updated_at',
+        ])
+        log_action(
+            request,
+            'beta_activation_email_sent',
+            'beta_application',
+            application.pk,
+            application.company_name,
+            application.provisioned_tenant,
+            {'email': application.email, 'resend': True},
+        )
+        messages.success(request, f'Activation email resent to {application.email}.')
+    else:
+        application.activation_email_last_error = error
+        application.save(update_fields=['activation_email_last_error', 'updated_at'])
+        log_action(
+            request,
+            'beta_activation_email_failed',
+            'beta_application',
+            application.pk,
+            application.company_name,
+            application.provisioned_tenant,
+            {'email': application.email, 'error': error, 'resend': True},
+        )
+        messages.error(request, 'Activation email could not be sent. Check Platform Email SMTP settings.')
 
     return redirect('platform_admin:beta_application_detail', pk=pk)
 

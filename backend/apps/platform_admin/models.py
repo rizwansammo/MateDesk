@@ -22,6 +22,10 @@ ACTION_CHOICES = [
     ('platform_settings_updated', 'Platform Settings Updated'),
     ('beta_application_approved', 'Beta Application Approved'),
     ('beta_application_rejected', 'Beta Application Rejected'),
+    ('beta_workspace_provisioned', 'Beta Workspace Provisioned'),
+    ('beta_activation_email_sent', 'Beta Activation Email Sent'),
+    ('beta_activation_email_failed', 'Beta Activation Email Failed'),
+    ('beta_application_activated', 'Beta Application Activated'),
     ('plan_updated', 'Plan Updated'),
     ('admin_login', 'Admin Login'),
     ('admin_login_failed', 'Admin Login Failed'),
@@ -106,6 +110,25 @@ class BetaApplication(models.Model):
         blank=True,
         related_name='beta_applications_reviewed',
     )
+    provisioned_tenant = models.OneToOneField(
+        'tenants.Tenant',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='beta_application',
+    )
+    owner_user = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='beta_application_owner',
+    )
+    receipt_email_sent_at = models.DateTimeField(null=True, blank=True)
+    receipt_email_last_error = models.TextField(blank=True, default='')
+    activation_email_sent_at = models.DateTimeField(null=True, blank=True)
+    activation_email_last_error = models.TextField(blank=True, default='')
+    activated_at = models.DateTimeField(null=True, blank=True)
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 

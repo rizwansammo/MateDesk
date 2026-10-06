@@ -43,13 +43,13 @@ function LoginForm() {
   const [instance, setInstance] = useState<InstanceConfig | null>(null);
 
   useEffect(() => {
-    if (!isSingleTenant) return;
     fetch('/api/instance/public/')
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setInstance(data as InstanceConfig); })
       .catch(() => {});
-  }, [isSingleTenant]);
+  }, []);
 
+  const isTenantPortal = isSingleTenant || Boolean(instance?.tenant_name);
   const productName = instance?.product_name
     || process.env.NEXT_PUBLIC_PRODUCT_NAME
     || (isSingleTenant ? 'HelpDesk' : 'MateDesk');
@@ -57,13 +57,13 @@ function LoginForm() {
     || process.env.NEXT_PUBLIC_PRODUCT_WORDMARK
     || (isSingleTenant ? 'NetaMate' : 'MateDesk');
   const vendorName = instance?.vendor_name || 'NetaMate Solutions';
-  const loginHeadline = instance?.login_headline || (isSingleTenant
+  const loginHeadline = instance?.login_headline || (isTenantPortal
     ? `Welcome to ${productName}.`
     : 'Welcome back.');
-  const loginSubtitle = instance?.login_subtitle || (isSingleTenant
+  const loginSubtitle = instance?.login_subtitle || (isTenantPortal
     ? 'Sign in to access your support workspace.'
     : "Sign in with your email and password. We'll take you straight to your workspace.");
-  const loginFeatures = isSingleTenant
+  const loginFeatures = isTenantPortal
     ? [
         { Icon: Shield, text: 'Secure access to your support workspace.' },
         { Icon: Key, text: 'Your requests and conversations stay in one place.' },
@@ -71,13 +71,19 @@ function LoginForm() {
       ]
     : features;
 
+  useEffect(() => {
+    if (isTenantPortal && productName) {
+      document.title = `${productName} — Support Portal`;
+    }
+  }, [isTenantPortal, productName]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     clearError();
     try {
       await login(email.trim(), password);
 
-      if (isSingleTenant) {
+      if (isTenantPortal) {
         const signedInUser = useAuthStore.getState().user;
         const isStaff = ['msp_owner', 'msp_manager', 'msp_agent'].includes(signedInUser?.role ?? '');
         const dest = searchParams.get('next') ?? (isStaff ? '/home' : '/requests');
@@ -105,7 +111,7 @@ function LoginForm() {
     transition: 'border-color 120ms',
   };
 
-  if (isSingleTenant) {
+  if (isTenantPortal) {
     const isDark = resolvedTheme !== 'light';
     const logoVariant = instance?.product_logo_variant || process.env.NEXT_PUBLIC_PRODUCT_LOGO_VARIANT || 'matedesk';
     const logoUrl = instance?.product_logo_url || '';
@@ -332,7 +338,7 @@ function LoginForm() {
                   textAlign: 'center',
                 }}
               >
-                Secure access for NetaMate staff, agents, and supported clients.
+                Secure access for {instance?.tenant_name || productWordmark} staff, agents, and supported clients.
               </div>
             </div>
 

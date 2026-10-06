@@ -56,6 +56,7 @@ function LoginForm() {
   const productWordmark = instance?.product_wordmark
     || process.env.NEXT_PUBLIC_PRODUCT_WORDMARK
     || (isSingleTenant ? 'NetaMate' : 'MateDesk');
+  const wordmarkAlreadyIncludesHelpDesk = productWordmark.trim().toLowerCase().endsWith('helpdesk');
   const vendorName = instance?.vendor_name || 'NetaMate Solutions';
   const loginHeadline = instance?.login_headline || (isTenantPortal
     ? `Welcome to ${productName}.`
@@ -238,7 +239,9 @@ function LoginForm() {
                   }}
                 >
                   <span style={{ color: 'var(--brand-monochrome)' }}>{productWordmark}</span>
-                  <span style={{ color: 'var(--accent-info-fg)' }}> HelpDesk</span>
+                  {!wordmarkAlreadyIncludesHelpDesk && (
+                    <span style={{ color: 'var(--accent-info-fg)' }}> HelpDesk</span>
+                  )}
                 </div>
                 <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.55, color: 'var(--text-3)' }}>
                   Sign in to access your support workspace.

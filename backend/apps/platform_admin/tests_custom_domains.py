@@ -2,6 +2,7 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
+from django.http import HttpResponse
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -33,7 +34,9 @@ class PlatformAdminCustomDomainTests(TestCase):
             status='active',
         )
 
-    def test_platform_admin_cannot_create_reserved_domains_tenant(self):
+    @patch('apps.platform_admin.views.render')
+    def test_platform_admin_cannot_create_reserved_domains_tenant(self, render):
+        render.return_value = HttpResponse('validation error', status=200)
         response = self.client.post(
             reverse('platform_admin:tenant_create'),
             {
@@ -47,6 +50,7 @@ class PlatformAdminCustomDomainTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Tenant.objects.filter(slug='domains').exists())
+        self.assertIn('reserved by the platform', str(render.call_args.args[2]['errors']))
 
     def test_add_domain_creates_pending_mapping(self):
         response = self.client.post(

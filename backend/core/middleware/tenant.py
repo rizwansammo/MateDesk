@@ -59,6 +59,12 @@ class TenantMiddleware:
             request.tenant = None
             return self.get_response(request)
 
+        # Local/test deployments may intentionally omit APP_DOMAIN. Preserve the
+        # existing same-host development behaviour; production sets APP_DOMAIN.
+        if not app_domain and not getattr(settings, 'CUSTOM_DOMAINS_ENABLED', False):
+            request.tenant = None
+            return self.get_response(request)
+
         # Dynamic host validation normally resolved this already. The fallback
         # lookup keeps TenantMiddleware independently testable and protects
         # deployments where middleware ordering is customized.

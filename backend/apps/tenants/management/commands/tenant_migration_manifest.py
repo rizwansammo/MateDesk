@@ -19,6 +19,10 @@ def _hash(value):
     return hashlib.sha256(_norm(value).encode('utf-8')).hexdigest()
 
 
+def _hash_exact(value):
+    return hashlib.sha256((value or '').strip().encode('utf-8')).hexdigest()
+
+
 def _org_match_value(org):
     domain = _norm(org.domain)
     if domain:
@@ -133,7 +137,7 @@ class Command(BaseCommand):
                 {
                     'id': str(t.id),
                     'ref': t.ticket_ref,
-                    'subject_h': _hash(t.subject),
+                    'subject_h': _hash_exact(t.subject),
                     'org_match_h': org_match.get(t.client_org_id, ''),
                     'requester_h': user_match.get(t.requester_id, ''),
                     'assignee_h': user_match.get(t.assignee_id, ''),
@@ -148,7 +152,7 @@ class Command(BaseCommand):
                     'ticket_ref': r.ticket.ticket_ref,
                     'author_h': user_match.get(r.author_id, ''),
                     'type': r.type,
-                    'body_h': _hash(r.body),
+                    'body_h': _hash_exact(r.body),
                     'created_at': r.created_at.isoformat(),
                 }
                 for r in replies
@@ -171,7 +175,7 @@ class Command(BaseCommand):
                         a.ticket.ticket_ref if a.ticket_id
                         else a.reply.ticket.ticket_ref if a.reply_id else ''
                     ),
-                    'path_h': _hash(a.file.name if a.file else ''),
+                    'path_h': _hash_exact(a.file.name if a.file else ''),
                     'size': a.size,
                     'storage_exists': bool(a.file and a.file.storage.exists(a.file.name)),
                 }
@@ -179,7 +183,7 @@ class Command(BaseCommand):
             ],
             'processed_emails': [
                 {
-                    'message_h': _hash(e.message_id),
+                    'message_h': _hash_exact(e.message_id),
                     'ticket_ref': e.ticket.ticket_ref if e.ticket_id else '',
                     'reply_id': str(e.reply_id or ''),
                     'processed_at': e.processed_at.isoformat(),

@@ -7,4 +7,4 @@ Wants=network-online.target
 Type=oneshot
 User=root
 WorkingDirectory=/opt/MateDesk
-ExecStart=/opt/MateDesk/deployment/scripts/sync-custom-domains.sh
+ExecStart=/usr/bin/bash /opt/MateDesk/deployment/scripts/sync-custom-domains.sh

@@ -1053,8 +1053,8 @@ export default function TicketDetailPage() {
       <div className="flex-1 overflow-hidden flex">
 
         {/* ── Left panel ───────────────────────────────────────────────────── */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
-          <div style={{ padding: '14px 6px 32px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="ticket-detail-scroll flex-1 min-w-0 overflow-y-auto">
+          <div style={{ padding: '4px 2px 6px 4px', display: 'flex', flexDirection: 'column', gap: 4 }}>
 
             {/* Card 1: Title + meta + description */}
             <div style={cardStyle}>
@@ -1456,16 +1456,20 @@ export default function TicketDetailPage() {
         </div>
 
         {isMSP && <>
-        {/* Vertical split divider — draggable, no visual handle */}
+        {/* Vertical split divider — 1px visible rule with a wider invisible drag target */}
         <div
-          onMouseDown={onDividerMouseDown}
-          style={{ width: 3, flexShrink: 0, background: 'var(--border-subtle)', cursor: 'col-resize', zIndex: 10, transition: 'background 0.15s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(37,99,235,0.4)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)'; }}
-        />
+          style={{ width: 1, flexShrink: 0, position: 'relative', background: 'var(--border-subtle)', zIndex: 10, transition: 'background 0.15s' }}
+        >
+          <div
+            onMouseDown={onDividerMouseDown}
+            style={{ position: 'absolute', top: 0, bottom: 0, left: -3, right: -3, cursor: 'col-resize' }}
+            onMouseEnter={e => { const divider = e.currentTarget.parentElement; if (divider) divider.style.background = 'rgba(37,99,235,0.45)'; }}
+            onMouseLeave={e => { const divider = e.currentTarget.parentElement; if (divider) divider.style.background = 'var(--border-subtle)'; }}
+          />
+        </div>
 
         {/* ── Right sidebar ─────────────────────────────────────────────────── */}
-        <div style={{ width: sidebarWidth, flexShrink: 0, overflowY: 'auto', background: 'var(--bg-base)', padding: '14px 8px 32px 6px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="ticket-detail-scroll" style={{ width: sidebarWidth, flexShrink: 0, overflowY: 'auto', background: 'var(--bg-base)', padding: '4px 3px 6px 2px', display: 'flex', flexDirection: 'column', gap: 4 }}>
 
           {/* PROPERTIES card */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>

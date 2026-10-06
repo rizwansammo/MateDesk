@@ -6,6 +6,7 @@ from django.test import RequestFactory, TestCase, override_settings
 
 from apps.tenants.domains import normalize_custom_domain, validate_custom_domain, verify_domain_ownership
 from apps.tenants.models import Tenant, TenantDomain
+from apps.users.models import User
 from core.middleware.host import DynamicHostValidationMiddleware
 from core.middleware.tenant import TenantMiddleware
 
@@ -106,6 +107,39 @@ class CustomDomainModelAndRoutingTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(captured['tenant'].pk, self.tenant.pk)
+
+    def test_custom_domain_login_and_authenticated_api(self):
+        TenantDomain.objects.create(
+            tenant=self.tenant,
+            domain='helpdesk.example.com',
+            status='active',
+        )
+        user = User.objects.create_user(
+            tenant=self.tenant,
+            email='owner@example.com',
+            password='StrongPassword-123!',
+            first_name='Owner',
+            role='msp_owner',
+            is_active=True,
+        )
+
+        login = self.client.post(
+            '/api/auth/login/',
+            {'email': user.email, 'password': 'StrongPassword-123!'},
+            content_type='application/json',
+            HTTP_HOST='helpdesk.example.com',
+        )
+        self.assertEqual(login.status_code, 200)
+        payload = login.json()
+        self.assertEqual(payload['user']['tenant_slug'], self.tenant.slug)
+
+        me = self.client.get(
+            '/api/auth/me/',
+            HTTP_HOST='helpdesk.example.com',
+            HTTP_AUTHORIZATION=f"Bearer {payload['access']}",
+        )
+        self.assertEqual(me.status_code, 200)
+        self.assertEqual(me.json()['tenant_slug'], self.tenant.slug)
 
     def test_operator_console_is_blocked_on_custom_domain(self):
         TenantDomain.objects.create(

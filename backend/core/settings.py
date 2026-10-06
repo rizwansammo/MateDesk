@@ -46,11 +46,11 @@ SILENCED_SYSTEM_CHECKS = ['auth.E003', 'auth.W004']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # Dynamic custom hosts must be validated before middleware that may call
-    # request.get_host(). It is a no-op unless CUSTOM_DOMAINS_ENABLED=True.
-    'core.middleware.host.DynamicHostValidationMiddleware',
     # WhiteNoise must come immediately after SecurityMiddleware
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Dynamic custom hosts are validated before CORS/CSRF/auth middleware.
+    # It is a no-op unless CUSTOM_DOMAINS_ENABLED=True.
+    'core.middleware.host.DynamicHostValidationMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

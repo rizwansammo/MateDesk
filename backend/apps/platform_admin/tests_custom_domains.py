@@ -2,7 +2,7 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.core.management import call_command
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from apps.platform_admin.auth_utils import SESSION_KEY
@@ -178,6 +178,7 @@ class PlatformAdminCustomDomainTests(TestCase):
         self.assertTrue(TenantDomain.objects.filter(pk=mapping.pk).exists())
 
 
+@override_settings(CUSTOM_DOMAINS_ENABLED=True)
 class CustomDomainProvisionerCommandTests(TestCase):
     def setUp(self):
         self.tenant = Tenant.objects.create(

@@ -7,6 +7,7 @@ from django.test import RequestFactory, TestCase, override_settings
 from apps.tenants.domains import normalize_custom_domain, validate_custom_domain, verify_domain_ownership
 from apps.tenants.models import Tenant, TenantDomain
 from apps.users.models import User
+from apps.users.serializers import TenantRegisterSerializer
 from core.middleware.host import DynamicHostValidationMiddleware
 from core.middleware.tenant import TenantMiddleware
 
@@ -186,6 +187,23 @@ class CustomDomainModelAndRoutingTests(TestCase):
 
         response = guard(self.factory.get('/login', HTTP_HOST='unknown.example.net'))
         self.assertEqual(response.status_code, 404)
+
+
+class ReservedPlatformSlugTests(TestCase):
+    def test_registration_rejects_domains_slug(self):
+        serializer = TenantRegisterSerializer(data={
+            'company_name': 'Domains',
+            'owner_name': 'Owner Example',
+            'email': 'owner@reserved.example',
+            'password': 'StrongPassword-123!',
+            'tenant_slug': 'domains',
+        })
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('tenant_slug', serializer.errors)
+
+    def test_derived_slug_skips_reserved_platform_label(self):
+        serializer = TenantRegisterSerializer()
+        self.assertEqual(serializer._unique_slug('domains'), 'domains-2')
 
 
 class CustomDomainNormalizationTests(TestCase):

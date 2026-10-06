@@ -1,10 +1,11 @@
 from django.urls import path
 
-from .views import PrivateBetaApplicationView, TenantLoginView, TenantTokenRefreshView, TenantRegisterView, MeView, LogoutView, UserDetailView, UserListView, StaffCreateView, ResetPasswordView
+from .views import PrivateBetaActivationView, PrivateBetaApplicationView, TenantLoginView, TenantTokenRefreshView, TenantRegisterView, MeView, LogoutView, UserDetailView, UserListView, StaffCreateView, ResetPasswordView
 
 urlpatterns = [
     path('auth/register/', TenantRegisterView.as_view(),     name='auth_register'),
     path('beta/apply/',    PrivateBetaApplicationView.as_view(), name='beta_apply'),
+    path('beta/activate/', PrivateBetaActivationView.as_view(), name='beta_activate'),
     path('auth/login/',    TenantLoginView.as_view(),        name='auth_login'),
     path('auth/refresh/',  TenantTokenRefreshView.as_view(), name='auth_refresh'),
     path('auth/logout/',   LogoutView.as_view(),             name='auth_logout'),

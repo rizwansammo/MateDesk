@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from apps.tenants.domains import normalize_custom_domain, validate_custom_domain, verify_domain_ownership
+from apps.tenants.domains import RESERVED_PLATFORM_SLUGS, normalize_custom_domain, validate_custom_domain, verify_domain_ownership
 from apps.tenants.models import Tenant, ClientOrganization, TenantDomain
 from apps.users.models import User
 from apps.tickets.models import Ticket
@@ -352,7 +352,9 @@ def tenant_create(request):
             errors.append('Tenant slug is required.')
         if not owner_email:
             errors.append('Owner email is required.')
-        if slug and Tenant.objects.filter(slug=slug).exists():
+        if slug in RESERVED_PLATFORM_SLUGS:
+            errors.append(f'Slug "{slug}" is reserved by the platform.')
+        elif slug and Tenant.objects.filter(slug=slug).exists():
             errors.append(f'Slug "{slug}" is already taken.')
         if owner_email and User.objects.filter(
             email=owner_email, tenant__isnull=False

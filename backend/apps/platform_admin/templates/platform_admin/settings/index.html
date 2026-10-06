@@ -456,7 +456,7 @@
           </div>
         </div>
 
-        <!-- New Tenant Registration -->
+        <!-- Public Signup Mode -->
         <div class="sc-card">
           <div class="sc-head">
             <div class="sc-head-icon">
@@ -466,22 +466,33 @@
               </svg>
             </div>
             <div class="sc-head-text">
-              <div class="sc-head-title">New Tenant Registration</div>
-              <div class="sc-head-desc">Allow self-registration via public site.</div>
+              <div class="sc-head-title">Public Signup Mode</div>
+              <div class="sc-head-desc">Control how new MSP workspaces enter MateDesk.</div>
             </div>
-            <span class="sc-head-badge off">Off</span>
+            {% if ps.signup_mode == 'private_beta' %}
+            <span class="sc-head-badge core">Private Beta</span>
+            {% else %}
+            <span class="sc-head-badge on">Public Trial</span>
+            {% endif %}
           </div>
           <div class="sc-body">
-            <div class="sc-toggle">
-              <div>
-                <div class="sc-toggle-label">Self-Registration</div>
-                <div class="sc-toggle-hint">Allow new MSP tenants to register independently through the public-facing signup flow.</div>
+            <form method="post" action="{% url 'platform_admin:settings_update' %}">
+              {% csrf_token %}
+              <div class="sc-field">
+                <div class="sc-field-label">Signup Mode</div>
+                <select name="signup_mode"
+                        style="width:100%;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:inherit;outline:none;">
+                  <option value="public_trial" {% if ps.signup_mode == 'public_trial' %}selected{% endif %}>Public Trial — instant workspace creation</option>
+                  <option value="private_beta" {% if ps.signup_mode == 'private_beta' %}selected{% endif %}>Private Beta — approval required</option>
+                </select>
               </div>
-              <label class="toggle-switch" style="flex-shrink:0;">
-                <input type="checkbox">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
+              <div class="sc-toggle-hint" style="margin-top:10px;">
+                Public Trial keeps the current self-service 14-day signup flow. Private Beta blocks direct tenant creation so applications can be reviewed before access is activated.
+              </div>
+              <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Save Signup Mode</button>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -517,7 +528,7 @@
       </div>
 
       <div class="sc-notice muted">
-        Feature toggle persistence is coming in a future release.
+        Public Signup Mode is live and persisted. Maintenance Mode remains informational in the current release.
       </div>
 
     </div><!-- /features -->

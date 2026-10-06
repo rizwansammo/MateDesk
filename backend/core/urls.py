@@ -30,6 +30,16 @@ def public_instance_branding_logo(request):
 def public_instance_config(request):
     tenant = getattr(request, 'tenant', None)
 
+    signup_mode = 'public_trial'
+    if settings.DEPLOYMENT_MODE == 'multi_tenant':
+        from apps.platform_admin.models import PlatformSettings
+        signup_mode = PlatformSettings.load().signup_mode
+
+    public_registration_enabled = (
+        settings.PUBLIC_REGISTRATION_ENABLED
+        and signup_mode == 'public_trial'
+    )
+
     product_name = settings.PRODUCT_NAME
     product_wordmark = settings.PRODUCT_WORDMARK
     product_logo_url = settings.PRODUCT_LOGO_URL
@@ -71,7 +81,8 @@ def public_instance_config(request):
         'tenant_name': tenant.name if tenant is not None else '',
         'login_headline': settings.LOGIN_HEADLINE,
         'login_subtitle': settings.LOGIN_SUBTITLE,
-        'public_registration_enabled': settings.PUBLIC_REGISTRATION_ENABLED,
+        'signup_mode': signup_mode,
+        'public_registration_enabled': public_registration_enabled,
     })
 
 

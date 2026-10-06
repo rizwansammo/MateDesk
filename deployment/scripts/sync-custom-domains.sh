@@ -34,13 +34,14 @@ has_conflict() {
   local domain="$1"
   local ours
   ours="$(conf_path "$domain")"
+  local escaped="${domain//./\\.}"
   local f
   for f in "$SITES_ENABLED"/*; do
     [[ -e "$f" ]] || continue
     local real
     real="$(readlink -f "$f" 2>/dev/null || printf '%s' "$f")"
     [[ "$real" == "$ours" ]] && continue
-    if grep -Eq "server_name[[:space:]][^;]*((^|[[:space:]])${domain}([[:space:]]|;))" "$f" 2>/dev/null; then
+    if grep -Eq "server_name[[:space:]]+([^;[:space:]]+[[:space:]]+)*${escaped}([[:space:]]|;)" "$f" 2>/dev/null; then
       return 0
     fi
   done
@@ -239,7 +240,7 @@ deprovision() {
     # removed later after the migration/decommission retention window.
     state "$domain" deprovisioned
   else
-    state "$domain" failed "Nginx validation failed while disabling the custom domain."
+    state "$domain" deprovision_failed "Nginx validation failed while disabling the custom domain."
   fi
 }
 

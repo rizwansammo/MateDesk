@@ -1,3 +1,5 @@
+import { PublicSignupModeProvider } from '@/hooks/usePublicSignupMode';
+
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const isSingleTenant = process.env.NEXT_PUBLIC_DEPLOYMENT_MODE === 'single_tenant';
 
@@ -12,7 +14,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         overflowY: 'auto',
       }}
     >
-      {children}
+      <PublicSignupModeProvider>{children}</PublicSignupModeProvider>
     </div>
   );
 }

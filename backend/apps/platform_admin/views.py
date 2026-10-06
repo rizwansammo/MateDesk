@@ -1175,6 +1175,21 @@ def settings_update(request):
     ps.support_email   = request.POST.get('support_email', ps.support_email).strip()
     ps.status_text     = request.POST.get('status_text', ps.status_text).strip()
     ps.build_info      = request.POST.get('build_info', ps.build_info).strip()
+
+    signup_mode_changed = None
+    if 'signup_mode' in request.POST:
+        requested_signup_mode = request.POST.get('signup_mode', '').strip()
+        valid_signup_modes = {value for value, _label in PlatformSettings.SIGNUP_MODE_CHOICES}
+        if requested_signup_mode not in valid_signup_modes:
+            messages.error(request, 'Invalid signup mode.')
+            return redirect('platform_admin:settings')
+        if requested_signup_mode != ps.signup_mode:
+            signup_mode_changed = {
+                'old': ps.signup_mode,
+                'new': requested_signup_mode,
+            }
+            ps.signup_mode = requested_signup_mode
+
     poll_interval = request.POST.get('email_poll_interval')
     if poll_interval and poll_interval.isdigit() and int(poll_interval) in (30, 60, 120, 300):
         ps.email_poll_interval = int(poll_interval)
@@ -1192,8 +1207,22 @@ def settings_update(request):
     ps.updated_by      = admin
     ps.save()
 
-    log_action(request, 'platform_settings_updated', 'settings', 1, 'Platform Settings', None)
-    messages.success(request, 'Platform settings saved.')
+    log_action(
+        request,
+        'platform_settings_updated',
+        'settings',
+        1,
+        'Platform Settings',
+        None,
+        {'signup_mode': signup_mode_changed} if signup_mode_changed else {},
+    )
+    if signup_mode_changed:
+        messages.success(
+            request,
+            f"Signup mode changed to {ps.get_signup_mode_display()}.",
+        )
+    else:
+        messages.success(request, 'Platform settings saved.')
     return redirect('platform_admin:settings')
 
 

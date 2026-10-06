@@ -234,6 +234,7 @@ REST_FRAMEWORK = {
         'user':           '2000/hour',   # generous per-user backstop (SPA polls notifications/stats)
         'auth_login':     '20/min',
         'auth_register':  '5/hour',
+        'beta_apply':     '5/hour',
         'password_reset': '30/hour',     # sensitive: returns a generated credential
         'staff_create':   '30/hour',     # sensitive: creates accounts
     },

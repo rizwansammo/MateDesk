@@ -3,7 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 
-def send_platform_email(*, to_email, subject, text_body, html_body, reply_to=None):
+def send_platform_email(*, to_email, subject, text_body, html_body, reply_to=None, from_name=None):
     """Send a platform-level transactional email using Platform Settings SMTP.
 
     Returns a (sent, error) tuple. Delivery failures never raise into the
@@ -15,8 +15,8 @@ def send_platform_email(*, to_email, subject, text_body, html_body, reply_to=Non
     if not ps.admin_smtp_host or not ps.admin_smtp_from_email:
         return False, 'Platform email SMTP is not configured.'
 
-    from_name = ps.admin_smtp_from_name or 'MateDesk'
-    from_display = f'{from_name} <{ps.admin_smtp_from_email}>'
+    sender_name = from_name or ps.admin_smtp_from_name or 'MateDesk'
+    from_display = f'{sender_name} <{ps.admin_smtp_from_email}>'
 
     msg = MIMEMultipart('alternative')
     msg['From'] = from_display

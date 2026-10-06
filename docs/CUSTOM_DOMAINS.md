@@ -37,7 +37,7 @@ as "Primary" records the preference but does **not** force a redirect, preservin
 
 ## TLS
 
-The host provisioner creates an HTTP-only Nginx block, requests a dedicated Let's Encrypt
+The host provisioner first checks for a valid existing certificate using the established `/var/www/html` ACME webroot. Compatible lineages are adopted directly, which gives dedicated-to-shared migrations a near-atomic HTTPS cutover. For a new hostname it creates an HTTP-only Nginx block, requests a dedicated Let's Encrypt
 certificate with HTTP-01/webroot, then replaces it with the final HTTPS reverse-proxy block.
 The final HTTP block keeps the ACME challenge path available for Certbot renewal. The host provisioner also installs a scoped Certbot deploy hook; after a successful renewal it reloads Nginx only when the renewed lineage has a matching MateDesk-managed vhost marker.
 
@@ -48,7 +48,7 @@ policy for unrelated customer subdomains.
 
 The following is intentionally deferred until the migration/cutover phase:
 
-1. Create `domains.matedesk.pro` as a DNS-only A/AAAA record pointing to MateServer. Do not proxy it through Cloudflare.
+1. Create `domains.matedesk.pro` as a DNS-only A/AAAA record pointing to MateServer. Do not proxy it through Cloudflare. The shared ACME webroot remains `/var/www/html`.
 2. Add `domains.matedesk.pro` to `NON_TENANT_HOSTS` and set `CUSTOM_DOMAIN_CNAME_TARGET=domains.matedesk.pro`.
 3. Copy `deployment/scripts/sync-custom-domains.sh` to
    `/opt/MateDesk/deployment/scripts/` and make it executable.

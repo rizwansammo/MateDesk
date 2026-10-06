@@ -235,10 +235,9 @@ class PrivateBetaActivationView(APIView):
         from apps.users.models import User
 
         with transaction.atomic():
-            locked_application = BetaApplication.objects.select_for_update().select_related(
-                'provisioned_tenant',
-                'owner_user',
-            ).get(pk=application.pk)
+            locked_application = BetaApplication.objects.select_for_update().get(
+                pk=application.pk,
+            )
             locked_user = User.objects.select_for_update().get(pk=user.pk)
 
             if (

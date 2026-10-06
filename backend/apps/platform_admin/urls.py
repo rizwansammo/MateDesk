@@ -13,6 +13,8 @@ urlpatterns = [
     path('beta-applications/', views.beta_applications_list, name='beta_applications'),
     path('beta-applications/<uuid:pk>/', views.beta_application_detail, name='beta_application_detail'),
     path('beta-applications/<uuid:pk>/decide/', views.beta_application_decide, name='beta_application_decide'),
+    path('beta-applications/<uuid:pk>/provision/', views.beta_application_provision, name='beta_application_provision'),
+    path('beta-applications/<uuid:pk>/resend-activation/', views.beta_application_resend_activation, name='beta_application_resend_activation'),
 
     # Tenants
     path('tenants/', views.tenants_list, name='tenants_list'),

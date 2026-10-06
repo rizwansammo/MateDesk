@@ -422,7 +422,7 @@ function BrandPreview({
             <MateDeskMark size={iconSize} />
           )}
         </div>
-        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize, lineHeight: 1, letterSpacing: '0.035em', transform: `translateY(${BRAND_WORDMARK_OPTICAL_SHIFT})`, transformOrigin: 'center' }}>
+        <span style={{ display: 'inline-block', fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize, lineHeight: 1, letterSpacing: '0.035em', transform: `translateY(${BRAND_WORDMARK_OPTICAL_SHIFT})`, transformOrigin: 'center' }}>
           {wordmark}
         </span>
       </div>

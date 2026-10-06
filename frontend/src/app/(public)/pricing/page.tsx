@@ -6,7 +6,7 @@ import Footer from '../_components/Footer';
 
 export const metadata: Metadata = {
   title: 'Pricing — MateDesk',
-  description: 'Simple, transparent pricing for MSPs of every size. 14-day free trial, no credit card required.',
+  description: 'Simple, transparent pricing for MSPs of every size.',
 };
 
 const faqItems = [
@@ -15,8 +15,8 @@ const faqItems = [
     a: 'Yes. You can upgrade or downgrade at any time. Changes take effect on your next billing cycle.',
   },
   {
-    q: 'Is there a free trial?',
-    a: 'All plans include a 14-day free trial — no credit card required. You get full access to every feature during the trial.',
+    q: 'How do I get access?',
+    a: 'Use the access option shown with the plans below. MateDesk may offer instant trials or approval-based early access depending on the current platform mode.',
   },
   {
     q: 'How does multi-tenant isolation work?',
@@ -57,7 +57,7 @@ export default function PricingPage() {
             }}
           >
             <Check size={12} />
-            14-day free trial on all plans — no credit card required
+            Flexible access for MSPs of every size
           </div>
         </div>
       </div>

@@ -46,6 +46,9 @@ SILENCED_SYSTEM_CHECKS = ['auth.E003', 'auth.W004']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Dynamic custom hosts must be validated before middleware that may call
+    # request.get_host(). It is a no-op unless CUSTOM_DOMAINS_ENABLED=True.
+    'core.middleware.host.DynamicHostValidationMiddleware',
     # WhiteNoise must come immediately after SecurityMiddleware
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -156,6 +159,22 @@ PLATFORM_ADMIN_ENABLED = config(
     cast=bool,
     default=(DEPLOYMENT_MODE == 'multi_tenant'),
 )
+
+# Native per-tenant custom domains are opt-in until the host-side TLS provisioner
+# is installed. When enabled Django accepts arbitrary Host values, while
+# DynamicHostValidationMiddleware becomes the authoritative allow-list.
+CUSTOM_DOMAINS_ENABLED = config(
+    'CUSTOM_DOMAINS_ENABLED',
+    cast=bool,
+    default=False,
+)
+CUSTOM_DOMAIN_CNAME_TARGET = config(
+    'CUSTOM_DOMAIN_CNAME_TARGET',
+    default=APP_DOMAIN,
+).strip().lower().rstrip('.')
+
+if CUSTOM_DOMAINS_ENABLED and DEPLOYMENT_MODE == 'multi_tenant':
+    ALLOWED_HOSTS = ['*']
 
 # Public, non-secret product identity used by dedicated login surfaces.
 PRODUCT_NAME = config('PRODUCT_NAME', default='MateDesk').strip() or 'MateDesk'

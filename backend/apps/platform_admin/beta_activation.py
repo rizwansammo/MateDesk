@@ -179,4 +179,5 @@ def send_beta_activation_email(application, activation_url, support_email=''):
         text_body=text_body,
         html_body=html_body,
         reply_to=support_email or None,
+        from_name='MateDesk',
     )

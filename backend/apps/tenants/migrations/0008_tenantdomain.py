@@ -22,6 +22,7 @@ class Migration(migrations.Migration):
                 ('is_primary', models.BooleanField(default=False)),
                 ('verified_at', models.DateTimeField(blank=True, null=True)),
                 ('ssl_issued_at', models.DateTimeField(blank=True, null=True)),
+                ('deprovisioned_at', models.DateTimeField(blank=True, null=True)),
                 ('last_error', models.TextField(blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),

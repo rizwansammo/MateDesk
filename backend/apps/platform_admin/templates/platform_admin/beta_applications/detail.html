@@ -1,0 +1,164 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}{{ application.company_name }} — Beta Application{% endblock %}
+{% block breadcrumb %}Private Beta Application{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <a href="{% url 'platform_admin:beta_applications' %}" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--fg-3);text-decoration:none;margin-bottom:8px;">
+      ← Back to Beta Applications
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="page-title">{{ application.company_name }}</div>
+      {% if application.status == 'pending' %}
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-yellow-tint);color:#fbbf24;border:1px solid rgba(245,158,11,.25);">Pending Review</span>
+      {% elif application.status == 'approved' %}
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-blue-tint);color:var(--accent-blue-hi);border:1px solid rgba(59,109,255,.25);">Approved</span>
+      {% elif application.status == 'rejected' %}
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-red-tint);color:#f87171;border:1px solid rgba(239,68,68,.25);">Rejected</span>
+      {% else %}
+        <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-green-tint);color:#4ade80;border:1px solid rgba(34,197,94,.25);">Activated</span>
+      {% endif %}
+    </div>
+    <div class="page-subtitle">Application submitted {{ application.created_at|date:"M j, Y \a\t H:i" }}.</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(340px,.65fr);gap:14px;align-items:start;">
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <section style="background:var(--bg-panel);border:1px solid var(--border-subtle);">
+      <div style="padding:11px 14px;border-bottom:1px solid var(--border-subtle);font-size:11px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-2);">
+        Application Details
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">MSP Company</div>
+          <div style="font-size:14px;font-weight:650;color:var(--fg-1);">{{ application.company_name }}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Owner</div>
+          <div style="font-size:14px;color:var(--fg-1);">{{ application.owner_name }}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Work Email</div>
+          <div style="font-size:13px;color:var(--fg-2);">{{ application.email }}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Requested Workspace</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--accent-blue-hi);">{{ application.requested_slug }}.matedesk.pro</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Application ID</div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--fg-3);word-break:break-all;">{{ application.pk }}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:5px;">Submitted</div>
+          <div style="font-size:12px;color:var(--fg-2);">{{ application.created_at|date:"M j, Y H:i" }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:var(--bg-panel);border:1px solid var(--border-subtle);">
+      <div style="padding:11px 14px;border-bottom:1px solid var(--border-subtle);font-size:11px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-2);">
+        Provisioning Readiness
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size:12px;font-weight:650;color:var(--fg-1);">Workspace subdomain</div>
+            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">{{ application.requested_slug }}.matedesk.pro</div>
+          </div>
+          {% if slug_conflict %}
+            <span style="font-size:10px;font-weight:700;color:#f87171;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);padding:3px 8px;">Conflict</span>
+          {% else %}
+            <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Available</span>
+          {% endif %}
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size:12px;font-weight:650;color:var(--fg-1);">Owner email</div>
+            <div style="font-size:11px;color:var(--fg-3);margin-top:2px;">{{ application.email }}</div>
+          </div>
+          {% if email_conflict %}
+            <span style="font-size:10px;font-weight:700;color:#f87171;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);padding:3px 8px;">In Use</span>
+          {% else %}
+            <span style="font-size:10px;font-weight:700;color:#4ade80;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);padding:3px 8px;">Available</span>
+          {% endif %}
+        </div>
+
+        {% if slug_conflict or email_conflict %}
+        <div style="padding:10px 12px;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.28);color:#fca5a5;font-size:11px;line-height:1.55;">
+          Approval is blocked until the conflicting workspace or email is resolved.
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <aside style="background:var(--bg-panel);border:1px solid var(--border-subtle);">
+    <div style="padding:11px 14px;border-bottom:1px solid var(--border-subtle);font-size:11px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-2);">
+      Review
+    </div>
+
+    {% if application.status == 'pending' %}
+      <form method="post" action="{% url 'platform_admin:beta_application_decide' pk=application.pk %}" style="padding:16px;">
+        {% csrf_token %}
+        <label for="review-note" style="display:block;font-size:11px;font-weight:700;color:var(--fg-2);margin-bottom:6px;">Review note <span style="font-weight:400;color:var(--fg-4);">(optional)</span></label>
+        <textarea id="review-note" name="review_note" rows="6"
+                  placeholder="Internal note about this application..."
+                  style="width:100%;resize:vertical;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border-soft);color:var(--fg-1);font-family:inherit;font-size:12px;line-height:1.55;outline:none;margin-bottom:14px;"></textarea>
+
+        <div style="padding:10px 12px;background:rgba(59,109,255,.07);border:1px solid rgba(59,109,255,.20);font-size:11px;color:var(--fg-3);line-height:1.55;margin-bottom:14px;">
+          Approving records the review decision only. Tenant provisioning, password setup, and the activation email are handled by the activation workflow.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="submit" name="decision" value="approve" class="btn btn-success"
+                  {% if slug_conflict or email_conflict %}disabled title="Resolve provisioning conflicts first"{% endif %}
+                  style="justify-content:center;">
+            Approve
+          </button>
+          <button type="submit" name="decision" value="reject" class="btn btn-danger" style="justify-content:center;">
+            Reject
+          </button>
+        </div>
+      </form>
+    {% else %}
+      <div style="padding:16px;">
+        {% if application.status == 'approved' %}
+          <div style="padding:11px 12px;background:var(--accent-blue-tint);border:1px solid rgba(59,109,255,.25);color:var(--accent-blue-hi);font-size:12px;font-weight:650;margin-bottom:14px;">
+            Approved · Awaiting Activation
+          </div>
+        {% elif application.status == 'rejected' %}
+          <div style="padding:11px 12px;background:var(--accent-red-tint);border:1px solid rgba(239,68,68,.25);color:#f87171;font-size:12px;font-weight:650;margin-bottom:14px;">
+            Application Rejected
+          </div>
+        {% else %}
+          <div style="padding:11px 12px;background:var(--accent-green-tint);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-size:12px;font-weight:650;margin-bottom:14px;">
+            Workspace Activated
+          </div>
+        {% endif %}
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Reviewed By</div>
+            <div style="font-size:12px;color:var(--fg-2);">
+              {% if application.reviewed_by %}{{ application.reviewed_by.full_name|default:application.reviewed_by.email }}{% else %}—{% endif %}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Reviewed At</div>
+            <div style="font-size:12px;color:var(--fg-2);">
+              {% if application.reviewed_at %}{{ application.reviewed_at|date:"M j, Y H:i" }}{% else %}—{% endif %}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg-4);margin-bottom:4px;">Review Note</div>
+            <div style="font-size:12px;color:var(--fg-2);line-height:1.6;white-space:pre-wrap;">{{ application.review_note|default:"No review note." }}</div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

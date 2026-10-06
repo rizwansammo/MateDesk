@@ -46,7 +46,7 @@ class TenantMiddleware:
         # Operator surfaces are valid only on the MateDesk platform/root host.
         # This is also enforced by generated custom-domain nginx configs.
         if any(request.path.startswith(p) for p in _OPERATOR_PREFIXES):
-            if host not in non_tenant_hosts and host != app_domain:
+            if app_domain and host not in non_tenant_hosts and host != app_domain:
                 return HttpResponseNotFound('Not found.')
             request.tenant = None
             return self.get_response(request)

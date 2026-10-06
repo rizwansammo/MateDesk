@@ -28,7 +28,9 @@ Ownership record:
 
 Preferred routing for subdomains:
 
-`helpdesk.example.com CNAME matedesk.pro`
+`helpdesk.example.com CNAME domains.matedesk.pro`
+
+`domains.matedesk.pro` is a dedicated **DNS-only** origin hostname. It must resolve directly to MateServer and must not be Cloudflare-proxied. This avoids asking Cloudflare's edge to terminate TLS for arbitrary customer-owned hostnames. Do not point customer CNAMEs at the proxied `matedesk.pro` apex.
 
 The default `tenant.matedesk.pro` workspace remains available. Setting a custom domain
 as "Primary" records the preference but does **not** force a redirect, preserving rollback.
@@ -46,13 +48,15 @@ policy for unrelated customer subdomains.
 
 The following is intentionally deferred until the migration/cutover phase:
 
-1. Copy `deployment/scripts/sync-custom-domains.sh` to
+1. Create `domains.matedesk.pro` as a DNS-only A/AAAA record pointing to MateServer. Do not proxy it through Cloudflare.
+2. Add `domains.matedesk.pro` to `NON_TENANT_HOSTS` and set `CUSTOM_DOMAIN_CNAME_TARGET=domains.matedesk.pro`.
+3. Copy `deployment/scripts/sync-custom-domains.sh` to
    `/opt/MateDesk/deployment/scripts/` and make it executable.
-2. Install the two units from `deployment/systemd/`.
-3. Run `systemctl daemon-reload` and enable the timer.
-4. Set `CUSTOM_DOMAINS_ENABLED=True` in `/opt/MateDesk/.env`.
-5. Recreate the backend so the setting is loaded.
-6. Verify the normal `matedesk.pro` and `*.matedesk.pro` paths before adding any live
+4. Install the two units from `deployment/systemd/`.
+5. Run `systemctl daemon-reload` and enable the timer.
+6. Set `CUSTOM_DOMAINS_ENABLED=True` in `/opt/MateDesk/.env`.
+7. Recreate the backend so the setting is loaded.
+8. Verify the normal `matedesk.pro` and `*.matedesk.pro` paths before adding any live
    custom domain.
 
 Always run `nginx -t` before a reload. The provisioner does this automatically.

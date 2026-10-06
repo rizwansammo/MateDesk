@@ -80,6 +80,12 @@ export function middleware(request: NextRequest) {
 
   const host = publicHost(request);
 
+  // domains.<APP_DOMAIN> is a DNS-only CNAME target for customer hostnames. It
+  // must never render a workspace of its own or become a tenant slug.
+  if (!IS_DEV && APP_DOMAIN && host === `domains.${APP_DOMAIN}`) {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
   // ── SINGLE-TENANT MODE ────────────────────────────────────────────────────
   // Dedicated installs live directly on their configured hostname. There is no
   // workspace subdomain handoff and no public tenant registration surface.

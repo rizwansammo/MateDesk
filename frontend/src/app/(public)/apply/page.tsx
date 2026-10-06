@@ -38,7 +38,8 @@ export default function PrivateBetaApplyPage() {
   const [submitted, setSubmitted] = useState<ApplicationResponse | null>(null);
 
   useEffect(() => {
-    setDisplayDomain(window.location.hostname);
+    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN;
+    setDisplayDomain(appDomain && appDomain !== 'localhost' ? appDomain : window.location.hostname);
   }, []);
 
   useEffect(() => {

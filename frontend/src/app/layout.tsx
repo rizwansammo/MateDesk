@@ -72,7 +72,7 @@ export const metadata: Metadata = IS_SINGLE_TENANT ? {
   // scrapers cannot fetch.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'MateDesk — Multi-Tenant Helpdesk for MSPs',
+    default: 'MATEDESK · HelpDesk Ticketing System.',
     template: '%s | MateDesk',
   },
   description:

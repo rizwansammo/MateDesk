@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, PartyPopper } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { BrandLogo } from '@/components/BrandLogo';
 import { TransitionLink } from '@/components/TransitionLink';
+import { usePublicSignupMode } from '@/hooks/usePublicSignupMode';
 
 interface RegisterResponse {
   user: { tenant_slug: string; full_name: string; email: string };
@@ -20,6 +22,8 @@ const benefits = [
 ];
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { signupMode, ready } = usePublicSignupMode();
   const [companyName,  setCompanyName]  = useState('');
   const [ownerName,    setOwnerName]    = useState('');
   const [email,        setEmail]        = useState('');
@@ -33,6 +37,12 @@ export default function RegisterPage() {
   const [displayDomain, setDisplayDomain] = useState('');
 
   useEffect(() => { setDisplayDomain(window.location.hostname); }, []);
+
+  useEffect(() => {
+    if (ready && signupMode === 'private_beta') {
+      router.replace('/apply');
+    }
+  }, [ready, signupMode, router]);
 
   function deriveSlug(name: string) {
     // Match Django's slugify: spaces → hyphens, strip non-alphanum, collapse hyphens
@@ -75,6 +85,16 @@ export default function RegisterPage() {
   }
 
   // ── Success screen ───────────────────────────────────────────────────────────
+
+  if (!ready) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0E1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 size={22} className="animate-spin" style={{ color: '#60a5fa' }} />
+      </div>
+    );
+  }
+
+  if (signupMode === 'private_beta') return null;
 
   if (registered) {
     return (

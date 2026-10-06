@@ -311,15 +311,20 @@ function InlineImages({ attachments }: { attachments: TicketAttachment[] }) {
 }
 
 function EmailContent({ html, text, mono = false }: { html?: string; text: string; mono?: boolean }) {
+  const presentationStyle: React.CSSProperties = {
+    ...(mono ? MONO : {}),
+    fontSize: mono ? 15 : 13,
+    lineHeight: 1.65,
+    color: 'var(--text-2)',
+  };
+
   if (html) {
     return (
       <div
+        className="ticket-email-html"
         style={{
-          fontSize: 13,
-          lineHeight: 1.6,
-          color: '#111827',
-          background: '#ffffff',
-          padding: '12px 14px',
+          ...presentationStyle,
+          background: 'transparent',
           overflowX: 'auto',
           wordBreak: 'normal',
         }}
@@ -330,10 +335,7 @@ function EmailContent({ html, text, mono = false }: { html?: string; text: strin
 
   return (
     <div style={{
-      ...(mono ? MONO : {}),
-      fontSize: mono ? 15 : 13,
-      lineHeight: 1.65,
-      color: 'var(--text-2)',
+      ...presentationStyle,
       whiteSpace: 'pre-wrap',
       wordBreak: 'break-word',
     }}>

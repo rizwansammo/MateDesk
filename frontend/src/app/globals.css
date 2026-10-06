@@ -227,6 +227,36 @@
 
 ::selection { background: rgba(37,99,235,0.28); color: var(--text-1); }
 
+/* Sanitized inbound HTML should look like part of the ticket, not a foreign
+ * white document. Keep its structure/images, but make typography consistent
+ * with MateDesk and neutralize sender colors/backgrounds in dark mode. */
+.ticket-email-html,
+.ticket-email-html * {
+  font-family: inherit !important;
+}
+
+html:not([data-theme="light"]) .ticket-email-html,
+html:not([data-theme="light"]) .ticket-email-html * {
+  color: inherit !important;
+  background-color: transparent !important;
+}
+
+html:not([data-theme="light"]) .ticket-email-html a {
+  color: var(--accent-info-fg) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ticket-email-html img {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.ticket-email-html table {
+  max-width: 100% !important;
+}
+
+
 /* ── Typography ────────────────────────────────────────────────────────────── */
 @layer utilities {
   .text-2xs { font-size: 0.65rem; line-height: 1rem; }

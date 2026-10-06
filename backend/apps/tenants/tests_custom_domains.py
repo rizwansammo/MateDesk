@@ -95,6 +95,20 @@ class CustomDomainModelAndRoutingTests(TestCase):
         )
         self.assertEqual(response.status_code, 404)
 
+    @override_settings(CUSTOM_DOMAIN_CNAME_TARGET='domains.matedesk.pro')
+    def test_custom_domain_origin_is_not_a_tenant_workspace(self):
+        captured = {}
+
+        def view(request):
+            captured['tenant'] = request.tenant
+            return JsonResponse({'ok': True})
+
+        response = TenantMiddleware(view)(
+            self.factory.get('/api/instance/public/', HTTP_HOST='domains.matedesk.pro')
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(captured['tenant'])
+
     def test_platform_subdomain_fallback_still_works(self):
         captured = {}
 

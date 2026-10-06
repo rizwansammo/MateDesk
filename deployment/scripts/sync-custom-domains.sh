@@ -2,7 +2,7 @@
 set -euo pipefail
 
 COMPOSE_DIR="${MATEDESK_COMPOSE_DIR:-/opt/MateDesk}"
-WEBROOT="${MATEDESK_CUSTOM_DOMAIN_WEBROOT:-/var/www/matedesk-custom-domains}"
+WEBROOT="${MATEDESK_CUSTOM_DOMAIN_WEBROOT:-/var/www/html}"
 SITES_AVAILABLE="${NGINX_SITES_AVAILABLE:-/etc/nginx/sites-available}"
 SITES_ENABLED="${NGINX_SITES_ENABLED:-/etc/nginx/sites-enabled}"
 CERTBOT_HOOK_DIR="${CERTBOT_HOOK_DIR:-/etc/letsencrypt/renewal-hooks/deploy}"
@@ -197,6 +197,29 @@ provision() {
   fi
 
   state "$domain" provisioning
+
+  local cert_file="/etc/letsencrypt/live/$domain/fullchain.pem"
+  local renewal_file="/etc/letsencrypt/renewal/$domain.conf"
+
+  # Migration fast-path: if this hostname already has a valid certificate whose
+  # renewal lineage uses our established MateServer webroot, adopt it directly.
+  # This avoids dropping HTTPS just to reissue a certificate during a cutover.
+  if [[ -f "$cert_file" ]] \
+     && openssl x509 -checkend 86400 -noout -in "$cert_file" >/dev/null 2>&1 \
+     && openssl x509 -in "$cert_file" -noout -ext subjectAltName 2>/dev/null | grep -Fq "DNS:$domain" \
+     && grep -Fq "webroot_path = $WEBROOT" "$renewal_file" 2>/dev/null; then
+    write_https_config "$domain"
+    if ! nginx -t; then
+      state "$domain" failed "Nginx validation failed while adopting the existing certificate."
+      return
+    fi
+    systemctl reload nginx
+    state "$domain" active
+    return
+  fi
+
+  # New hostname (or an incompatible/near-expiry existing lineage): expose only
+  # the ACME path, issue/reconfigure the certificate, then enable HTTPS.
   write_http_config "$domain"
 
   if ! nginx -t; then
@@ -211,12 +234,12 @@ provision() {
     --non-interactive --agree-tos
   )
 
-  if [[ -f "/etc/letsencrypt/live/$domain/fullchain.pem" ]]; then
-    if grep -Fq "webroot_path = $WEBROOT" "/etc/letsencrypt/renewal/$domain.conf" 2>/dev/null; then
+  if [[ -f "$cert_file" ]]; then
+    if grep -Fq "webroot_path = $WEBROOT" "$renewal_file" 2>/dev/null; then
       cert_args+=(--keep-until-expiring)
     else
-      # Existing cert from an older deployment: reissue once so renewal is bound
-      # to the managed custom-domain webroot.
+      # Existing cert from another deployment/webroot: bind the lineage to the
+      # managed MateDesk challenge path before activating it.
       cert_args+=(--force-renewal)
     fi
   fi

@@ -5,9 +5,14 @@ COMPOSE_DIR="${MATEDESK_COMPOSE_DIR:-/opt/MateDesk}"
 WEBROOT="${MATEDESK_CUSTOM_DOMAIN_WEBROOT:-/var/www/matedesk-custom-domains}"
 SITES_AVAILABLE="${NGINX_SITES_AVAILABLE:-/etc/nginx/sites-available}"
 SITES_ENABLED="${NGINX_SITES_ENABLED:-/etc/nginx/sites-enabled}"
+CERTBOT_HOOK_DIR="${CERTBOT_HOOK_DIR:-/etc/letsencrypt/renewal-hooks/deploy}"
+CERTBOT_HOOK_SRC="$COMPOSE_DIR/deployment/scripts/matedesk-custom-domain-certbot-hook.sh"
+CERTBOT_HOOK_DST="$CERTBOT_HOOK_DIR/matedesk-custom-domain-nginx.sh"
 
 cd "$COMPOSE_DIR"
 mkdir -p "$WEBROOT/.well-known/acme-challenge"
+mkdir -p "$CERTBOT_HOOK_DIR"
+install -m 0755 "$CERTBOT_HOOK_SRC" "$CERTBOT_HOOK_DST"
 
 state() {
   local domain="$1"
@@ -53,7 +58,7 @@ write_http_config() {
   local conf
   conf="$(conf_path "$domain")"
   cat >"$conf" <<EOF
-# Managed by MateDesk custom-domain provisioner. Do not edit manually.
+# MATEDESK CUSTOM DOMAIN v1
 server {
     listen 80;
     listen [::]:80;
@@ -77,7 +82,7 @@ write_https_config() {
   local conf
   conf="$(conf_path "$domain")"
   cat >"$conf" <<EOF
-# Managed by MateDesk custom-domain provisioner. Do not edit manually.
+# MATEDESK CUSTOM DOMAIN v1
 server {
     listen 80;
     listen [::]:80;

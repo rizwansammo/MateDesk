@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from django.test import Client, TestCase, override_settings
 
@@ -30,7 +31,11 @@ class PrivateBetaApplicationApiTests(TestCase):
         data.update(overrides)
         return data
 
-    def test_application_is_stored_without_creating_tenant(self):
+    @patch(
+        'apps.platform_admin.beta_activation.send_beta_receipt_email',
+        return_value=(True, ''),
+    )
+    def test_application_is_stored_without_creating_tenant(self, send_receipt):
         response = self.client.post(
             '/api/beta/apply/',
             data=json.dumps(self.payload()),
@@ -42,7 +47,10 @@ class PrivateBetaApplicationApiTests(TestCase):
         self.assertEqual(response.json()['status'], 'pending')
         application = BetaApplication.objects.get(email='john@acmemsp.com')
         self.assertEqual(application.requested_slug, 'acme-msp')
+        self.assertIsNotNone(application.receipt_email_sent_at)
+        self.assertEqual(application.receipt_email_last_error, '')
         self.assertFalse(Tenant.objects.filter(slug='acme-msp').exists())
+        send_receipt.assert_called_once()
 
     def test_duplicate_email_is_rejected(self):
         BetaApplication.objects.create(

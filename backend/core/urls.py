@@ -39,8 +39,15 @@ def public_instance_config(request):
     if tenant is not None:
         branding = tenant.branding or {}
         product_wordmark = branding.get('md_custom_text') or product_wordmark
-        if branding.get('md_custom_text'):
-            product_name = f'{product_wordmark} HelpDesk'
+        if (
+            branding.get('md_custom_text')
+            and settings.DEPLOYMENT_MODE == 'multi_tenant'
+        ):
+            product_name = (
+                product_wordmark
+                if product_wordmark.lower().endswith('helpdesk')
+                else f'{product_wordmark} HelpDesk'
+            )
         product_logo_theme_aware = branding.get(
             'md_logo_theme_aware',
             product_logo_theme_aware,

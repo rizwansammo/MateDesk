@@ -48,7 +48,7 @@ function extractSubdomain(request: NextRequest): string | null {
   return null;
 }
 
-const PUBLIC_ROUTES  = new Set(['/', '/pricing', '/logout-complete']);
+const PUBLIC_ROUTES  = new Set(['/', '/pricing', '/apply', '/activate', '/logout-complete']);
 const AUTH_PAGES     = new Set(['/login', '/register']);
 // Always pass through without any auth redirect — needed for the cross-domain
 // token handoff that lands on a subdomain before cookies are set.

@@ -9,6 +9,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
 
+    # Private Beta Applications
+    path('beta-applications/', views.beta_applications_list, name='beta_applications'),
+    path('beta-applications/<uuid:pk>/', views.beta_application_detail, name='beta_application_detail'),
+    path('beta-applications/<uuid:pk>/decide/', views.beta_application_decide, name='beta_application_decide'),
+
     # Tenants
     path('tenants/', views.tenants_list, name='tenants_list'),
     path('tenants/create/', views.tenant_create, name='tenant_create'),

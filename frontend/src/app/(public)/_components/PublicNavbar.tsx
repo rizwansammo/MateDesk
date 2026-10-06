@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { TransitionLink } from '@/components/TransitionLink';
 import { usePublicAuthStatus } from '@/hooks/usePublicAuthStatus';
+import { usePublicSignupMode } from '@/hooks/usePublicSignupMode';
 
 const NAV_LINKS = [
   { label: 'Product',      id: 'product'    },
@@ -22,6 +23,8 @@ function smoothScrollTo(id: string) {
 export default function PublicNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const { isAuth, dashboardUrl } = usePublicAuthStatus();
+  const { signupMode } = usePublicSignupMode();
+  const isPrivateBeta = signupMode === 'private_beta';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -97,14 +100,14 @@ export default function PublicNavbar() {
                 Sign in
               </TransitionLink>
               <TransitionLink
-                href="/register"
+                href={isPrivateBeta ? '/apply' : '/register'}
                 style={{
                   height: 36, padding: '0 16px', display: 'inline-flex', alignItems: 'center',
                   fontSize: 14, fontWeight: 600, color: '#fff',
                   background: '#1F4ED8', textDecoration: 'none', transition: 'background 120ms',
                 }}
               >
-                Start free trial
+                {isPrivateBeta ? 'Apply for Private Beta' : 'Start free trial'}
               </TransitionLink>
             </>
           )}

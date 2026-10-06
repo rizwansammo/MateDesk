@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
-from .serializers import TenantTokenObtainPairSerializer, TenantRegisterSerializer, UserMeSerializer
+from .serializers import BetaApplicationSerializer, TenantTokenObtainPairSerializer, TenantRegisterSerializer, UserMeSerializer
 from .permissions import IsTenantUser
 
 
@@ -18,6 +18,10 @@ class LoginRateThrottle(AnonRateThrottle):
 
 class RegisterRateThrottle(AnonRateThrottle):
     scope = 'auth_register'
+
+
+class BetaApplicationRateThrottle(AnonRateThrottle):
+    scope = 'beta_apply'
 
 
 class TenantLoginView(TokenObtainPairView):
@@ -80,6 +84,51 @@ class TenantRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.create(serializer.validated_data)
         return Response(data, status=201)
+
+
+class PrivateBetaApplicationView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [BetaApplicationRateThrottle]
+
+    def post(self, request):
+        from django.conf import settings
+        from django.db import IntegrityError
+        from apps.platform_admin.models import PlatformSettings
+
+        if (
+            getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') != 'multi_tenant'
+            or not getattr(settings, 'PUBLIC_REGISTRATION_ENABLED', True)
+        ):
+            return Response({'detail': 'Not found.'}, status=404)
+
+        if PlatformSettings.load().signup_mode != PlatformSettings.SIGNUP_MODE_PRIVATE_BETA:
+            return Response(
+                {
+                    'detail': 'Private Beta applications are not currently open.',
+                    'code': 'private_beta_closed',
+                },
+                status=409,
+            )
+
+        serializer = BetaApplicationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            application = serializer.save()
+        except IntegrityError:
+            return Response(
+                {'detail': 'An application with this email or workspace subdomain already exists.'},
+                status=409,
+            )
+
+        return Response(
+            {
+                'id': str(application.id),
+                'status': application.status,
+                'email': application.email,
+                'requested_slug': application.requested_slug,
+            },
+            status=201,
+        )
 
 
 class LogoutView(APIView):

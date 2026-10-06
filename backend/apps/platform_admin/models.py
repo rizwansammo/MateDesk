@@ -77,6 +77,36 @@ class PlatformSettings(models.Model):
         return obj
 
 
+class BetaApplication(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_ACTIVATED = 'activated'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+        (STATUS_ACTIVATED, 'Activated'),
+    ]
+
+    id             = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_name   = models.CharField(max_length=200)
+    owner_name     = models.CharField(max_length=201)
+    email          = models.EmailField(unique=True)
+    requested_slug = models.SlugField(max_length=30, unique=True)
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at     = models.DateTimeField(auto_now_add=True)
+    updated_at     = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Private Beta Application'
+        verbose_name_plural = 'Private Beta Applications'
+
+    def __str__(self):
+        return f'{self.company_name} <{self.email}>'
+
+
 class PlatformPlan(models.Model):
     PLAN_CHOICES = [
         ('starter', 'Starter'),

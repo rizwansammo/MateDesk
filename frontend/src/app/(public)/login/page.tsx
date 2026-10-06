@@ -28,6 +28,7 @@ interface InstanceConfig {
   tenant_name: string;
   login_headline: string;
   login_subtitle: string;
+  signup_mode?: 'public_trial' | 'private_beta';
 }
 
 function LoginForm() {
@@ -50,6 +51,7 @@ function LoginForm() {
   }, []);
 
   const isTenantPortal = isSingleTenant || Boolean(instance?.tenant_name);
+  const isPrivateBeta = !isTenantPortal && instance?.signup_mode === 'private_beta';
   const productName = instance?.product_name
     || process.env.NEXT_PUBLIC_PRODUCT_NAME
     || (isSingleTenant ? 'HelpDesk' : 'MateDesk');
@@ -445,8 +447,8 @@ function LoginForm() {
         ) : (
           <p style={{ fontSize: 13, color: '#6B7385', marginBottom: 40, textAlign: 'right' }}>
             New to MateDesk?{' '}
-            <TransitionLink href="/register" style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
-              Create a workspace →
+            <TransitionLink href={isPrivateBeta ? '/apply' : '/register'} style={{ color: '#1F4ED8', fontWeight: 600, textDecoration: 'none' }}>
+              {isPrivateBeta ? 'Apply for Private Beta →' : 'Create a workspace →'}
             </TransitionLink>
           </p>
         )}

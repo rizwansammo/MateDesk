@@ -185,6 +185,46 @@ class TenantRegisterSerializer(serializers.Serializer):
         }
 
 
+class BetaApplicationSerializer(serializers.Serializer):
+    company_name   = serializers.CharField(max_length=200)
+    owner_name     = serializers.CharField(max_length=201)
+    email          = serializers.EmailField()
+    requested_slug = serializers.CharField(max_length=30)
+
+    def validate_email(self, value):
+        from apps.platform_admin.models import BetaApplication
+        from apps.users.models import User
+
+        value = value.strip().lower()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('An account with this email already exists.')
+        if BetaApplication.objects.filter(email=value).exists():
+            raise serializers.ValidationError('An application with this email has already been submitted.')
+        return value
+
+    def validate_requested_slug(self, value):
+        import re
+        from apps.platform_admin.models import BetaApplication
+        from apps.tenants.models import Tenant
+
+        value = value.lower().strip()
+        pattern = r'^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$|^[a-z0-9]{3,30}$'
+        if not re.match(pattern, value):
+            raise serializers.ValidationError(
+                'Subdomain must be 3–30 characters: lowercase letters, digits, and hyphens only.'
+            )
+        if value in RESERVED_PLATFORM_SLUGS:
+            raise serializers.ValidationError('This workspace subdomain is reserved by the platform.')
+        if Tenant.objects.filter(slug=value).exists():
+            raise serializers.ValidationError('This workspace subdomain is already taken.')
+        if BetaApplication.objects.filter(requested_slug=value).exists():
+            raise serializers.ValidationError('This workspace subdomain has already been requested.')
+        return value
+
+    def create(self, validated_data):
+        from apps.platform_admin.models import BetaApplication
+        return BetaApplication.objects.create(**validated_data)
+
 class UserMeSerializer(serializers.Serializer):
     id          = serializers.UUIDField()
     email       = serializers.EmailField()

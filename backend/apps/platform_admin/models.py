@@ -20,6 +20,8 @@ ACTION_CHOICES = [
     ('mateconnect_enabled', 'MateConnect Enabled'),
     ('mateconnect_disabled', 'MateConnect Disabled'),
     ('platform_settings_updated', 'Platform Settings Updated'),
+    ('beta_application_approved', 'Beta Application Approved'),
+    ('beta_application_rejected', 'Beta Application Rejected'),
     ('plan_updated', 'Plan Updated'),
     ('admin_login', 'Admin Login'),
     ('admin_login_failed', 'Admin Login Failed'),
@@ -95,6 +97,15 @@ class BetaApplication(models.Model):
     email          = models.EmailField(unique=True)
     requested_slug = models.SlugField(max_length=30, unique=True)
     status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    review_note    = models.TextField(blank=True, default='')
+    reviewed_at    = models.DateTimeField(null=True, blank=True)
+    reviewed_by    = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='beta_applications_reviewed',
+    )
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 

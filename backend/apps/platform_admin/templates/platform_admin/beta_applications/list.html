@@ -1,0 +1,117 @@
+{% extends 'platform_admin/base.html' %}
+{% block title %}Private Beta Applications{% endblock %}
+{% block breadcrumb %}Private Beta Applications{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <div class="page-title">Private Beta Applications</div>
+    <div class="page-subtitle">Review access requests before a MateDesk tenant is provisioned.</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px;">
+  <a href="?status=pending" style="text-decoration:none;background:var(--bg-panel);border:1px solid {% if status_filter == 'pending' %}rgba(245,158,11,.55){% else %}var(--border-subtle){% endif %};padding:14px 16px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:5px;">Pending</div>
+    <div style="font-size:24px;font-weight:750;color:#fbbf24;line-height:1;">{{ counts.pending }}</div>
+  </a>
+  <a href="?status=approved" style="text-decoration:none;background:var(--bg-panel);border:1px solid {% if status_filter == 'approved' %}rgba(59,109,255,.55){% else %}var(--border-subtle){% endif %};padding:14px 16px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:5px;">Approved</div>
+    <div style="font-size:24px;font-weight:750;color:var(--accent-blue-hi);line-height:1;">{{ counts.approved }}</div>
+  </a>
+  <a href="?status=rejected" style="text-decoration:none;background:var(--bg-panel);border:1px solid {% if status_filter == 'rejected' %}rgba(239,68,68,.55){% else %}var(--border-subtle){% endif %};padding:14px 16px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:5px;">Rejected</div>
+    <div style="font-size:24px;font-weight:750;color:#f87171;line-height:1;">{{ counts.rejected }}</div>
+  </a>
+  <a href="?status=activated" style="text-decoration:none;background:var(--bg-panel);border:1px solid {% if status_filter == 'activated' %}rgba(34,197,94,.55){% else %}var(--border-subtle){% endif %};padding:14px 16px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:5px;">Activated</div>
+    <div style="font-size:24px;font-weight:750;color:#4ade80;line-height:1;">{{ counts.activated }}</div>
+  </a>
+</div>
+
+<div class="filter-bar">
+  <form method="get" action="" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;">
+    <div class="search-wrap">
+      <svg class="search-icon" width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+        <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <input type="text" name="q" class="search-input" placeholder="Search company, owner, email, workspace..."
+             value="{{ search }}">
+    </div>
+
+    <div class="filter-chips">
+      <a href="?{% if search %}q={{ search|urlencode }}{% endif %}" class="filter-chip {% if not status_filter %}active{% endif %}">All · {{ counts.all }}</a>
+      <a href="?status=pending{% if search %}&q={{ search|urlencode }}{% endif %}" class="filter-chip {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+      <a href="?status=approved{% if search %}&q={{ search|urlencode }}{% endif %}" class="filter-chip {% if status_filter == 'approved' %}active{% endif %}">Approved</a>
+      <a href="?status=rejected{% if search %}&q={{ search|urlencode }}{% endif %}" class="filter-chip {% if status_filter == 'rejected' %}active{% endif %}">Rejected</a>
+      <a href="?status=activated{% if search %}&q={{ search|urlencode }}{% endif %}" class="filter-chip {% if status_filter == 'activated' %}active{% endif %}">Activated</a>
+    </div>
+
+    {% if search or status_filter %}
+    <a href="{% url 'platform_admin:beta_applications' %}" class="btn btn-ghost btn-sm">Clear Filters</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Owner</th>
+        <th>Work Email</th>
+        <th>Requested Workspace</th>
+        <th>Status</th>
+        <th>Submitted</th>
+        <th>Reviewed By</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app in applications %}
+      <tr>
+        <td>
+          <div class="t-name-wrap">
+            <div class="t-avatar">{{ app.company_name|slice:":2"|upper }}</div>
+            <div>
+              <a href="{% url 'platform_admin:beta_application_detail' pk=app.pk %}" class="t-name" style="text-decoration:none;color:var(--fg-1);">{{ app.company_name }}</a>
+              <span class="t-slug">{{ app.pk }}</span>
+            </div>
+          </div>
+        </td>
+        <td class="text-sm">{{ app.owner_name }}</td>
+        <td class="text-muted text-sm">{{ app.email }}</td>
+        <td>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--accent-blue-hi);">{{ app.requested_slug }}.matedesk.pro</span>
+        </td>
+        <td>
+          {% if app.status == 'pending' %}
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-yellow-tint);color:#fbbf24;border:1px solid rgba(245,158,11,.25);">Pending</span>
+          {% elif app.status == 'approved' %}
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-blue-tint);color:var(--accent-blue-hi);border:1px solid rgba(59,109,255,.25);">Approved</span>
+          {% elif app.status == 'rejected' %}
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-red-tint);color:#f87171;border:1px solid rgba(239,68,68,.25);">Rejected</span>
+          {% else %}
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:var(--accent-green-tint);color:#4ade80;border:1px solid rgba(34,197,94,.25);">Activated</span>
+          {% endif %}
+        </td>
+        <td class="text-muted text-sm">{{ app.created_at|date:"M j, Y H:i" }}</td>
+        <td class="text-muted text-sm">
+          {% if app.reviewed_by %}{{ app.reviewed_by.full_name|default:app.reviewed_by.email }}{% else %}—{% endif %}
+        </td>
+        <td>
+          <a href="{% url 'platform_admin:beta_application_detail' pk=app.pk %}" class="btn btn-secondary btn-sm">
+            {% if app.status == 'pending' %}Review{% else %}View{% endif %}
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="table-empty">No private beta applications found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

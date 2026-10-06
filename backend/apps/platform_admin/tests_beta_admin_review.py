@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 from django.test import Client, TestCase, override_settings
 
+from apps.email_ingestion.models import TenantEmailSettings
 from apps.platform_admin.auth_utils import SESSION_KEY
 from apps.platform_admin.models import AdminActionLog, BetaApplication
-from apps.tenants.models import Tenant
+from apps.tenants.models import ClientOrganization, Tenant
 from apps.users.models import User
 
 
@@ -54,10 +57,13 @@ class BetaApplicationAdminReviewTests(TestCase):
         self.assertEqual(detail_response.status_code, 200)
         self.assertContains(detail_response, 'john@acmemsp.com')
 
-    def test_approve_records_review_without_provisioning_tenant(self):
+    @patch('apps.platform_admin.views.send_beta_activation_email', return_value=(True, ''))
+    def test_approve_provisions_workspace_and_sends_activation(self, send_email):
         response = self.client.post(
             self.decision_url(),
             {'decision': 'approve', 'review_note': 'Good fit for the beta.'},
+            HTTP_HOST='matedesk.pro',
+            secure=True,
         )
 
         self.assertEqual(response.status_code, 302)
@@ -66,10 +72,74 @@ class BetaApplicationAdminReviewTests(TestCase):
         self.assertEqual(self.application.reviewed_by, self.admin)
         self.assertIsNotNone(self.application.reviewed_at)
         self.assertEqual(self.application.review_note, 'Good fit for the beta.')
-        self.assertFalse(Tenant.objects.filter(slug='acme-msp').exists())
+        self.assertIsNotNone(self.application.activation_email_sent_at)
+        self.assertEqual(self.application.activation_email_last_error, '')
+
+        tenant = Tenant.objects.get(slug='acme-msp')
+        self.assertEqual(self.application.provisioned_tenant, tenant)
+        self.assertEqual(tenant.status, 'active')
+        self.assertTrue(tenant.is_active)
+
+        owner = User.objects.get(tenant=tenant, role='msp_owner')
+        self.assertEqual(self.application.owner_user, owner)
+        self.assertFalse(owner.is_active)
+        self.assertFalse(owner.has_usable_password())
+
+        self.assertTrue(
+            ClientOrganization.objects.filter(
+                tenant=tenant,
+                name='Walk-In',
+                is_active=True,
+            ).exists()
+        )
+        self.assertTrue(TenantEmailSettings.objects.filter(tenant=tenant).exists())
+
+        send_email.assert_called_once()
+        activation_url = send_email.call_args.args[1]
+        self.assertIn('https://matedesk.pro/activate?', activation_url)
+
         self.assertTrue(
             AdminActionLog.objects.filter(
                 action='beta_application_approved',
+                target_id=str(self.application.pk),
+            ).exists()
+        )
+        self.assertTrue(
+            AdminActionLog.objects.filter(
+                action='beta_workspace_provisioned',
+                target_tenant=tenant,
+            ).exists()
+        )
+        self.assertTrue(
+            AdminActionLog.objects.filter(
+                action='beta_activation_email_sent',
+                target_id=str(self.application.pk),
+            ).exists()
+        )
+
+    @patch(
+        'apps.platform_admin.views.send_beta_activation_email',
+        return_value=(False, 'SMTP unavailable'),
+    )
+    def test_smtp_failure_does_not_roll_back_approved_workspace(self, _send_email):
+        response = self.client.post(
+            self.decision_url(),
+            {'decision': 'approve'},
+            HTTP_HOST='matedesk.pro',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, BetaApplication.STATUS_APPROVED)
+        self.assertIsNotNone(self.application.provisioned_tenant_id)
+        self.assertIsNotNone(self.application.owner_user_id)
+        self.assertEqual(self.application.activation_email_last_error, 'SMTP unavailable')
+        self.assertIsNone(self.application.activation_email_sent_at)
+        self.assertTrue(Tenant.objects.filter(slug='acme-msp').exists())
+        self.assertTrue(
+            AdminActionLog.objects.filter(
+                action='beta_activation_email_failed',
                 target_id=str(self.application.pk),
             ).exists()
         )
@@ -131,3 +201,43 @@ class BetaApplicationAdminReviewTests(TestCase):
                 target_id=str(self.application.pk),
             ).exists()
         )
+
+    @patch('apps.platform_admin.views.send_beta_activation_email', return_value=(True, ''))
+    def test_legacy_approved_application_can_be_provisioned(self, send_email):
+        self.application.status = BetaApplication.STATUS_APPROVED
+        self.application.reviewed_by = self.admin
+        self.application.save(update_fields=['status', 'reviewed_by'])
+
+        response = self.client.post(
+            f'/platform-admin/beta-applications/{self.application.pk}/provision/',
+            HTTP_HOST='matedesk.pro',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.application.refresh_from_db()
+        self.assertIsNotNone(self.application.provisioned_tenant_id)
+        self.assertIsNotNone(self.application.owner_user_id)
+        send_email.assert_called_once()
+
+    @patch('apps.platform_admin.views.send_beta_activation_email', return_value=(True, ''))
+    def test_activation_email_can_be_resent_before_owner_activates(self, send_email):
+        self.application.status = BetaApplication.STATUS_APPROVED
+        self.application.reviewed_by = self.admin
+        self.application.save(update_fields=['status', 'reviewed_by'])
+
+        self.client.post(
+            f'/platform-admin/beta-applications/{self.application.pk}/provision/',
+            HTTP_HOST='matedesk.pro',
+            secure=True,
+        )
+        send_email.reset_mock()
+
+        response = self.client.post(
+            f'/platform-admin/beta-applications/{self.application.pk}/resend-activation/',
+            HTTP_HOST='matedesk.pro',
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        send_email.assert_called_once()

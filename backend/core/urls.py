@@ -35,7 +35,7 @@ def public_instance_config(request):
     product_logo_variant = settings.PRODUCT_LOGO_VARIANT
     product_logo_theme_aware = settings.PRODUCT_LOGO_THEME_AWARE
 
-    if tenant is not None and settings.DEPLOYMENT_MODE == 'single_tenant':
+    if tenant is not None:
         branding = tenant.branding or {}
         product_wordmark = branding.get('md_custom_text') or product_wordmark
         product_logo_theme_aware = branding.get(

@@ -1,3 +1,5 @@
+import { BRAND_WORDMARK_OPTICAL_SHIFT } from '@/lib/brandGeometry';
+
 export function BrandLogo({
   size = 'md',
   label,
@@ -38,8 +40,10 @@ export function BrandLogo({
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
           color: 'inherit',
-          position: 'relative',
-          top: 2,
+          display: 'inline-flex',
+          alignItems: 'center',
+          transform: `translateY(${BRAND_WORDMARK_OPTICAL_SHIFT})`,
+          transformOrigin: 'center',
           whiteSpace: 'nowrap',
         }}
       >

@@ -337,7 +337,11 @@ def beta_applications_list(request):
 @platform_admin_required
 def beta_application_detail(request, pk):
     application = get_object_or_404(
-        BetaApplication.objects.select_related('reviewed_by'),
+        BetaApplication.objects.select_related(
+            'reviewed_by',
+            'provisioned_tenant',
+            'owner_user',
+        ),
         pk=pk,
     )
     slug_conflict = (

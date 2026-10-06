@@ -146,3 +146,8 @@ The script performs no database writes.
 Phase D may begin only when the final dry-run reports no fatal ticket-ref/schema/
 UUID collision. The standalone system remains authoritative for current NetaMate
 HelpDesk state until the freeze-and-export step.
+
+## Validation gate
+
+The Phase C branch must pass the normal MateDesk backend migration/tests and frontend
+typecheck/lint together with Phase B before it can be considered ready for Phase D.

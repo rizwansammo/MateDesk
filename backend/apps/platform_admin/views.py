@@ -4,6 +4,8 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -11,7 +13,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from apps.tenants.models import Tenant, ClientOrganization
+from apps.tenants.domains import normalize_custom_domain, validate_custom_domain, verify_domain_ownership
+from apps.tenants.models import Tenant, ClientOrganization, TenantDomain
 from apps.users.models import User
 from apps.tickets.models import Ticket
 from .auth_utils import platform_admin_required, get_platform_admin, SESSION_KEY, log_action
@@ -424,6 +427,14 @@ def tenant_detail(request, pk):
     branding = {**_branding_defaults, **(tenant.branding or {})}
     branding['md_logo_url'] = tenant.branding_md_logo.url if tenant.branding_md_logo else ''
 
+    from django.conf import settings
+    custom_domains = tenant.custom_domains.all()
+    custom_domains_enabled = getattr(settings, 'CUSTOM_DOMAINS_ENABLED', False)
+    custom_domain_target = (
+        getattr(settings, 'CUSTOM_DOMAIN_CNAME_TARGET', '')
+        or getattr(settings, 'APP_DOMAIN', '')
+    )
+
     temp_pw = request.session.pop('_temp_pw', None)
     ctx = {
         'tenant': tenant,
@@ -434,6 +445,9 @@ def tenant_detail(request, pk):
         'logs': logs,
         'ticket_counts': ticket_counts,
         'branding': branding,
+        'custom_domains': custom_domains,
+        'custom_domains_enabled': custom_domains_enabled,
+        'custom_domain_target': custom_domain_target,
         'tab': tab,
         'page': 'tenants',
         'temp_pw': temp_pw,
@@ -538,6 +552,206 @@ def tenant_update_branding(request, pk):
                {'field': 'branding', 'values': branding})
     messages.success(request, f'Branding updated for "{tenant.name}".')
     return redirect(f'/platform-admin/tenants/{pk}/?tab=branding')
+
+
+# ── Tenant Custom Domains ───────────────────────────────────────────────────
+
+def _domain_redirect(pk):
+    return redirect(f'/platform-admin/tenants/{pk}/?tab=domains')
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_add(request, pk):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    domain = normalize_custom_domain(request.POST.get('domain', ''))
+
+    try:
+        validate_custom_domain(domain)
+    except ValidationError as exc:
+        messages.error(request, '; '.join(exc.messages))
+        return _domain_redirect(pk)
+
+    existing = TenantDomain.objects.filter(domain=domain).select_related('tenant').first()
+    if existing:
+        if existing.tenant_id == tenant.id:
+            messages.info(request, f'{domain} is already attached to this tenant.')
+        else:
+            messages.error(request, 'That hostname is already attached to another tenant.')
+        return _domain_redirect(pk)
+
+    try:
+        mapping = TenantDomain.objects.create(tenant=tenant, domain=domain)
+    except (ValidationError, IntegrityError):
+        messages.error(request, 'The hostname could not be added. Check the value and try again.')
+        return _domain_redirect(pk)
+
+    log_action(
+        request, 'tenant_updated', 'tenant', tenant.pk, tenant.name, tenant,
+        {'field': 'custom_domain_added', 'domain': mapping.domain},
+    )
+    messages.success(
+        request,
+        f'{mapping.domain} added. Publish the TXT ownership record, then verify it here.',
+    )
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_verify(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant)
+
+    if mapping.status not in {'pending', 'failed'}:
+        messages.info(request, f'{mapping.domain} is already {mapping.get_status_display().lower()}.')
+        return _domain_redirect(pk)
+
+    if not verify_domain_ownership(mapping.domain, mapping.verification_token):
+        messages.error(
+            request,
+            f'Ownership TXT record was not found for {mapping.domain}. DNS may still be propagating.',
+        )
+        return _domain_redirect(pk)
+
+    mapping.status = 'verified'
+    mapping.verified_at = timezone.now()
+    mapping.deprovisioned_at = None
+    mapping.last_error = ''
+    mapping.save(update_fields=[
+        'status', 'verified_at', 'deprovisioned_at', 'last_error', 'updated_at',
+    ])
+    log_action(
+        request, 'tenant_updated', 'tenant', tenant.pk, tenant.name, tenant,
+        {'field': 'custom_domain_verified', 'domain': mapping.domain},
+    )
+    messages.success(
+        request,
+        f'{mapping.domain} ownership verified. SSL provisioning is now queued.',
+    )
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_retry(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant)
+
+    if mapping.status != 'failed' or not mapping.verified_at:
+        messages.error(request, 'Only a verified domain with a provisioning failure can be retried.')
+        return _domain_redirect(pk)
+
+    mapping.status = 'verified'
+    mapping.last_error = ''
+    mapping.save(update_fields=['status', 'last_error', 'updated_at'])
+    messages.success(request, f'{mapping.domain} has been queued for provisioning again.')
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_disable(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant)
+
+    if mapping.status == 'disabled':
+        return _domain_redirect(pk)
+
+    mapping.status = 'disabled'
+    mapping.is_primary = False
+    mapping.deprovisioned_at = None
+    mapping.last_error = ''
+    mapping.save(update_fields=[
+        'status', 'is_primary', 'deprovisioned_at', 'last_error', 'updated_at',
+    ])
+    log_action(
+        request, 'tenant_updated', 'tenant', tenant.pk, tenant.name, tenant,
+        {'field': 'custom_domain_disabled', 'domain': mapping.domain},
+    )
+    messages.warning(
+        request,
+        f'{mapping.domain} is disabled. The host provisioner will remove its MateDesk nginx route.',
+    )
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_reenable(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant)
+
+    if mapping.status != 'disabled':
+        messages.error(request, 'Only disabled domains can be re-enabled.')
+        return _domain_redirect(pk)
+
+    # Ownership must be proved again after a disable interval. Rotate the token so
+    # an old DNS record cannot silently reactivate a hostname that changed hands.
+    from apps.tenants.models import generate_domain_verification_token
+    mapping.verification_token = generate_domain_verification_token()
+    mapping.status = 'pending'
+    mapping.verified_at = None
+    mapping.ssl_issued_at = None
+    mapping.deprovisioned_at = None
+    mapping.last_error = ''
+    mapping.save(update_fields=[
+        'verification_token', 'status', 'verified_at', 'ssl_issued_at',
+        'deprovisioned_at', 'last_error', 'updated_at',
+    ])
+    messages.success(
+        request,
+        f'{mapping.domain} reset to pending. Publish the new TXT token and verify ownership again.',
+    )
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_set_primary(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant, status='active')
+
+    with transaction.atomic():
+        TenantDomain.objects.filter(tenant=tenant, is_primary=True).exclude(pk=mapping.pk).update(is_primary=False)
+        if not mapping.is_primary:
+            mapping.is_primary = True
+            mapping.save(update_fields=['is_primary', 'updated_at'])
+
+    log_action(
+        request, 'tenant_updated', 'tenant', tenant.pk, tenant.name, tenant,
+        {'field': 'custom_domain_primary', 'domain': mapping.domain},
+    )
+    messages.success(request, f'{mapping.domain} is now the primary custom domain.')
+    return _domain_redirect(pk)
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def tenant_domain_remove(request, pk, domain_id):
+    tenant = get_object_or_404(Tenant, pk=pk)
+    mapping = get_object_or_404(TenantDomain, pk=domain_id, tenant=tenant)
+
+    # Once TLS has ever been provisioned we retain the row as an audit/rollback
+    # record. Deleting an active route would also race the host provisioner.
+    if mapping.ssl_issued_at or mapping.status not in {'pending', 'disabled'}:
+        messages.error(
+            request,
+            'Previously provisioned domains are retained for rollback. Disable the domain instead.',
+        )
+        return _domain_redirect(pk)
+    if mapping.status == 'disabled' and not mapping.deprovisioned_at:
+        messages.error(request, 'Wait for host deprovisioning to finish before removing this domain.')
+        return _domain_redirect(pk)
+
+    domain = mapping.domain
+    mapping.delete()
+    log_action(
+        request, 'tenant_updated', 'tenant', tenant.pk, tenant.name, tenant,
+        {'field': 'custom_domain_removed', 'domain': domain},
+    )
+    messages.success(request, f'{domain} removed.')
+    return _domain_redirect(pk)
 
 
 # ── Platform Admin Accounts ─────────────────────────────────────────────────

@@ -64,6 +64,18 @@ class TenantRegisterView(APIView):
         if not getattr(settings, 'PUBLIC_REGISTRATION_ENABLED', True):
             return Response({'detail': 'Not found.'}, status=404)
 
+        if getattr(settings, 'DEPLOYMENT_MODE', 'multi_tenant') == 'multi_tenant':
+            from apps.platform_admin.models import PlatformSettings
+            signup_mode = PlatformSettings.load().signup_mode
+            if signup_mode != PlatformSettings.SIGNUP_MODE_PUBLIC_TRIAL:
+                return Response(
+                    {
+                        'detail': 'Public self-registration is disabled while MateDesk is in Private Beta.',
+                        'code': 'private_beta',
+                    },
+                    status=403,
+                )
+
         serializer = TenantRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.create(serializer.validated_data)

@@ -11,7 +11,7 @@ class Command(BaseCommand):
         parser.add_argument('domain')
         parser.add_argument(
             'state',
-            choices=['provisioning', 'active', 'failed', 'deprovisioned'],
+            choices=['provisioning', 'active', 'failed', 'deprovisioned', 'deprovision_failed'],
         )
         parser.add_argument('--error', default='')
 
@@ -48,12 +48,18 @@ class Command(BaseCommand):
             mapping.last_error = (options['error'] or 'Host provisioning failed.')[:1000]
             fields = ['status', 'last_error', 'updated_at']
 
-        else:
+        elif state == 'deprovisioned':
             if mapping.status != 'disabled':
                 raise CommandError('Only disabled domains can be marked deprovisioned.')
             mapping.deprovisioned_at = now
             mapping.last_error = ''
             fields = ['deprovisioned_at', 'last_error', 'updated_at']
+
+        else:
+            if mapping.status != 'disabled':
+                raise CommandError('Only disabled domains can record a deprovisioning error.')
+            mapping.last_error = (options['error'] or 'Host deprovisioning failed.')[:1000]
+            fields = ['last_error', 'updated_at']
 
         mapping.save(update_fields=fields)
         self.stdout.write(f'{mapping.domain}\t{mapping.status}')

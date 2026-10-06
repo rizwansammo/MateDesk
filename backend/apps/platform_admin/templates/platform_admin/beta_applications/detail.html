@@ -120,6 +120,17 @@
           Approving creates the tenant and inactive MSP Owner account, then sends a one-time password activation link. SMTP failure will not roll back the workspace; the email can be resent safely.
         </div>
 
+        {% if not platform_email_configured %}
+        <div style="padding:10px 12px;background:var(--accent-yellow-tint);border:1px solid rgba(245,158,11,.26);font-size:11px;color:#fbbf24;line-height:1.55;margin-bottom:14px;">
+          Platform Email SMTP is not configured. Approval will still provision the workspace, but the activation email will need to be resent after SMTP is configured.
+        </div>
+        {% else %}
+        <div style="padding:9px 11px;background:var(--bg-input);border:1px solid var(--border-subtle);font-size:10.5px;color:var(--fg-3);line-height:1.5;margin-bottom:14px;">
+          Activation email sender: <strong style="color:var(--fg-2);">{{ platform_from_email }}</strong>
+          · Reply-To: <strong style="color:var(--fg-2);">{{ platform_support_email }}</strong>
+        </div>
+        {% endif %}
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <button type="submit" name="decision" value="approve" class="btn btn-success"
                   {% if slug_conflict or email_conflict %}disabled title="Resolve provisioning conflicts first"{% endif %}

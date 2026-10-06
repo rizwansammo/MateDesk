@@ -10,7 +10,7 @@ import StructuredData from './_components/StructuredData';
 // otherwise the homepage would read "MateDesk … | MateDesk" in search results.
 export const metadata: Metadata = {
   title: {
-    absolute: 'MateDesk — Multi-Tenant Helpdesk for MSPs',
+    absolute: 'MATEDESK · HelpDesk Ticketing System.',
   },
   description:
     'Multi-tenant helpdesk for managed service providers. Isolated client workspaces, '

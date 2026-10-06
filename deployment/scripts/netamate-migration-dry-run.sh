@@ -13,14 +13,16 @@ chmod 600 "$TMP_MAIN" "$TMP_SOURCE"
 manifest() {
   local dir="$1"
   local out="$2"
-  cd "$dir"
-  if [[ -f .release.env ]]; then
-    set -a
-    # shellcheck disable=SC1091
-    source ./.release.env
-    set +a
-  fi
-  docker compose exec -T backend     python manage.py tenant_migration_manifest --tenant "$TENANT" > "$out"
+  (
+    cd "$dir"
+    if [[ -f .release.env ]]; then
+      set -a
+      # shellcheck disable=SC1091
+      source ./.release.env
+      set +a
+    fi
+    docker compose exec -T backend python manage.py tenant_migration_manifest --tenant "$TENANT"
+  ) > "$out"
 }
 
 manifest "$MAIN_DIR" "$TMP_MAIN"
@@ -108,15 +110,21 @@ sys.exit(2 if fatal else 0)
 PY
 
 # Safe encryption compatibility probe. This never reads or emits a mailbox secret.
-cd "$SOURCE_DIR"
-set -a
-# shellcheck disable=SC1091
-source ./.release.env
-set +a
-PROBE="$(docker compose exec -T backend python manage.py shell -c   'from apps.email_ingestion.crypto import encrypt_email_credential; print(encrypt_email_credential("phase-c-probe"))' | tail -1)"
+PROBE="$(
+  cd "$SOURCE_DIR"
+  set -a
+  # shellcheck disable=SC1091
+  source ./.release.env
+  set +a
+  docker compose exec -T backend python manage.py shell -c \
+    'from apps.email_ingestion.crypto import encrypt_email_credential; print(encrypt_email_credential("phase-c-probe"))' | tail -1
+)"
 
-cd "$MAIN_DIR"
-RESULT="$(docker compose exec -T -e PHASEC_PROBE="$PROBE" backend python manage.py shell -c   'import os; from apps.email_ingestion.crypto import decrypt_email_credential; print(decrypt_email_credential(os.environ["PHASEC_PROBE"]) == "phase-c-probe")' | tail -1)"
+RESULT="$(
+  cd "$MAIN_DIR"
+  docker compose exec -T -e PHASEC_PROBE="$PROBE" backend python manage.py shell -c \
+    'import os; from apps.email_ingestion.crypto import decrypt_email_credential; print(decrypt_email_credential(os.environ["PHASEC_PROBE"]) == "phase-c-probe")' | tail -1
+)"
 
 echo "cross_deployment_email_crypto_compatible=$RESULT"
 if [[ "$RESULT" != "True" ]]; then

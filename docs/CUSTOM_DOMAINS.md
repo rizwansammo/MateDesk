@@ -39,7 +39,7 @@ as "Primary" records the preference but does **not** force a redirect, preservin
 
 The host provisioner creates an HTTP-only Nginx block, requests a dedicated Let's Encrypt
 certificate with HTTP-01/webroot, then replaces it with the final HTTPS reverse-proxy block.
-The final HTTP block keeps the ACME challenge path available for Certbot renewal.
+The final HTTP block keeps the ACME challenge path available for Certbot renewal. The host provisioner also installs a scoped Certbot deploy hook; after a successful renewal it reloads Nginx only when the renewed lineage has a matching MateDesk-managed vhost marker.
 
 Custom-domain HSTS intentionally omits `includeSubDomains` because MateDesk must not set
 policy for unrelated customer subdomains.

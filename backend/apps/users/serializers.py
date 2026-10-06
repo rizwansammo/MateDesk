@@ -208,25 +208,8 @@ class BetaApplicationSerializer(serializers.Serializer):
         from apps.tenants.models import Tenant
 
         value = value.lower().strip()
-        if not re.match(r'^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$|^[a-z0-9]{3,30}
-    id          = serializers.UUIDField()
-    email       = serializers.EmailField()
-    full_name   = serializers.CharField()
-    role        = serializers.CharField()
-    tenant_id   = serializers.UUIDField(allow_null=True)
-    tenant_slug = serializers.SerializerMethodField()
-    tenant_name = serializers.SerializerMethodField()
-    job_title   = serializers.CharField()
-    department  = serializers.CharField()
-    phone       = serializers.CharField()
-    date_joined = serializers.DateTimeField()
-
-    def get_tenant_slug(self, obj):
-        return obj.tenant.slug if obj.tenant else None
-
-    def get_tenant_name(self, obj):
-        return obj.tenant.name if obj.tenant else None
-, value):
+        pattern = r'^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$|^[a-z0-9]{3,30}$'
+        if not re.match(pattern, value):
             raise serializers.ValidationError(
                 'Subdomain must be 3–30 characters: lowercase letters, digits, and hyphens only.'
             )
@@ -241,7 +224,6 @@ class BetaApplicationSerializer(serializers.Serializer):
     def create(self, validated_data):
         from apps.platform_admin.models import BetaApplication
         return BetaApplication.objects.create(**validated_data)
-
 
 class UserMeSerializer(serializers.Serializer):
     id          = serializers.UUIDField()

@@ -280,7 +280,7 @@
           </div>
         </div>
 
-        <!-- SMTP card — Platform Admin outbound mail (for 2FA OTP emails) -->
+        <!-- SMTP card — platform-level authentication and transactional mail -->
         <div class="sc-card">
           <div class="sc-head">
             <div class="sc-head-icon">
@@ -291,8 +291,8 @@
               </svg>
             </div>
             <div class="sc-head-text">
-              <div class="sc-head-title">Platform Admin SMTP</div>
-              <div class="sc-head-desc">Used for admin 2FA OTP emails.</div>
+              <div class="sc-head-title">Platform Email SMTP</div>
+              <div class="sc-head-desc">Used for platform authentication and transactional emails.</div>
             </div>
             {% if ps.admin_smtp_host and ps.admin_smtp_from_email %}
             <span class="sc-head-badge on">Configured</span>
@@ -331,7 +331,7 @@
                 <div>
                   <div class="sc-kv-key">Username</div>
                   <input type="text" name="admin_smtp_username" value="{{ ps.admin_smtp_username }}"
-                         placeholder="you@gmail.com"
+                         placeholder="notifications@matedesk.pro"
                          style="width:100%;padding:7px 10px;background:var(--bg-input);border:1px solid var(--border-subtle);color:var(--fg-1);font-size:13px;font-family:monospace;box-sizing:border-box;outline:none;margin-top:4px;">
                 </div>
                 <div>

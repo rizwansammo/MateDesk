@@ -36,6 +36,7 @@ class DeploymentModeTenantMiddlewareTests(TestCase):
 
     @override_settings(
         DEPLOYMENT_MODE='multi_tenant',
+        APP_DOMAIN='matedesk.pro',
         NON_TENANT_HOSTS={'matedesk.pro', 'www.matedesk.pro'},
         ALLOWED_HOSTS=['matedesk.pro', '.matedesk.pro'],
     )

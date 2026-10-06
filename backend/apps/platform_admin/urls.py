@@ -22,6 +22,13 @@ urlpatterns = [
     path('tenants/<uuid:pk>/change-plan/', views.tenant_change_plan, name='tenant_change_plan'),
     path('tenants/<uuid:pk>/update-subscription/', views.tenant_update_subscription, name='tenant_update_subscription'),
     path('tenants/<uuid:pk>/branding/', views.tenant_update_branding, name='tenant_update_branding'),
+    path('tenants/<uuid:pk>/domains/add/', views.tenant_domain_add, name='tenant_domain_add'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/verify/', views.tenant_domain_verify, name='tenant_domain_verify'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/retry/', views.tenant_domain_retry, name='tenant_domain_retry'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/disable/', views.tenant_domain_disable, name='tenant_domain_disable'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/reenable/', views.tenant_domain_reenable, name='tenant_domain_reenable'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/primary/', views.tenant_domain_set_primary, name='tenant_domain_set_primary'),
+    path('tenants/<uuid:pk>/domains/<uuid:domain_id>/remove/', views.tenant_domain_remove, name='tenant_domain_remove'),
 
     # Subscriptions
     path('subscriptions/plans/', views.plans_list, name='plans_list'),

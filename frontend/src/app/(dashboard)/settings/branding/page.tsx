@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { BrandingConfig, useLogoSizeStore } from '@/store/useLogoSizeStore';
 import { NetaMateMark } from '@/components/NetaMateMark';
 import { MateDeskMark } from '@/components/MateDeskMark';
+import { BRAND_WORDMARK_OPTICAL_SHIFT } from '@/lib/brandGeometry';
 
 type BrandingState = BrandingConfig & {
   md_logo_variant?: string;
@@ -421,7 +422,7 @@ function BrandPreview({
             <MateDeskMark size={iconSize} />
           )}
         </div>
-        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize, lineHeight: 1, letterSpacing: '0.035em' }}>
+        <span style={{ fontFamily: 'var(--font-hemi), sans-serif', fontWeight: 700, fontSize, lineHeight: 1, letterSpacing: '0.035em', transform: `translateY(${BRAND_WORDMARK_OPTICAL_SHIFT})`, transformOrigin: 'center' }}>
           {wordmark}
         </span>
       </div>

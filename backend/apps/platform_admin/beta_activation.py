@@ -133,6 +133,7 @@ Requested workspace<br><strong style="color:#111827;">{application.requested_slu
         text_body=text_body,
         html_body=html_body,
         reply_to=support_email or None,
+        from_name='MateDesk',
     )
 
 

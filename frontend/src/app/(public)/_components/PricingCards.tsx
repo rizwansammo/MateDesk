@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Check, ArrowRight } from 'lucide-react';
 import { usePublicAuthStatus } from '@/hooks/usePublicAuthStatus';
+import { usePublicSignupMode } from '@/hooks/usePublicSignupMode';
 import { useState, useEffect } from 'react';
 
 type Tier = {
@@ -46,6 +47,9 @@ const wrap: React.CSSProperties = { maxWidth: 1280, margin: '0 auto', padding: '
 
 export default function PricingCards() {
   const { isAuth, dashboardUrl } = usePublicAuthStatus();
+  const { signupMode } = usePublicSignupMode();
+  const isPrivateBeta = signupMode === 'private_beta';
+  const signupHref = isPrivateBeta ? '/apply' : '/register';
   const [tiers, setTiers] = useState<Tier[]>(FALLBACK_TIERS);
 
   useEffect(() => {
@@ -67,8 +71,10 @@ export default function PricingCards() {
             <h2 style={{ fontFamily: 'var(--font-hemi), sans-serif', fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, textTransform: 'uppercase', color: '#0B1220', marginBottom: 16 }}>
               One platform. Pay for agents, not tenants.
             </h2>
-            <p style={{ fontSize: 16, color: '#6B7385', maxWidth: 520, margin: '0 auto', lineHeight: 1.6 }}>
-              No per-client fees, no surprise overage charges. Pay only for the agents working tickets.
+            <p style={{ fontSize: 16, color: '#6B7385', maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
+              {isPrivateBeta
+                ? 'MateDesk is currently in Private Beta. Access is approval-based, and no payment is collected during the application process.'
+                : 'No per-client fees, no surprise overage charges. Pay only for the agents working tickets.'}
             </p>
           </div>
 
@@ -102,7 +108,7 @@ export default function PricingCards() {
                   </a>
                 ) : (
                   <Link
-                    href="/register"
+                    href={signupHref}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       height: 44, width: '100%', marginBottom: 28,
@@ -114,7 +120,7 @@ export default function PricingCards() {
                     onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = t.featured ? '#1B43BC' : '#F7F8FA'; }}
                     onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = t.featured ? '#1F4ED8' : 'transparent'; }}
                   >
-                    Start free trial
+                    {isPrivateBeta ? 'Apply for Beta' : 'Start free trial'}
                   </Link>
                 )}
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -163,7 +169,11 @@ export default function PricingCards() {
                   {f.q}
                   <span style={{ color: '#9AA2B1', fontSize: 20, flexShrink: 0, marginLeft: 12 }}>+</span>
                 </summary>
-                <p style={{ padding: '0 24px 20px', fontSize: 14, color: '#6B7385', lineHeight: 1.7, margin: 0 }}>{f.a}</p>
+                <p style={{ padding: '0 24px 20px', fontSize: 14, color: '#6B7385', lineHeight: 1.7, margin: 0 }}>
+                  {isPrivateBeta && f.q === 'Do you offer a free trial?'
+                    ? 'MateDesk is currently available through a limited private beta. Submit an application for access; no payment is required to apply.'
+                    : f.a}
+                </p>
               </details>
             ))}
           </div>
@@ -176,8 +186,10 @@ export default function PricingCards() {
           <h2 style={{ fontFamily: 'var(--font-hemi), sans-serif', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, textTransform: 'uppercase', color: '#ECEEF2', lineHeight: 1.05, marginBottom: 20 }}>
             Ready to retire the<br /><span style={{ color: '#1F4ED8' }}>shared inbox?</span>
           </h2>
-          <p style={{ fontSize: 16, color: '#6B7385', maxWidth: 520, margin: '0 auto 36px', lineHeight: 1.6 }}>
-            Spin up your MateDesk tenant in under 5 minutes. Pull in your first client mailbox and never lose track of an SLA again.
+          <p style={{ fontSize: 16, color: '#6B7385', maxWidth: 560, margin: '0 auto 36px', lineHeight: 1.6 }}>
+            {isPrivateBeta
+              ? 'Join the MateDesk Private Beta. Tell us about your MSP and we’ll review your workspace request for early access.'
+              : 'Spin up your MateDesk tenant in under 5 minutes. Pull in your first client mailbox and never lose track of an SLA again.'}
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
             {isAuth ? (
@@ -188,11 +200,11 @@ export default function PricingCards() {
                 Go to Dashboard <ArrowRight size={18} />
               </a>
             ) : (
-              <Link href="/register" style={{ height: 52, padding: '0 28px', display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1F4ED8', color: '#fff', fontSize: 16, fontWeight: 600, textDecoration: 'none', transition: 'background 120ms' }}
+              <Link href={signupHref} style={{ height: 52, padding: '0 28px', display: 'inline-flex', alignItems: 'center', gap: 8, background: '#1F4ED8', color: '#fff', fontSize: 16, fontWeight: 600, textDecoration: 'none', transition: 'background 120ms' }}
                 onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = '#1B43BC'; }}
                 onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = '#1F4ED8'; }}
               >
-                Start free trial <ArrowRight size={18} />
+                {isPrivateBeta ? 'Apply for Private Beta' : 'Start free trial'} <ArrowRight size={18} />
               </Link>
             )}
             <a href="#" style={{ height: 52, padding: '0 28px', display: 'inline-flex', alignItems: 'center', border: '1px solid #2F3744', color: '#ECEEF2', fontSize: 16, fontWeight: 500, textDecoration: 'none', background: 'transparent', transition: 'background 120ms' }}

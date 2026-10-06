@@ -170,7 +170,7 @@ CUSTOM_DOMAINS_ENABLED = config(
 )
 CUSTOM_DOMAIN_CNAME_TARGET = config(
     'CUSTOM_DOMAIN_CNAME_TARGET',
-    default=APP_DOMAIN,
+    default=(f'domains.{APP_DOMAIN}' if APP_DOMAIN else ''),
 ).strip().lower().rstrip('.')
 
 if CUSTOM_DOMAINS_ENABLED and DEPLOYMENT_MODE == 'multi_tenant':

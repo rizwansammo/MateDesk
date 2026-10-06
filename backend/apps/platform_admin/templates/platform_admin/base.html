@@ -108,6 +108,15 @@
         <!-- Tenant Control -->
         <div class="nav-section">
           <span class="nav-section-label">Tenant Control</span>
+          <a href="{% url 'platform_admin:beta_applications' %}" class="nav-item {% if page == 'beta_applications' %}active{% endif %}">
+            <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+              <path d="M2 3.5h12v9H2z" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <path d="M2 5l6 4 6-4" stroke="currentColor" stroke-width="1.3" fill="none"/>
+              <circle cx="12.5" cy="11.5" r="2.2" fill="var(--bg-panel)" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M12.5 10.3v2.4M11.3 11.5h2.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+            </svg>
+            Beta Applications
+          </a>
           <a href="{% url 'platform_admin:tenants_list' %}" class="nav-item {% if page == 'tenants' %}active{% endif %}">
             <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
               <rect x="2" y="7" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>

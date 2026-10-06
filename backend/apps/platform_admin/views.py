@@ -351,11 +351,18 @@ def beta_application_detail(request, pk):
         .exclude(pk=application.owner_user_id)
         .exists()
     )
+    platform_settings = PlatformSettings.load()
 
     return render(request, 'platform_admin/beta_applications/detail.html', {
         'application': application,
         'slug_conflict': slug_conflict,
         'email_conflict': email_conflict,
+        'platform_email_configured': bool(
+            platform_settings.admin_smtp_host
+            and platform_settings.admin_smtp_from_email
+        ),
+        'platform_from_email': platform_settings.admin_smtp_from_email,
+        'platform_support_email': platform_settings.support_email,
         'page': 'beta_applications',
     })
 

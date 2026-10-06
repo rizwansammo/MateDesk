@@ -335,7 +335,7 @@ def tenants_list(request):
 def tenant_create(request):
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
-        slug = request.POST.get('slug', '').strip()
+        slug = request.POST.get('slug', '').strip().lower()
         plan = request.POST.get('plan', 'starter')
         status = request.POST.get('status', 'trial')
         owner_name = request.POST.get('owner_name', '').strip()
@@ -457,6 +457,13 @@ def tenant_detail(request, pk):
     return render(request, 'platform_admin/tenants/detail.html', ctx)
 
 
+def _tenant_has_domains_blocking_delete(tenant):
+    return tenant.custom_domains.exclude(
+        Q(status='pending') |
+        Q(status='disabled', deprovisioned_at__isnull=False)
+    ).exists()
+
+
 @platform_admin_required
 @require_http_methods(['POST'])
 def tenant_delete(request, pk):
@@ -467,6 +474,13 @@ def tenant_delete(request, pk):
     verified = authenticate(request, email=admin.email, password=password)
     if not verified:
         messages.error(request, 'Incorrect password — tenant was NOT deleted.')
+        return redirect('platform_admin:tenant_detail', pk=pk)
+
+    if _tenant_has_domains_blocking_delete(tenant):
+        messages.error(
+            request,
+            'Tenant was NOT deleted. Disable all custom domains and wait for host deprovisioning first.',
+        )
         return redirect('platform_admin:tenant_detail', pk=pk)
 
     tenant_name = tenant.name
@@ -1017,6 +1031,13 @@ def tenant_schedule_delete(request, pk):
     verified = authenticate(request, email=admin.email, password=password)
     if not verified:
         messages.error(request, 'Incorrect password — deletion was NOT scheduled.')
+        return redirect('platform_admin:tenants_list')
+
+    if _tenant_has_domains_blocking_delete(tenant):
+        messages.error(
+            request,
+            'Deletion was NOT scheduled. Disable all custom domains and wait for host deprovisioning first.',
+        )
         return redirect('platform_admin:tenants_list')
 
     tenant.deletion_scheduled_at = timezone.now() + timedelta(hours=24)

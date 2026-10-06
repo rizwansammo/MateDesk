@@ -28,6 +28,13 @@ ACTION_CHOICES = [
 
 
 class PlatformSettings(models.Model):
+    SIGNUP_MODE_PUBLIC_TRIAL = 'public_trial'
+    SIGNUP_MODE_PRIVATE_BETA = 'private_beta'
+    SIGNUP_MODE_CHOICES = [
+        (SIGNUP_MODE_PUBLIC_TRIAL, 'Public Trial'),
+        (SIGNUP_MODE_PRIVATE_BETA, 'Private Beta'),
+    ]
+
     platform_name  = models.CharField(max_length=200, default='MateDesk')
     company_name   = models.CharField(max_length=200, default='NetaMate Solutions')
     version        = models.CharField(max_length=50, default='v2.0')
@@ -41,6 +48,12 @@ class PlatformSettings(models.Model):
     email_poll_interval = models.IntegerField(
         default=60,
         choices=[(30, '30 seconds'), (60, '1 minute'), (120, '2 minutes'), (300, '5 minutes')],
+    )
+    signup_mode = models.CharField(
+        max_length=30,
+        choices=SIGNUP_MODE_CHOICES,
+        default=SIGNUP_MODE_PUBLIC_TRIAL,
+        help_text='Controls whether the public site allows instant trials or requires private-beta approval.',
     )
     # SMTP for Platform Admin emails (OTP codes, etc.)
     admin_smtp_host       = models.CharField(max_length=255, blank=True, default='')

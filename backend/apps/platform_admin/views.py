@@ -18,7 +18,7 @@ from apps.tenants.models import Tenant, ClientOrganization, TenantDomain
 from apps.users.models import User
 from apps.tickets.models import Ticket
 from .auth_utils import platform_admin_required, get_platform_admin, SESSION_KEY, log_action
-from .models import AdminActionLog, PlatformSettings, PlatformPlan
+from .models import AdminActionLog, BetaApplication, PlatformSettings, PlatformPlan
 from .two_fa_utils import (
     create_email_otp, verify_email_otp, send_otp_email,
     generate_totp_secret, get_totp_provisioning_uri, verify_totp_code, generate_qr_svg,
@@ -287,6 +287,153 @@ def dashboard(request):
         'page': 'dashboard',
     }
     return render(request, 'platform_admin/dashboard.html', ctx)
+
+
+# ── Private Beta Applications ────────────────────────────────────────────────
+
+@platform_admin_required
+def beta_applications_list(request):
+    qs = BetaApplication.objects.select_related('reviewed_by').order_by('-created_at')
+
+    search = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+
+    if search:
+        qs = qs.filter(
+            Q(company_name__icontains=search)
+            | Q(owner_name__icontains=search)
+            | Q(email__icontains=search)
+            | Q(requested_slug__icontains=search)
+        )
+
+    valid_statuses = {value for value, _label in BetaApplication.STATUS_CHOICES}
+    if status_filter in valid_statuses:
+        qs = qs.filter(status=status_filter)
+    elif status_filter:
+        status_filter = ''
+
+    counts = {
+        'all': BetaApplication.objects.count(),
+        'pending': BetaApplication.objects.filter(status=BetaApplication.STATUS_PENDING).count(),
+        'approved': BetaApplication.objects.filter(status=BetaApplication.STATUS_APPROVED).count(),
+        'rejected': BetaApplication.objects.filter(status=BetaApplication.STATUS_REJECTED).count(),
+        'activated': BetaApplication.objects.filter(status=BetaApplication.STATUS_ACTIVATED).count(),
+    }
+
+    return render(request, 'platform_admin/beta_applications/list.html', {
+        'applications': qs,
+        'counts': counts,
+        'search': search,
+        'status_filter': status_filter,
+        'page': 'beta_applications',
+    })
+
+
+@platform_admin_required
+def beta_application_detail(request, pk):
+    application = get_object_or_404(
+        BetaApplication.objects.select_related('reviewed_by'),
+        pk=pk,
+    )
+    slug_conflict = (
+        application.requested_slug in RESERVED_PLATFORM_SLUGS
+        or Tenant.objects.filter(slug=application.requested_slug).exists()
+    )
+    email_conflict = User.objects.filter(email__iexact=application.email).exists()
+
+    return render(request, 'platform_admin/beta_applications/detail.html', {
+        'application': application,
+        'slug_conflict': slug_conflict,
+        'email_conflict': email_conflict,
+        'page': 'beta_applications',
+    })
+
+
+@platform_admin_required
+@require_http_methods(['POST'])
+def beta_application_decide(request, pk):
+    decision = request.POST.get('decision', '').strip().lower()
+    review_note = request.POST.get('review_note', '').strip()
+
+    if decision not in {'approve', 'reject'}:
+        messages.error(request, 'Invalid review decision.')
+        return redirect('platform_admin:beta_application_detail', pk=pk)
+
+    with transaction.atomic():
+        application = get_object_or_404(
+            BetaApplication.objects.select_for_update(),
+            pk=pk,
+        )
+
+        if application.status != BetaApplication.STATUS_PENDING:
+            messages.warning(
+                request,
+                f'This application has already been reviewed as {application.get_status_display()}.',
+            )
+            return redirect('platform_admin:beta_application_detail', pk=pk)
+
+        if decision == 'approve':
+            if application.requested_slug in RESERVED_PLATFORM_SLUGS:
+                messages.error(
+                    request,
+                    'Approval blocked: the requested workspace subdomain is reserved by the platform.',
+                )
+                return redirect('platform_admin:beta_application_detail', pk=pk)
+            if Tenant.objects.filter(slug=application.requested_slug).exists():
+                messages.error(
+                    request,
+                    'Approval blocked: the requested workspace subdomain is no longer available.',
+                )
+                return redirect('platform_admin:beta_application_detail', pk=pk)
+            if User.objects.filter(email__iexact=application.email).exists():
+                messages.error(
+                    request,
+                    'Approval blocked: an account with this email now exists on the platform.',
+                )
+                return redirect('platform_admin:beta_application_detail', pk=pk)
+
+            application.status = BetaApplication.STATUS_APPROVED
+            action = 'beta_application_approved'
+            verb = 'approved'
+        else:
+            application.status = BetaApplication.STATUS_REJECTED
+            action = 'beta_application_rejected'
+            verb = 'rejected'
+
+        application.review_note = review_note
+        application.reviewed_at = timezone.now()
+        application.reviewed_by = request.platform_admin
+        application.save(update_fields=[
+            'status',
+            'review_note',
+            'reviewed_at',
+            'reviewed_by',
+            'updated_at',
+        ])
+
+        log_action(
+            request,
+            action,
+            'beta_application',
+            application.pk,
+            application.company_name,
+            None,
+            {
+                'email': application.email,
+                'requested_slug': application.requested_slug,
+                'status': application.status,
+            },
+        )
+
+    if decision == 'approve':
+        messages.success(
+            request,
+            f'"{application.company_name}" approved. Workspace provisioning is awaiting activation.',
+        )
+    else:
+        messages.success(request, f'"{application.company_name}" application rejected.')
+
+    return redirect('platform_admin:beta_application_detail', pk=pk)
 
 
 # ── Tenants ─────────────────────────────────────────────────────────────────

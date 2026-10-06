@@ -62,6 +62,7 @@ class PublicInstanceConfigTests(TestCase):
         self.assertEqual(data['deployment_mode'], 'multi_tenant')
         self.assertEqual(data['tenant_name'], 'Example Support')
         self.assertEqual(data['product_wordmark'], 'Example HelpDesk')
+        self.assertEqual(data['product_name'], 'Example HelpDesk')
 
     @override_settings(
         DEPLOYMENT_MODE='single_tenant',

@@ -6,6 +6,7 @@ from urllib.parse import unquote, urlparse
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connections, transaction
+from django.db.models.signals import post_save
 
 from apps.email_ingestion.models import KnownSender, ProcessedEmail, TenantEmailSettings
 from apps.tenants.models import ClientOrganization, Tenant
@@ -205,6 +206,15 @@ class Command(BaseCommand):
             'processed_emails_created': 0,
             'processed_emails_skipped': 0,
         }
+
+        # Ticket/Reply post-save receivers create live UI notifications. Imported
+        # historical rows already carry their original notifications, so firing
+        # those receivers during a transfer would create duplicate alerts. This
+        # management command runs in its own short-lived process, so disconnect
+        # the receivers for this process before the transaction starts.
+        from apps.tickets.signals import reply_post_save, ticket_post_save
+        post_save.disconnect(ticket_post_save, sender=Ticket)
+        post_save.disconnect(reply_post_save, sender=Reply)
 
         with transaction.atomic():
             # Current standalone identity/contact state wins; platform billing,

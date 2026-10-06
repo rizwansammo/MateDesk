@@ -33,6 +33,21 @@ class PlatformAdminCustomDomainTests(TestCase):
             status='active',
         )
 
+    def test_platform_admin_cannot_create_reserved_domains_tenant(self):
+        response = self.client.post(
+            reverse('platform_admin:tenant_create'),
+            {
+                'name': 'Reserved Infrastructure',
+                'slug': 'domains',
+                'owner_name': 'Reserved Owner',
+                'owner_email': 'reserved-owner@example.com',
+                'plan': 'starter',
+                'status': 'active',
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Tenant.objects.filter(slug='domains').exists())
+
     def test_add_domain_creates_pending_mapping(self):
         response = self.client.post(
             reverse('platform_admin:tenant_domain_add', args=[self.tenant.pk]),

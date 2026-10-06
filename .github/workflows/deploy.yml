@@ -60,6 +60,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate deployment shell scripts
+        run: |
+          bash -n deployment/scripts/*.sh
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'      # Django 5.2 does not support 3.14

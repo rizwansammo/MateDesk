@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { usePublicAuthStatus } from '@/hooks/usePublicAuthStatus';
+import { usePublicSignupMode } from '@/hooks/usePublicSignupMode';
 
 const FEED = [
   { av: 'TA', bg: '#0B7A6E', name: 'Tanvir',     action: 'replied to a request',  tag: '0008', isNew: false },
@@ -21,6 +22,9 @@ const PP_ROWS = [
 
 export default function HeroSection() {
   const { isAuth, dashboardUrl } = usePublicAuthStatus();
+  const { signupMode } = usePublicSignupMode();
+  const isPrivateBeta = signupMode === 'private_beta';
+  const signupHref = isPrivateBeta ? '/apply' : '/register';
   return (
     <section style={{ background: '#fff' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '72px 32px 0' }}>
@@ -31,7 +35,7 @@ export default function HeroSection() {
           {/* Left copy */}
           <div>
             <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, color: '#1F4ED8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 20 }}>
-              MSP Helpdesk · Multi-tenant by design
+              {isPrivateBeta ? 'Private Beta · Applications Open' : 'MSP Helpdesk · Multi-tenant by design'}
             </span>
             <h1 style={{
               fontFamily: 'var(--font-hemi), sans-serif',
@@ -42,9 +46,10 @@ export default function HeroSection() {
               Run support<br />for every client.<br />
               <span style={{ color: '#1F4ED8' }}>From one inbox.</span>
             </h1>
-            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#3A4252', maxWidth: 480, marginBottom: 36 }}>
-              MateDesk is the ticketing platform built for managed service providers.
-              One workspace, every client tenant, every SLA.
+            <p style={{ fontSize: 18, lineHeight: 1.55, color: '#3A4252', maxWidth: 520, marginBottom: 36 }}>
+              {isPrivateBeta
+                ? 'MateDesk is currently available through a limited private beta for MSPs. Apply for access and our team will review your workspace request.'
+                : 'MateDesk is the ticketing platform built for managed service providers. One workspace, every client tenant, every SLA.'}
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
               {isAuth ? (
@@ -62,7 +67,7 @@ export default function HeroSection() {
                 </a>
               ) : (
                 <Link
-                  href="/register"
+                  href={signupHref}
                   style={{
                     height: 48, padding: '0 22px', display: 'inline-flex', alignItems: 'center', gap: 8,
                     background: '#1F4ED8', color: '#fff', fontSize: 15, fontWeight: 600,
@@ -71,7 +76,7 @@ export default function HeroSection() {
                   onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = '#1B43BC'; }}
                   onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.background = '#1F4ED8'; }}
                 >
-                  Start free 14-day trial <ArrowRight size={16} />
+                  {isPrivateBeta ? 'Apply for Private Beta' : 'Start free 14-day trial'} <ArrowRight size={16} />
                 </Link>
               )}
               <a
@@ -88,7 +93,10 @@ export default function HeroSection() {
               </a>
             </div>
             <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#6B7385', flexWrap: 'wrap' }}>
-              {['No credit card required', 'Set up in 4 minutes', 'Unlimited tenants in trial'].map(t => (
+              {(isPrivateBeta
+                ? ['Application-based access', 'Applications reviewed by our team', 'No payment required to apply']
+                : ['No credit card required', 'Set up in 4 minutes', 'Unlimited tenants in trial']
+              ).map(t => (
                 <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ color: '#1F4ED8', fontWeight: 700 }}>✓</span> {t}
                 </span>

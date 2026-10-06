@@ -2019,13 +2019,13 @@ export default function TicketDetailPage() {
           {/* ── MERGE / ABSORB card ────────────────────────────────────────── */}
           {isMSP && (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>
-              <CardHeader title="Merge / Absorb" />
+              <CardHeader title="Absorb / Merge" />
               <div style={{ padding: '10px 14px 14px 14px' }}>
                 <div style={{ fontSize: 11, color: 'var(--text-1)', marginBottom: 3, lineHeight: 1.65 }}>
-                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Merge</span> — this ticket is a duplicate; close it into another.
+                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Absorb:</span> this is the primary; pull a duplicate into it.
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-1)', marginBottom: 14, lineHeight: 1.65 }}>
-                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Absorb</span> — this is the primary; pull a duplicate into it.
+                  <span style={{ fontWeight: 600, color: 'var(--text-0)' }}>Merge:</span> this ticket is a duplicate; close it into another.
                 </div>
 
                 {ticket.merge_info?.status === 'secondary' ? (
@@ -2042,20 +2042,20 @@ export default function TicketDetailPage() {
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <button
-                        onClick={() => { setMergeError(''); setMergeModal({ type: 'merge', searchQ: '', selectedRef: '' }); }}
-                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: 'var(--accent-danger-fg)', background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.08)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                      >
-                        <GitMerge size={11} /> Merge into…
-                      </button>
-                      <button
                         onClick={() => { setMergeError(''); setMergeModal({ type: 'absorb', searchQ: '', selectedRef: '' }); }}
                         style={{ height: 32, fontSize: 11, fontWeight: 600, color: 'var(--accent-info-fg)', background: 'transparent', border: '1px solid rgba(96,165,250,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(96,165,250,0.08)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
-                        <GitMerge size={11} /> Absorb duplicate…
+                        <GitMerge size={11} /> Absorb
+                      </button>
+                      <button
+                        onClick={() => { setMergeError(''); setMergeModal({ type: 'merge', searchQ: '', selectedRef: '' }); }}
+                        style={{ height: 32, fontSize: 11, fontWeight: 600, color: 'var(--accent-danger-fg)', background: 'transparent', border: '1px solid rgba(248,113,113,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.08)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        <GitMerge size={11} /> Merge
                       </button>
                     </div>
 

@@ -53,6 +53,7 @@ def _message(sender, reference='', mid='<incoming@client.test>',
 @override_settings(
     DEBUG=True, APP_DOMAIN='matedesk.pro', DEPLOYMENT_MODE='multi_tenant',
     ALLOWED_HOSTS=['.matedesk.pro', 'localhost', 'testserver'],
+    PROJECT_EMAIL_REPLIES_ENABLED=True,
 )
 class ProjectNotificationTests(TestCase):
     def setUp(self):
@@ -188,6 +189,24 @@ class ProjectNotificationTests(TestCase):
         self.project.visibility = 'internal'
         self.project.save()
         self.assertEqual(self.api.get(self.url).status_code, 400)
+
+    @override_settings(PROJECT_EMAIL_REPLIES_ENABLED=False)
+    def test_email_notifications_are_disabled_by_default_for_beta(self):
+        response = self.api.post(self.url, {
+            'recipient_id': str(self.reviewer.id), 'idempotency_key': str(uuid.uuid4()),
+        }, format='json')
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(ProjectEmailNotification.objects.count(), 0)
+
+    @override_settings(PROJECT_EMAIL_REPLIES_ENABLED=False)
+    def test_known_project_reply_does_not_create_comment_or_ticket_when_disabled(self):
+        notice = self.sent_record()
+        _process_email(self.tenant, _message(
+            self.reviewer.email, reference=notice.message_id,
+        ))
+        self.assertEqual(WorkItemComment.objects.count(), 0)
+        self.assertEqual(Ticket.objects.count(), 0)
+        self.assertEqual(ProcessedEmail.objects.count(), 1)
 
     def test_valid_reply_is_client_visible_comment_not_ticket(self):
         notice = self.sent_record()

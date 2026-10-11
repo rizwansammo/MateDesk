@@ -1,4 +1,5 @@
 """Staff controlled client notifications with an idempotent audit record."""
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
@@ -66,6 +67,10 @@ class WorkItemNotificationView(APIView):
 
     def post(self, request, pk):
         item = self._item(request, pk)
+        if not settings.PROJECT_EMAIL_REPLIES_ENABLED:
+            return Response({
+                'detail': 'Project email notifications are disabled pending sender authentication verification.',
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         data = NotificationWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data

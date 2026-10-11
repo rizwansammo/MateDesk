@@ -1,4 +1,5 @@
 """Explicit input serializers prevent changing relationships through client payloads."""
+from django.conf import settings
 from rest_framework import serializers
 
 from .models import Project, ProjectMember, ProjectMilestone, WorkItem, WorkItemComment
@@ -20,6 +21,10 @@ class ProjectReadSerializer(serializers.ModelSerializer):
     my_role = serializers.SerializerMethodField()
     can_manage = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
+    project_email_enabled = serializers.SerializerMethodField()
+
+    def get_project_email_enabled(self, obj):
+        return bool(settings.PROJECT_EMAIL_REPLIES_ENABLED)
 
     def get_my_role(self, obj):
         request = self.context.get('request')
@@ -45,7 +50,7 @@ class ProjectReadSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'client_org', 'client_org_name', 'key', 'name', 'description',
-            'my_role', 'can_manage', 'can_edit',
+            'my_role', 'can_manage', 'can_edit', 'project_email_enabled',
             'status', 'visibility', 'start_date', 'due_date', 'created_at', 'updated_at',
         ]
 

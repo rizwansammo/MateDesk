@@ -4,7 +4,7 @@
 
 **Branch:** `feature/projects-phase-2-backend` (Draft PR #24).
 
-**Release policy:** Do not merge or deploy based only on passing unit tests. Explicit operational approval and live verification are required.
+**Release policy:** The product owner approved a controlled Main and Production Beta deployment after verifying CI, backups and security mitigations. Live browser and email acceptance remains necessary.
 
 ## Delivered in Phase 7
 
@@ -18,6 +18,15 @@
 8. Project Milestones now have **Internal** (default) or **Client Visible** visibility. Client API returns published milestones only. Existing milestones default to Internal after migration `projects.0004`.
 9. Revocation removes the client member's portal access. Phase 6 inbound email validation also checks current reviewer membership.
 10. Existing Ticket Detail, IMAP parser, Ticket SLA and reply lifecycle remain independent from Project progress.
+
+## Beta security mitigation
+
+- Project Email Notifications and automatic email to Work Item comment ingestion are **OFF by default** under `PROJECT_EMAIL_REPLIES_ENABLED=False`.
+- Notification API POST rejects sending when disabled, and the Work Item UI hides Notify Client.
+- Previously identified Project notification threads are consumed without creating comments or new tickets when disabled.
+- The existing Support Ticket inbound parser remains available.
+- Do **not** enable the feature flag until inbound identity verification has been hardened and reviewed, including trust boundaries for DKIM/SPF/DMARC data. A plain From address and thread ID are not authentication.
+- Test client feedback in the Project Portal while automatic email replies are disabled.
 
 ## Automated verification
 
@@ -76,4 +85,4 @@ Use dedicated test accounts in a nonproduction tenant:
 - **Live mailbox delivery:** not performed.
 - **Authenticated sender infrastructure validation:** not performed.
 - **Real browser visual review:** not performed.
-- **Production deployment:** intentionally not performed.
+- **Production deployment:** authorized only after latest CI, signed off predeployment backup and security gating; validate the actual deployment result separately.

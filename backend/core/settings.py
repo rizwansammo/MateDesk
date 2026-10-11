@@ -6,6 +6,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG      = config('DEBUG', cast=bool, default=False)
+# Fail closed until trusted inbound sender verification is implemented and approved.
+# When false, outgoing project notifications are unavailable and matched project
+# email replies are consumed without posting comments or creating tickets.
+PROJECT_EMAIL_REPLIES_ENABLED = config('PROJECT_EMAIL_REPLIES_ENABLED', cast=bool, default=False)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,.localhost').split(',')
 
 INSTALLED_APPS = [

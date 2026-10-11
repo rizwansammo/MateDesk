@@ -35,6 +35,8 @@ def _project_url(notification):
 
 def send_project_notification(notification):
     """Attempt exactly once; store actual MateMail Message-ID after send."""
+    if not settings.PROJECT_EMAIL_REPLIES_ENABLED:
+        return False
     if notification.status != 'pending':
         return notification.status == 'sent'
     try:
@@ -156,7 +158,7 @@ def route_project_email_reply(tenant, msg, *, message_id, from_address, from_nam
     notification = matches[0] if len({m.id for m in matches}) == 1 else None
     sender = None
     from_address = (from_address or '').strip().casefold()
-    if notification:
+    if notification and settings.PROJECT_EMAIL_REPLIES_ENABLED:
         recipient = notification.recipient
         item = notification.work_item
         project = item.project

@@ -14,6 +14,7 @@ export interface Project {
   my_role: ProjectRole | null;
   can_manage: boolean;
   can_edit: boolean;
+  project_email_enabled: boolean;
   key: string;
   name: string;
   description: string;

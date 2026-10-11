@@ -143,7 +143,7 @@ export default function WorkItemDetailPage() {
       <ProjectTitleBar back={`/projects/${projectId}`} eyebrow={`${project.key} / ${item.ref}`}
         title={item.title}
         right={<div className="flex flex-wrap items-center gap-2">
-          {canManage && item.visibility === 'client' && project.visibility === 'client' && (
+          {canManage && project.project_email_enabled && item.visibility === 'client' && project.visibility === 'client' && (
             <button className="btn-primary" onClick={() => setNotifyOpen(true)}>
               <Mail size={13} /> Notify Client
             </button>

@@ -12,7 +12,7 @@ class MateMailError(Exception):
 
 def _base_url():
     return str(
-        getattr(settings, "MATEMAIL_BASE_URL", "https://portal.matemail.online")
+        getattr(settings, "MATEMAIL_BASE_URL", "https://portal.matemail.pro")
     ).rstrip("/")
 
 

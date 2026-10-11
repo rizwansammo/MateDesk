@@ -116,7 +116,7 @@ class TicketProjectAssociationView(APIView):
 
         with transaction.atomic():
             ticket = _ticket_for_staff(request, ticket_ref)
-            ticket = Ticket.objects.select_for_update().select_related('client_org').get(pk=ticket.pk)
+            ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
             _check_client_org(ticket, project)
             existing = TicketProjectAssociation.objects.select_for_update().filter(ticket=ticket).first()
 
@@ -162,7 +162,7 @@ class TicketWorkItemLinkView(APIView):
         data.is_valid(raise_exception=True)
         with transaction.atomic():
             ticket = _ticket_for_staff(request, ticket_ref)
-            ticket = Ticket.objects.select_for_update().select_related('client_org').get(pk=ticket.pk)
+            ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
             link = _association(request, ticket, editing=True)
             if not link:
                 raise ValidationError({'detail': 'Link the ticket to a project first.'})
@@ -212,7 +212,7 @@ class TicketCreateLinkedWorkItemView(APIView):
 
         with transaction.atomic():
             ticket = _ticket_for_staff(request, ticket_ref)
-            ticket = Ticket.objects.select_for_update().select_related('client_org').get(pk=ticket.pk)
+            ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
             association = _association(request, ticket, editing=True)
             if not association:
                 raise ValidationError({'detail': 'Link the ticket to a project first.'})

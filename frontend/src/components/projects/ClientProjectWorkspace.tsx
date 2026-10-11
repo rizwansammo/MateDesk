@@ -84,7 +84,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
         ))}
       </nav>
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
-        <div className="mx-auto max-w-[1100px] space-y-3">
+        <div className="w-full min-w-0 space-y-3">
           {itemsQuery.isError && <ProjectError error={itemsQuery.error}
             retry={() => { void itemsQuery.refetch(); }} />}
           {milestonesQuery.isError && <ProjectError error={milestonesQuery.error}

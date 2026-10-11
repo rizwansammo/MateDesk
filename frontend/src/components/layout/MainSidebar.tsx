@@ -35,7 +35,7 @@ export function MainSidebar() {
         {
           title: 'SUPPORT',
           items: [
-            { label: 'Requests',       href: '/requests', icon: Ticket    },
+            { label: 'Tickets',        href: '/requests', icon: Ticket    },
             { label: 'Projects',       href: '/projects', icon: FolderKanban },
             { label: 'Events',         href: '/events',   icon: CalendarDays },
             { label: 'Calendar',       href: '/calendar', icon: Calendar  },
@@ -60,7 +60,7 @@ export function MainSidebar() {
         {
           title: 'SUPPORT',
           items: [
-            { label: 'Requests', href: '/requests', icon: Ticket },
+            { label: 'Tickets', href: '/requests', icon: Ticket },
             { label: 'My Projects', href: '/projects', icon: FolderKanban },
           ],
         },

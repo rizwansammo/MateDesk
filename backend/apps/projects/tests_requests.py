@@ -310,6 +310,19 @@ class ProjectRequestPhase8ATests(TestCase):
         self.assertEqual(after.data['count'], 1)
         self.assertTrue(self.agent_api.get('/api/tickets/').status_code == 200)
 
+    def test_project_request_uses_original_ticket_list_with_project_reference(self):
+        row = self.submit()
+        result = self.agent_api.get('/api/tickets/')
+        self.assertEqual(result.status_code, 200, result.data)
+        matches = [ticket for ticket in result.data['results'] if ticket['ref'] == row['ticket_ref']]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['project_request_id'], row['id'])
+        self.assertEqual(matches[0]['category'], 'Project Request')
+        client_result = self.client_api.get('/api/tickets/')
+        self.assertEqual(client_result.status_code, 200, client_result.data)
+        self.assertEqual(client_result.data['count'], 1)
+        self.assertEqual(client_result.data['results'][0]['project_request_id'], row['id'])
+
     def test_new_request_visible_in_client_unified_queue(self):
         row = self.submit()
         result = self.client_api.get('/api/requests/workspace/')

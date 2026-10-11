@@ -155,7 +155,7 @@ export default function WorkItemDetailPage() {
           )}
         </div>} />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
-        <div className="mx-auto flex max-w-[1400px] flex-col gap-3">
+        <div className="flex w-full min-w-0 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <Link href="/projects" className="inline-flex items-center gap-1"
               style={{ color: 'var(--text-3)' }}><FolderKanban size={13} /> Projects</Link>

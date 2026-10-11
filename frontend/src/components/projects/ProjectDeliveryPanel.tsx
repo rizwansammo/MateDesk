@@ -81,7 +81,7 @@ export function ProjectDeliveryPanel({ project }: { project: Project }) {
     retry={() => { void refetch(); }}/></div>;
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-3">
+    <div className="w-full min-w-0 space-y-3">
       <section className="panel p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>

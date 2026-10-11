@@ -221,7 +221,7 @@ export default function ProjectWorkspacePage() {
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
         {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
         {tab === 'overview' && (
-          <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
+          <div className="flex w-full min-w-0 flex-col gap-3">
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
               <Stat label="Work Items" count={overview.total} Icon={ListChecks} />
               <Stat label="In Progress" count={overview.progress} Icon={Clock3} />
@@ -348,7 +348,7 @@ export default function ProjectWorkspacePage() {
         )}
 
         {tab === 'milestones' && (
-          <div className="mx-auto max-w-[1100px] space-y-3">
+          <div className="w-full min-w-0 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text-0)' }}>Milestones</h2>
@@ -419,7 +419,7 @@ export default function ProjectWorkspacePage() {
         )}
 
         {tab === 'team' && canManage && (
-          <div className="mx-auto max-w-[1100px] space-y-3">
+          <div className="w-full min-w-0 space-y-3">
             <section className="panel">
               <div className="panel-header">
                 <div className="flex items-center gap-2">

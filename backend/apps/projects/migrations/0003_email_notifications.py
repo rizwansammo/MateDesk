@@ -48,14 +48,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='projectemailnotification',
-            constraint=models.UniqueConstraint(fields=('tenant', 'idempotency_key'), name='unique_project_email_idempotency'),
+            constraint=models.UniqueConstraint(fields=('tenant', 'idempotency_key'), name='unique_proj_email_idem'),
         ),
         migrations.AddConstraint(
             model_name='projectemailnotification',
-            constraint=models.UniqueConstraint(fields=('tenant', 'message_id'), name='unique_project_email_message_id'),
+            constraint=models.UniqueConstraint(fields=('tenant', 'message_id'), name='unique_proj_email_msg'),
         ),
         migrations.AddConstraint(
             model_name='projectemailreply',
-            constraint=models.UniqueConstraint(fields=('tenant', 'message_id'), name='unique_project_inbound_message_id'),
+            constraint=models.UniqueConstraint(fields=('tenant', 'message_id'), name='unique_proj_reply_msg'),
         ),
     ]

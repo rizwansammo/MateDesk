@@ -341,11 +341,11 @@ class ProjectEmailNotification(ValidatedModel):
         constraints = [
             models.UniqueConstraint(
                 fields=['tenant', 'idempotency_key'],
-                name='unique_project_email_idempotency',
+                name='unique_proj_email_idem',
             ),
             models.UniqueConstraint(
                 fields=['tenant', 'message_id'],
-                name='unique_project_email_message_id',
+                name='unique_proj_email_msg',
             ),
         ]
 
@@ -395,7 +395,7 @@ class ProjectEmailReply(ValidatedModel):
         ordering = ['received_at']
         constraints = [
             models.UniqueConstraint(
-                fields=['tenant', 'message_id'], name='unique_project_inbound_message_id',
+                fields=['tenant', 'message_id'], name='unique_proj_reply_msg',
             ),
         ]
 

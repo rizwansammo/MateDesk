@@ -25,7 +25,10 @@ def api_for(user):
     return client
 
 
-@override_settings(DEBUG=True)
+@override_settings(
+    DEBUG=True,
+    PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'],
+)
 class ClientProjectPortalTests(TestCase):
     def setUp(self):
         self.tenant = Tenant.objects.create(name='Portal Workspace', slug='portal-workspace')
@@ -109,9 +112,12 @@ class ClientProjectPortalTests(TestCase):
             self.client_api.get(f'/api/projects/{self.other_project.id}/').status_code, 404)
 
     def test_client_cannot_open_other_tenant_project(self):
+        foreign_owner = make_user(
+            self.foreign_tenant, 'owner@foreign.test', 'msp_owner',
+        )
         foreign_project = Project.objects.create(
             tenant=self.foreign_tenant, client_org=self.foreign_org, key='FOREIGN',
-            name='Foreign', visibility='client',
+            name='Foreign', visibility='client', created_by=foreign_owner,
         )
         ProjectMember.objects.create(
             project=foreign_project, user=self.foreign_client, role='client_reviewer')

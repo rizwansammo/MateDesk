@@ -16,6 +16,7 @@ import {
   AddProjectMemberDialog, CreateMilestoneDialog, CreateWorkItemDialog, EditProjectDialog,
 } from '@/components/projects/ProjectForms';
 import { ProjectReviewerDialog } from '@/components/projects/ProjectReviewerDialog';
+import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorkspace';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,

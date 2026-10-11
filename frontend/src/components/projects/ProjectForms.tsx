@@ -337,7 +337,7 @@ export function AddProjectMemberDialog({ projectId, existingMembers, onClose }: 
             <option value="viewer">Viewer</option>
           </select>
         </div>
-        <p className="text-xs" style={{ color: 'var(--text-3)' }}>Client reviewer access will be configured in the Client Portal phase.</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>This dialog assigns staff. For client access, use Team & Reviewers > Add Reviewer.</p>
         <Footer busy={add.isPending} submit="Add Member" onClose={onClose} />
       </form>
     </ProjectDialog>

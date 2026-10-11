@@ -83,6 +83,6 @@ export interface CreateProject {
 }
 export type UpdateProject = Partial<Pick<Project, 'name' | 'description' | 'status' | 'visibility' | 'start_date' | 'due_date'>>;
 export type CreateMilestone = Pick<ProjectMilestone, 'name'> & Partial<Pick<ProjectMilestone, 'description' | 'status' | 'visibility' | 'due_date' | 'position'>>;
-export type UpdateMilestone = Partial<Pick<ProjectMilestone, 'name' | 'description' | 'status' | 'due_date' | 'position'>>;
+export type UpdateMilestone = Partial<Pick<ProjectMilestone, 'name' | 'description' | 'status' | 'visibility' | 'due_date' | 'position'>>;
 export type CreateWorkItem = Pick<WorkItem, 'title'> & Partial<Pick<WorkItem, 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;
 export type UpdateWorkItem = Partial<Pick<WorkItem, 'title' | 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;

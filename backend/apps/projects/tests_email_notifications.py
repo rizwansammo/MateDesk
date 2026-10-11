@@ -156,11 +156,11 @@ class ProjectNotificationTests(TestCase):
                          '<actual-matemail-id@example.test>')
         self.assertTrue(mock_send.call_args.kwargs['payload']['idempotency_key'].startswith('matedesk-project-'))
 
-    def test_notification_requires_manager(self):
+    def test_nonmember_agent_cannot_discover_or_send_project_notification(self):
         response = _api(self.agent).post(self.url, {
             'recipient_id': str(self.reviewer.id), 'idempotency_key': str(uuid.uuid4()),
         }, format='json')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
     def test_notification_requires_client_reviewer(self):
         response = self.api.post(self.url, {

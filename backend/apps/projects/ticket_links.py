@@ -218,6 +218,8 @@ class TicketCreateLinkedWorkItemView(APIView):
                 raise ValidationError({'detail': 'Link the ticket to a project first.'})
             _check_client_org(ticket, association.project)
             project = Project.objects.select_for_update().get(pk=association.project_id)
+            from .delivery import ensure_delivery_unlocked
+            ensure_delivery_unlocked(project)
             if attrs.get('visibility') == 'client':
                 # Only managers may publish external items, consistent with Phase 2.
                 from .permissions import can_manage_project

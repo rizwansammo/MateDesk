@@ -102,7 +102,7 @@ export function EditProjectDialog({ project, onClose }: { project: Project; onCl
   const update = useUpdateProject(project.id);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
-  const [status, setStatus] = useState<ProjectStatus>(project.status);
+  const [status, setStatus] = useState<ProjectStatus>(['completed', 'archived'].includes(project.status) ? 'active' : project.status);
   const [visibility, setVisibility] = useState<ProjectVisibility>(project.visibility);
   const [dueDate, setDueDate] = useState(project.due_date || '');
 
@@ -134,7 +134,7 @@ export function EditProjectDialog({ project, onClose }: { project: Project; onCl
           <div>
             <label className="label" htmlFor="edit-project-status">Status</label>
             <select id="edit-project-status" className="select" value={status} onChange={e => setStatus(e.target.value as ProjectStatus)}>
-              {PROJECT_STATES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {PROJECT_STATES.filter(s => !['completed', 'archived'].includes(s.value)).map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
           <div>

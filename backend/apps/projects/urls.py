@@ -5,6 +5,9 @@ from .requests import (
     UnifiedRequestsView,
 )
 from .support import ProjectSupportTicketsView, ProjectActivityView, ProjectActivityReadView
+from .delivery import (ProjectDeliveryView, ProjectDeliverySubmitView,
+    ProjectDeliveryDecisionView, ProjectDeliveryCompleteView,
+    ProjectDeliveryArchiveView, ProjectDeliveryReopenView)
 from .reviewers import ProjectReviewerCandidatesView
 from .email_views import WorkItemNotificationView
 
@@ -30,6 +33,12 @@ urlpatterns = [
     path('projects/capabilities/', ProjectCapabilitiesView.as_view(), name='project-capabilities'),
     path('projects/agent-permissions/', ProjectAgentPermissionsView.as_view(), name='project-agent-permissions'),
     path('projects/agent-permissions/<uuid:user_id>/', ProjectAgentPermissionsView.as_view(), name='project-agent-permission-detail'),
+    path('projects/<uuid:pk>/delivery/', ProjectDeliveryView.as_view(), name='project-delivery'),
+    path('projects/<uuid:pk>/delivery/submit/', ProjectDeliverySubmitView.as_view(), name='project-delivery-submit'),
+    path('projects/<uuid:pk>/delivery/decision/', ProjectDeliveryDecisionView.as_view(), name='project-delivery-decision'),
+    path('projects/<uuid:pk>/delivery/complete/', ProjectDeliveryCompleteView.as_view(), name='project-delivery-complete'),
+    path('projects/<uuid:pk>/delivery/archive/', ProjectDeliveryArchiveView.as_view(), name='project-delivery-archive'),
+    path('projects/<uuid:pk>/delivery/reopen/', ProjectDeliveryReopenView.as_view(), name='project-delivery-reopen'),
     path('projects/<uuid:pk>/support-tickets/', ProjectSupportTicketsView.as_view(), name='project-support-tickets'),
     path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
     path('projects/<uuid:pk>/activity/read/', ProjectActivityReadView.as_view(), name='project-activity-read'),

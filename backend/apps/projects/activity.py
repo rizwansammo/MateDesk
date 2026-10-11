@@ -16,10 +16,13 @@ STAFF_ATTENTION_KINDS = (
     'client_feedback',
     'support_ticket_created',
     'client_ticket_reply',
+    'delivery_approved',
+    'delivery_changes_requested',
 )
 CLIENT_ATTENTION_KINDS = (
     'staff_feedback',
     'staff_ticket_reply',
+    'delivery_submitted',
 )
 
 

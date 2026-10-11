@@ -45,6 +45,9 @@ class Project(ValidatedModel):
     created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='created_projects')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    reopened_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'projects'
@@ -532,6 +535,12 @@ class ProjectActivity(ValidatedModel):
         ('support_ticket_created', 'Support Ticket Created'),
         ('client_ticket_reply', 'Client Ticket Reply'),
         ('staff_ticket_reply', 'Team Ticket Reply'),
+        ('delivery_submitted', 'Delivery Submitted'),
+        ('delivery_approved', 'Delivery Approved'),
+        ('delivery_changes_requested', 'Delivery Changes Requested'),
+        ('project_completed', 'Project Completed'),
+        ('project_reopened', 'Project Reopened'),
+        ('project_archived', 'Project Archived'),
     ]
     VISIBILITY = [('internal', 'Staff Only'), ('client', 'Client Visible')]
 
@@ -604,3 +613,59 @@ class ProjectActivityRead(ValidatedModel):
             self.user.tenant_id != self.project.tenant_id or not self.user.is_active
         ):
             raise ValidationError({'user': 'Activity acknowledgement requires an active project tenant user.'})
+
+
+class ProjectDeliveryReview(ValidatedModel):
+    """One immutable submission per client-review round.
+
+    Revising delivery creates another round rather than overwriting the
+    original client decision. Lifecycle actions are enforced by dedicated APIs.
+    """
+    STATUS = [
+        ('pending', 'Awaiting Client Review'),
+        ('changes_requested', 'Changes Requested'),
+        ('approved', 'Approved'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name='delivery_reviews')
+    round_number = models.PositiveIntegerField()
+    summary = models.TextField()
+    delivery_url = models.URLField(max_length=2000, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, default='pending')
+    submitted_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='submitted_project_deliveries',
+    )
+    reviewed_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_project_deliveries',
+    )
+    feedback = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'project_delivery_reviews'
+        ordering = ['-round_number']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'round_number'], name='uniq_project_delivery_round'),
+        ]
+
+    def clean(self):
+        if not self.project_id:
+            return
+        project = self.project
+        if self.submitted_by_id and (
+            self.submitted_by.tenant_id != project.tenant_id
+            or self.submitted_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'submitted_by': 'Delivery must be submitted by staff from this tenant.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != project.tenant_id
+            or self.reviewed_by.role not in CLIENT_ROLES
+            or self.reviewed_by.client_org_id != project.client_org_id
+            or not project.members.filter(
+                user=self.reviewed_by, role='client_reviewer'
+            ).exists()
+        ):
+            raise ValidationError({'reviewed_by': 'Review must be made by an authorized client reviewer.'})

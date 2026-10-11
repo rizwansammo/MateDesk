@@ -94,6 +94,8 @@ class ProjectListView(APIView):
         data = ProjectCreateSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
+        if attrs.get('status') in ('completed', 'archived'):
+            raise ValidationError({'status': 'Use the Delivery workflow for completion and archiving.'})
         tenant = tenant_for_request(request)
         org = get_object_or_404(
             ClientOrganization.objects.filter(tenant=tenant, is_active=True),
@@ -120,8 +122,12 @@ class ProjectDetailView(APIView):
         forbidden = {'client_org', 'client_org_id', 'tenant', 'tenant_id', 'key', 'created_by'}
         if forbidden.intersection(request.data):
             raise ValidationError({'detail': 'Project identity and client organization cannot be changed.'})
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = ProjectUpdateSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
+        if data.validated_data.get('status') in ('completed', 'archived'):
+            raise ValidationError({'status': 'Use the Client Approval and Completion workflow.'})
         for field, value in data.validated_data.items():
             setattr(project, field, value)
         _save_validated(project)
@@ -182,6 +188,8 @@ class ProjectMilestonesView(APIView):
     def post(self, request, pk):
         project = _project(request, pk)
         _manage(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = ProjectMilestoneWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         if not data.validated_data.get('name'):
@@ -199,6 +207,8 @@ class ProjectMilestoneDetailView(APIView):
     def patch(self, request, pk, milestone_id):
         project = _project(request, pk)
         _manage(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         milestone = get_object_or_404(project.milestones.all(), pk=milestone_id)
         data = ProjectMilestoneWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
@@ -227,6 +237,8 @@ class ProjectWorkItemsView(APIView):
     def post(self, request, pk):
         project = _project(request, pk)
         _edit(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = WorkItemWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
@@ -261,6 +273,8 @@ class WorkItemDetailView(APIView):
     def patch(self, request, pk):
         item = _work_item(request, pk)
         _edit(request.user, item.project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(item.project)
         data = WorkItemWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()

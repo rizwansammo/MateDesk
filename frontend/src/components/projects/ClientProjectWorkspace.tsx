@@ -9,12 +9,13 @@ import {
 import type { Project, WorkItem } from '@/types/projects';
 import { ProjectSupportPanel } from './ProjectSupportPanel';
 import { ProjectActivityPanel } from './ProjectActivityPanel';
+import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
   WORK_STATES, formatProjectDate,
 } from './ProjectUI';
 
-type ClientTab = 'overview' | 'work' | 'milestones' | 'support' | 'activity';
+type ClientTab = 'overview' | 'work' | 'milestones' | 'support' | 'activity' | 'delivery';
 
 export function ClientProjectWorkspace({ project }: { project: Project }) {
   const projectId = project.id;
@@ -71,6 +72,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           { value: 'milestones', label: 'Milestones' },
           { value: 'support', label: 'Support Tickets' },
           { value: 'activity', label: 'Activity' },
+          { value: 'delivery', label: 'Delivery & Approval' },
         ] as const).map(item => (
           <button key={item.value} type="button" role="tab"
             aria-selected={tab === item.value}
@@ -89,6 +91,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
             retry={() => { void milestonesQuery.refetch(); }} />}
           {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
           {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
+          {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
           {tab === 'overview' && (
             <>
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">

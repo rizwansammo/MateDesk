@@ -191,8 +191,9 @@ class ProjectActivityView(APIView):
             page = 1
         size = 25
         cursor = activity_read_cursor(request.user, project)
-        relevant = ('client_feedback', 'support_ticket_created', 'client_ticket_reply') \
-            if request.user.role in MSP_ROLES else ('staff_feedback', 'staff_ticket_reply')
+        relevant = ('client_feedback', 'support_ticket_created', 'client_ticket_reply',
+                    'delivery_approved', 'delivery_changes_requested') \
+            if request.user.role in MSP_ROLES else ('staff_feedback', 'staff_ticket_reply', 'delivery_submitted')
         pending = qs.filter(kind__in=relevant).exclude(actor_id=request.user.id)
         if cursor is not None:
             pending = pending.filter(created_at__gt=cursor)

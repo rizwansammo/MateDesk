@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   CalendarDays, Check, ChevronRight, Clock3, Columns3, FolderKanban,
-  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity,
+  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useProjectWorkItems,
@@ -19,12 +19,13 @@ import { ProjectReviewerDialog } from '@/components/projects/ProjectReviewerDial
 import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorkspace';
 import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
+import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'support' | 'activity' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'support' | 'activity' | 'delivery' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -178,6 +179,7 @@ export default function ProjectWorkspacePage() {
     { value: 'milestones', label: 'Milestones', Icon: CalendarDays },
     { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
     { value: 'activity', label: 'Activity', Icon: Activity },
+    { value: 'delivery', label: 'Delivery', Icon: ClipboardCheck },
     ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
   ];
 
@@ -187,9 +189,9 @@ export default function ProjectWorkspacePage() {
         right={
           <div className="flex flex-wrap items-center gap-2">
             <StatePill value={project.status} label={project.status === 'on_hold' ? 'On Hold' : undefined} />
-            {canManage && <button type="button" className="btn-secondary" onClick={() => setShowSettings(true)}>
+            {canManage && !['completed','archived'].includes(project.status) && <button type="button" className="btn-secondary" onClick={() => setShowSettings(true)}>
               <Settings2 size={13} /> Settings</button>}
-            {canEdit && <button type="button" className="btn-primary" onClick={() => setShowNewWork(true)}>
+            {canEdit && !['completed','archived'].includes(project.status) && <button type="button" className="btn-primary" onClick={() => setShowNewWork(true)}>
               <Plus size={13} /> Work Item</button>}
           </div>
         } />
@@ -217,6 +219,7 @@ export default function ProjectWorkspacePage() {
 
         {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
+        {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
         {tab === 'overview' && (
           <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">

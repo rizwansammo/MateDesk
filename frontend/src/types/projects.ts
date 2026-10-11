@@ -22,6 +22,9 @@ export interface Project {
   visibility: ProjectVisibility;
   start_date: string | null;
   due_date: string | null;
+  completed_at: string | null;
+  archived_at: string | null;
+  reopened_at: string | null;
   created_at: string;
   updated_at: string;
 }

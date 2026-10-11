@@ -51,7 +51,7 @@ class ProjectReadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'client_org', 'client_org_name', 'key', 'name', 'description',
             'my_role', 'can_manage', 'can_edit', 'project_email_enabled',
-            'status', 'visibility', 'start_date', 'due_date', 'created_at', 'updated_at',
+            'status', 'visibility', 'start_date', 'due_date', 'completed_at', 'archived_at', 'reopened_at', 'created_at', 'updated_at',
         ]
 
 

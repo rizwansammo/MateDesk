@@ -152,6 +152,28 @@ class ProjectAutomationTests(TestCase):
         self.execute(ticket)
         self.assertFalse(TicketProjectAssociation.objects.exists())
 
+    def test_project_rule_cannot_stop_other_client_automation(self):
+        ticket = self.ticket(org=self.other_org, subject='Checkout issue')
+        self.rule(stop=True, order=1)
+        AutomationRule.objects.create(
+            tenant=self.tenant, name='Other Client Priority',
+            trigger='ticket_created', priority_order=2,
+            actions=[{'type': 'set_priority', 'value': 'high'}],
+        )
+        self.execute(ticket)
+        ticket.refresh_from_db()
+        self.assertEqual(ticket.priority, 'high')
+        self.assertFalse(TicketProjectAssociation.objects.exists())
+        self.assertEqual(AutomationLog.objects.count(), 1)
+
+    def test_dry_run_reports_project_organization_mismatch(self):
+        ticket = self.ticket(org=self.other_org)
+        self.rule(stop=True)
+        result = dry_run_automation_rules(ticket, 'ticket_created')
+        self.assertFalse(result[0]['would_fire'])
+        self.assertIn('another organization', result[0]['skip_reason'])
+        self.assertFalse(TicketProjectAssociation.objects.exists())
+
     def test_rules_with_specific_org_scope_do_not_match_other_orgs(self):
         ticket = self.ticket(org=self.other_org)
         self.rule(scope='specific_org', org=self.org)

@@ -429,6 +429,37 @@ def _apply_action(ticket, action, trigger=''):
     return None
 
 
+def _project_routing_scope_matches(rule, ticket):
+    """Implicitly scope a Project action to its client's organization.
+
+    A rule configured for all organizations must not block unrelated tenants'
+    or client organizations' other ticket automation actions or stop processing.
+    This also fails closed if the target project was archived or deleted.
+    """
+    project_actions = [
+        action for action in (rule.actions or [])
+        if action.get('type') == 'link_to_project'
+    ]
+    if not project_actions:
+        return True
+
+    import uuid
+    from apps.projects.models import Project
+    try:
+        project_id = uuid.UUID(str(project_actions[0].get('value', '')))
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+    return bool(ticket.client_org_id) and Project.objects.filter(
+        pk=project_id,
+        tenant_id=ticket.tenant_id,
+        client_org_id=ticket.client_org_id,
+        client_org__is_active=True,
+    ).exclude(
+        status='archived',
+    ).exclude(client_org__name='Walk-In').exists()
+
+
 def dry_run_automation_rules(ticket, trigger, reply=None):
     """Evaluate rules against a ticket without applying any changes."""
     from apps.tickets.models import Ticket
@@ -461,6 +492,18 @@ def dry_run_automation_rules(ticket, trigger, reply=None):
                 'would_fire':      False,
                 'skip_reason':     'Scope: different organization',
                 'actions':         [],
+                'stop_processing': rule.stop_processing,
+                'blocked_by_stop': stopped,
+            })
+            continue
+
+        if not _project_routing_scope_matches(rule, ticket):
+            results.append({
+                'rule_id': str(rule.id),
+                'rule_name': rule.name,
+                'would_fire': False,
+                'skip_reason': 'Project belongs to another organization or is unavailable',
+                'actions': [],
                 'stop_processing': rule.stop_processing,
                 'blocked_by_stop': stopped,
             })
@@ -510,6 +553,9 @@ def run_automation_rules(ticket, trigger, reply=None):
         for rule in rules:
             try:
                 if rule.scope_type == 'specific_org' and rule.scope_org_id != ticket.client_org_id:
+                    continue
+
+                if not _project_routing_scope_matches(rule, ticket):
                     continue
 
                 if not evaluate_conditions(rule, ticket, reply=reply):

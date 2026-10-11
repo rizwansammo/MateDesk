@@ -37,6 +37,7 @@ export interface ProjectMilestone {
   name: string;
   description: string;
   status: MilestoneStatus;
+  visibility: WorkVisibility;
   due_date: string | null;
   position: number;
   created_at: string;
@@ -81,7 +82,7 @@ export interface CreateProject {
   due_date?: string | null;
 }
 export type UpdateProject = Partial<Pick<Project, 'name' | 'description' | 'status' | 'visibility' | 'start_date' | 'due_date'>>;
-export type CreateMilestone = Pick<ProjectMilestone, 'name'> & Partial<Pick<ProjectMilestone, 'description' | 'status' | 'due_date' | 'position'>>;
+export type CreateMilestone = Pick<ProjectMilestone, 'name'> & Partial<Pick<ProjectMilestone, 'description' | 'status' | 'visibility' | 'due_date' | 'position'>>;
 export type UpdateMilestone = Partial<Pick<ProjectMilestone, 'name' | 'description' | 'status' | 'due_date' | 'position'>>;
 export type CreateWorkItem = Pick<WorkItem, 'title'> & Partial<Pick<WorkItem, 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;
 export type UpdateWorkItem = Partial<Pick<WorkItem, 'title' | 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;

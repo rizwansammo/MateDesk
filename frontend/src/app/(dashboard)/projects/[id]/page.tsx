@@ -15,6 +15,7 @@ import type { ProjectMilestone, WorkItem, WorkItemKind, WorkItemPriority, WorkIt
 import {
   AddProjectMemberDialog, CreateMilestoneDialog, CreateWorkItemDialog, EditProjectDialog,
 } from '@/components/projects/ProjectForms';
+import { ProjectReviewerDialog } from '@/components/projects/ProjectReviewerDialog';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
@@ -117,6 +118,7 @@ export default function ProjectWorkspacePage() {
   const [showNewWork, setShowNewWork] = useState(false);
   const [showNewMilestone, setShowNewMilestone] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showAddReviewer, setShowAddReviewer] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
 
@@ -162,12 +164,16 @@ export default function ProjectWorkspacePage() {
       retry={() => { void projectQuery.refetch(); }} /></div>
   );
 
+  if (project.my_role === 'client_reviewer' && !canEdit && !canManage) {
+    return <ClientProjectWorkspace project={project} />;
+  }
+
   const tabs: { value: Tab; label: string; Icon: typeof ListChecks }[] = [
     { value: 'overview', label: 'Overview', Icon: FolderKanban },
     { value: 'board', label: 'Board', Icon: Columns3 },
     { value: 'list', label: 'List', Icon: LayoutList },
     { value: 'milestones', label: 'Milestones', Icon: CalendarDays },
-    ...(canManage ? [{ value: 'team' as const, label: 'Team', Icon: Users }] : []),
+    ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
   ];
 
   return (
@@ -357,6 +363,16 @@ export default function ProjectWorkspacePage() {
                           <CalendarDays size={12} /> {formatProjectDate(milestone.due_date)} · {related.length} work items
                         </span>
                       </div>
+                      {canManage && (
+                        <select className="select w-auto" aria-label={`Visibility for ${milestone.name}`}
+                          disabled={patchMilestone.isPending} value={milestone.visibility}
+                          onChange={e => patchMilestone.mutate({
+                            id: milestone.id, changes: { visibility: e.target.value as ProjectMilestone['visibility'] },
+                          })}>
+                          <option value="internal">Internal</option>
+                          <option value="client">Client Visible</option>
+                        </select>
+                      )}
                       {canManage ? (
                         <select className="select w-auto" aria-label={`Status for ${milestone.name}`}
                           disabled={patchMilestone.isPending} value={milestone.status}
@@ -393,37 +409,107 @@ export default function ProjectWorkspacePage() {
         )}
 
         {tab === 'team' && canManage && (
-          <div className="mx-auto max-w-[1100px]">
-            <div className="panel">
+          <div className="mx-auto max-w-[1100px] space-y-3">
+            <section className="panel">
               <div className="panel-header">
-                <div className="flex items-center gap-2"><span className="panel-title">Project Team</span>
-                  <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>{members.length} members</span></div>
-                <button className="btn-primary" onClick={() => setShowAddMember(true)}><Plus size={13} /> Add Member</button>
+                <div className="flex items-center gap-2">
+                  <span className="panel-title">Staff Team</span>
+                  <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                    {members.filter(m => m.role !== 'client_reviewer').length}
+                  </span>
+                </div>
+                <button className="btn-primary" type="button"
+                  onClick={() => setShowAddMember(true)}>
+                  <Plus size={13} /> Add Staff
+                </button>
               </div>
-              {membersQuery.isLoading ? <ProjectLoading text="Loading team…" /> : membersQuery.isError ?
-                <div className="p-3"><ProjectError error={membersQuery.error} retry={() => { void membersQuery.refetch(); }} /></div> :
-                members.length === 0 ? <ProjectEmpty title="No members yet" description="Invite your project team." /> :
-                  <div className="overflow-x-auto"><table className="data-table">
-                    <thead><tr><th>Name</th><th>Email</th><th>Project Role</th><th aria-label="Remove member" /></tr></thead>
-                    <tbody>{members.map(member => (
-                      <tr key={member.id}>
-                        <td>{member.user_name}</td><td>{member.user_email}</td>
-                        <td><StatePill value={member.role} label={member.role.replace(/_/g, ' ')} /></td>
-                        <td className="text-right">
-                          <button className="icon-btn inline-flex" aria-label={`Remove ${member.user_name}`}
-                            disabled={removeMember.isPending} onClick={() => {
-                              if (window.confirm(`Remove ${member.user_name} from this project? Assigned work must be reassigned first.`)) {
-                                removeMember.mutate(member.id);
-                              }
-                            }}><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                    ))}</tbody>
-                  </table></div>}
-            </div>
-            <p className="mt-2 text-[11px]" style={{ color: 'var(--text-3)' }}>
-              Staff membership is managed here. Client reviewer onboarding belongs to the Client Portal phase.
-            </p>
+              {membersQuery.isLoading ? <ProjectLoading text="Loading team…" /> :
+                membersQuery.isError ? <div className="p-3">
+                  <ProjectError error={membersQuery.error} retry={() => { void membersQuery.refetch(); }} />
+                </div> :
+                members.filter(m => m.role !== 'client_reviewer').length === 0 ?
+                  <ProjectEmpty title="No Staff Members"
+                    description="Assign staff members to manage and deliver project work." /> :
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead><tr><th>Name</th><th>Email</th><th>Role</th>
+                        <th aria-label="Remove staff member" /></tr></thead>
+                      <tbody>{members.filter(m => m.role !== 'client_reviewer').map(member => (
+                        <tr key={member.id}>
+                          <td>{member.user_name}</td>
+                          <td>{member.user_email}</td>
+                          <td><StatePill value={member.role}
+                            label={member.role.replace(/_/g, ' ')} /></td>
+                          <td className="text-right">
+                            <button type="button" className="icon-btn inline-flex"
+                              aria-label={`Remove ${member.user_name}`}
+                              disabled={removeMember.isPending}
+                              onClick={() => {
+                                if (window.confirm(`Remove ${member.user_name} from this Project?`)) {
+                                  removeMember.mutate(member.id);
+                                }
+                              }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+              }
+            </section>
+            <section className="panel">
+              <div className="panel-header">
+                <div className="flex items-center gap-2">
+                  <span className="panel-title">Client Reviewers</span>
+                  <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                    {members.filter(m => m.role === 'client_reviewer').length}
+                  </span>
+                </div>
+                <button className="btn-primary" type="button"
+                  onClick={() => setShowAddReviewer(true)}>
+                  <Plus size={13} /> Add Reviewer
+                </button>
+              </div>
+              {membersQuery.isLoading ? <ProjectLoading text="Loading reviewers…" /> :
+                membersQuery.isError ? <div className="p-3">
+                  <ProjectError error={membersQuery.error} retry={() => { void membersQuery.refetch(); }} />
+                </div> :
+                members.filter(m => m.role === 'client_reviewer').length === 0 ?
+                  <ProjectEmpty title="No Client Reviewers"
+                    description="Choose existing users from this Project's Client Organization." /> :
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead><tr><th>Name</th><th>Email</th><th>Access</th>
+                        <th aria-label="Revoke client reviewer" /></tr></thead>
+                      <tbody>{members.filter(m => m.role === 'client_reviewer').map(member => (
+                        <tr key={member.id}>
+                          <td>{member.user_name}</td>
+                          <td>{member.user_email}</td>
+                          <td><StatePill value="client" label="Client Reviewer" /></td>
+                          <td className="text-right">
+                            <button type="button" className="icon-btn inline-flex"
+                              aria-label={`Revoke ${member.user_name}`}
+                              disabled={removeMember.isPending}
+                              onClick={() => {
+                                if (window.confirm(`Revoke ${member.user_name}'s Project access? Existing comments remain.`)) {
+                                  removeMember.mutate(member.id);
+                                }
+                              }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+              }
+              <div className="border-t px-3 py-2 text-[11px]"
+                style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-3)' }}>
+                Reviewers can view only Client Visible Projects and Work Items.
+                Revoking membership prevents further portal access and email replies.
+              </div>
+            </section>
           </div>
         )}
       </div>
@@ -433,6 +519,8 @@ export default function ProjectWorkspacePage() {
       {showNewMilestone && <CreateMilestoneDialog projectId={projectId} onClose={() => setShowNewMilestone(false)} />}
       {showAddMember && <AddProjectMemberDialog projectId={projectId} existingMembers={members}
         onClose={() => setShowAddMember(false)} />}
+      {showAddReviewer && <ProjectReviewerDialog projectId={projectId}
+        clientOrgId={project.client_org} onClose={() => setShowAddReviewer(false)} />}
       {showSettings && <EditProjectDialog project={project} onClose={() => setShowSettings(false)} />}
     </div>
   );

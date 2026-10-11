@@ -167,6 +167,7 @@ def route_project_email_reply(tenant, msg, *, message_id, from_address, from_nam
                 and recipient.role in CLIENT_ROLES
                 and recipient.tenant_id == tenant.id
                 and recipient.client_org_id == project.client_org_id
+                and project.client_org.is_active
                 and project.visibility == 'client'
                 and project.status != 'archived'
                 and item.visibility == 'client'

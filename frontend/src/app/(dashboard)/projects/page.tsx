@@ -7,6 +7,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Project, ProjectStatus } from '@/types/projects';
 import { CreateProjectDialog } from '@/components/projects/ProjectForms';
+import { ClientProjectsOverview } from '@/components/projects/ClientProjectsOverview';
 import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
 
 const STATUSES: { value: ProjectStatus | 'all'; label: string }[] = [
@@ -42,8 +43,8 @@ export default function ProjectsPage() {
   }, [projects, query, status]);
 
   if (!isStaff) return (
-    <div className="p-4"><ProjectEmpty title="Projects are not available here"
-      description="Your project portal access will be enabled separately." /></div>
+    <ClientProjectsOverview projects={projects} isLoading={isLoading} error={error}
+      retry={() => { void refetch(); }} />
   );
 
   return (
@@ -136,7 +137,7 @@ export default function ProjectsPage() {
                 )}
           </div>
           <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
-            Support Requests remain separate. Ticket linking will be added in Phase 4.
+            Support Requests remain separate from Project Work Items.
           </p>
         </div>
       </div>

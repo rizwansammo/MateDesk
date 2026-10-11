@@ -32,7 +32,8 @@ class WorkItemNotificationView(APIView):
             raise PermissionDenied('Project Manager permission required.')
         if (item.project.visibility != 'client'
                 or item.visibility != 'client'
-                or item.project.status == 'archived'):
+                or item.project.status == 'archived'
+                or not item.project.client_org.is_active):
             raise ValidationError({
                 'detail': 'Make the Project and Work Item client visible before notifying reviewers.',
             })

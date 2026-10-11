@@ -23,6 +23,7 @@ def visible_projects(request):
     if user.role in CLIENT_ROLES and user.client_org_id:
         return base.filter(
             client_org_id=user.client_org_id,
+            client_org__is_active=True,
             visibility='client',
             members__user=user,
             members__role='client_reviewer',

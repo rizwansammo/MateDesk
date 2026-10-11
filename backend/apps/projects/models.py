@@ -95,6 +95,8 @@ class ProjectMember(ValidatedModel):
         if not user.is_active or user.tenant_id != project.tenant_id:
             raise ValidationError({'user': 'Member must be active and belong to this tenant.'})
         if user.role in CLIENT_ROLES:
+            if not project.client_org.is_active:
+                raise ValidationError({'user': 'Client organization must be active.'})
             if user.client_org_id != project.client_org_id or self.role != 'client_reviewer':
                 raise ValidationError({'user': 'Client member must belong to the project client organization.'})
         elif user.role in MSP_ROLES:
@@ -110,11 +112,13 @@ class ProjectMilestone(ValidatedModel):
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
     ]
+    VISIBILITY = [('internal', 'Internal'), ('client', 'Client Visible')]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='milestones')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS, default='planned')
+    visibility = models.CharField(max_length=20, choices=VISIBILITY, default='internal')
     due_date = models.DateField(null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -358,7 +362,7 @@ class ProjectEmailNotification(ValidatedModel):
         if project.tenant_id != self.tenant_id:
             raise ValidationError({'tenant': 'Notification tenant must match the project.'})
         if (project.visibility != 'client' or item.visibility != 'client'
-                or project.status == 'archived'):
+                or project.status == 'archived' or not project.client_org.is_active):
             raise ValidationError({'work_item': 'Only active client visible work can be emailed.'})
         if (reviewer.tenant_id != self.tenant_id
                 or reviewer.client_org_id != project.client_org_id

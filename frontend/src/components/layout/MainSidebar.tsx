@@ -69,6 +69,12 @@ export function MainSidebar() {
           ],
         },
         {
+          title: 'PROJECTS',
+          items: [
+            { label: 'My Projects', href: '/projects', icon: FolderKanban },
+          ],
+        },
+        {
           title: 'PEOPLE',
           items: [
             { label: 'Users', href: '/users', icon: Users },

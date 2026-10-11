@@ -126,7 +126,10 @@ export function useAddProjectMember(projectId: string) {
       apiFetch<ProjectMember>(`/api/projects/${projectId}/members/`, {
         method: 'POST', body: JSON.stringify(payload),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'reviewerCandidates'] });
+    },
   });
 }
 export function useRemoveProjectMember(projectId: string) {
@@ -134,7 +137,10 @@ export function useRemoveProjectMember(projectId: string) {
   return useMutation({
     mutationFn: (memberId: string) =>
       apiFetch<void>(`/api/projects/${projectId}/members/${memberId}/`, { method: 'DELETE' }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'reviewerCandidates'] });
+    },
   });
 }
 export function useAddWorkItemComment(id: string) {

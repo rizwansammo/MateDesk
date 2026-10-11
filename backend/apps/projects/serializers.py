@@ -7,6 +7,7 @@ from .models import Project, ProjectMember, ProjectMilestone, WorkItem, WorkItem
 PROJECT_STATUSES = [item[0] for item in Project.STATUS]
 PROJECT_VISIBILITY = [item[0] for item in Project.VISIBILITY]
 MILESTONE_STATUSES = [item[0] for item in ProjectMilestone.STATUS]
+MILESTONE_VISIBILITY = [item[0] for item in ProjectMilestone.VISIBILITY]
 WORK_KINDS = [item[0] for item in WorkItem.KINDS]
 WORK_STATUSES = [item[0] for item in WorkItem.STATUSES]
 WORK_PRIORITIES = [item[0] for item in WorkItem.PRIORITIES]
@@ -89,13 +90,14 @@ class ProjectMemberWriteSerializer(serializers.Serializer):
 class ProjectMilestoneReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMilestone
-        fields = ['id', 'name', 'description', 'status', 'due_date', 'position', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'status', 'visibility', 'due_date', 'position', 'created_at', 'updated_at']
 
 
 class ProjectMilestoneWriteSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=200, required=False)
     description = serializers.CharField(allow_blank=True, required=False)
     status = serializers.ChoiceField(choices=MILESTONE_STATUSES, required=False)
+    visibility = serializers.ChoiceField(choices=MILESTONE_VISIBILITY, required=False)
     due_date = serializers.DateField(allow_null=True, required=False)
     position = serializers.IntegerField(min_value=0, required=False)
 

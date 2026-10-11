@@ -167,7 +167,10 @@ class ProjectMilestonesView(APIView):
 
     def get(self, request, pk):
         project = _project(request, pk)
-        return Response(ProjectMilestoneReadSerializer(project.milestones.all(), many=True).data)
+        milestones = project.milestones.all()
+        if request.user.role in CLIENT_ROLES:
+            milestones = milestones.filter(visibility='client')
+        return Response(ProjectMilestoneReadSerializer(milestones, many=True).data)
 
     def post(self, request, pk):
         project = _project(request, pk)

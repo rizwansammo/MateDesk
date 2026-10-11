@@ -98,6 +98,12 @@ export default function WorkItemDetailPage() {
   const membersQuery = useProjectMembers(projectId, canManage);
   const commentsQuery = useWorkItemComments(workItemId);
   const isStaff = useAuthStore(state => ['msp_owner', 'msp_manager', 'msp_agent'].includes(state.user?.role || ''));
+  const isClientReviewer = Boolean(
+    project?.my_role === 'client_reviewer' &&
+    project?.visibility === 'client' &&
+    item?.visibility === 'client'
+  );
+  const canComment = canEdit || isClientReviewer;
   const linkedTicketQuery = useWorkItemSupportTickets(workItemId, isStaff);
   const update = useUpdateWorkItem(projectId);
   const addComment = useAddWorkItemComment(workItemId);
@@ -114,9 +120,9 @@ export default function WorkItemDetailPage() {
   async function submitComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = commentText.trim();
-    if (!body || !canEdit) return;
+    if (!body || !canComment) return;
     try {
-      await addComment.mutateAsync({ body, visibility });
+      await addComment.mutateAsync({ body, visibility: isClientReviewer ? 'client' : visibility });
       setCommentText('');
     } catch { /* Mutation error is visible below. */ }
   }
@@ -218,14 +224,18 @@ export default function WorkItemDetailPage() {
                       </div>
                     )}
 
-                {canEdit && <form onSubmit={submitComment} className="border-t p-3"
+                {canComment && <form onSubmit={submitComment} className="border-t p-3"
                   style={{ borderColor: 'var(--border-md)' }}>
-                  <label className="label" htmlFor="work-comment">Add Comment</label>
+                  <label className="label" htmlFor="work-comment">{isClientReviewer ? 'Your Feedback' : 'Add Comment'}</label>
                   <textarea id="work-comment" className="input min-h-[100px] resize-y"
                     value={commentText} maxLength={10000} onChange={e => setCommentText(e.target.value)}
                     placeholder="Write a project update or internal note…" required />
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    {canManage ? (
+                    {isClientReviewer ? (
+                      <span className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                        Client visible feedback is not formal approval
+                      </span>
+                    ) : canManage ? (
                       <select className="select w-auto" aria-label="Comment visibility"
                         value={visibility} onChange={e => setVisibility(e.target.value as WorkVisibility)}>
                         <option value="internal">Internal Note</option>
@@ -237,7 +247,7 @@ export default function WorkItemDetailPage() {
                     </span>}
                     <button className="btn-primary" type="submit"
                       disabled={addComment.isPending || !commentText.trim()}>
-                      <Send size={13} /> {addComment.isPending ? 'Posting…' : 'Post Comment'}
+                      <Send size={13} /> {addComment.isPending ? 'Posting…' : isClientReviewer ? 'Post Feedback' : 'Post Comment'}
                     </button>
                   </div>
                 </form>}

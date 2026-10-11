@@ -10,7 +10,7 @@ import {
 } from '@/hooks/useProjects';
 import type {
   Project, ProjectMember, ProjectMilestone, ProjectRole, ProjectStatus,
-  ProjectVisibility, WorkItemKind, WorkItemPriority,
+  ProjectVisibility, WorkItemKind, WorkItemPriority, WorkVisibility,
 } from '@/types/projects';
 import { ProjectDialog, ProjectError, PROJECT_STATES, WORK_KINDS, WORK_PRIORITIES } from './ProjectUI';
 
@@ -162,10 +162,14 @@ export function CreateMilestoneDialog({ projectId, onClose }: { projectId: strin
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [visibility, setVisibility] = useState<WorkVisibility>('internal');
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      await create.mutateAsync({ name: name.trim(), description, ...(dueDate ? { due_date: dueDate } : {}) });
+      await create.mutateAsync({
+        name: name.trim(), description, visibility,
+        ...(dueDate ? { due_date: dueDate } : {}),
+      });
       onClose();
     } catch { /* Display mutation error. */ }
   }
@@ -186,6 +190,17 @@ export function CreateMilestoneDialog({ projectId, onClose }: { projectId: strin
         <div>
           <label className="label" htmlFor="milestone-due">Due Date</label>
           <input id="milestone-due" className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+        </div>
+        <div>
+          <label className="label" htmlFor="milestone-visibility">Visibility</label>
+          <select id="milestone-visibility" className="select" value={visibility}
+            onChange={e => setVisibility(e.target.value as WorkVisibility)}>
+            <option value="internal">Internal</option>
+            <option value="client">Client Visible</option>
+          </select>
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--text-3)' }}>
+            Internal milestones are hidden from the Client Portal.
+          </p>
         </div>
         <Footer busy={create.isPending} submit="Create Milestone" onClose={onClose} />
       </form>

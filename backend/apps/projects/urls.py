@@ -1,4 +1,5 @@
 from django.urls import path
+from .reviewers import ProjectReviewerCandidatesView
 from .email_views import WorkItemNotificationView
 
 from .ticket_links import (
@@ -15,6 +16,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path('projects/<uuid:pk>/reviewer-candidates/', ProjectReviewerCandidatesView.as_view(), name='project-reviewer-candidates'),
     path('work-items/<uuid:pk>/email-notifications/', WorkItemNotificationView.as_view(), name='work-item-email-notifications'),
     path('tickets/<str:ticket_ref>/project-association/', TicketProjectAssociationView.as_view(), name='ticket-project-association'),
     path('tickets/<str:ticket_ref>/project-work-items/', TicketWorkItemLinkView.as_view(), name='ticket-project-work-items'),

@@ -1,9 +1,12 @@
-from unittest.mock import patch
+import json
+from urllib.error import URLError
+from unittest.mock import MagicMock, patch
 
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken
 
+from apps.email_ingestion import matemail
 from apps.email_ingestion.models import (
     AUTH_METHOD_MATEMAIL,
     TenantEmailSettings,
@@ -55,7 +58,7 @@ class MateMailConnectedAppTest(TestCase):
     def test_start_secret_is_passed_through_and_never_saved(self, start):
         start.return_value = {
             "tenant_id": "11111111-1111-1111-1111-111111111111",
-            "authorization_url": "https://portal.matemail.online/app/integrations/authorize?request=mmr_test",
+            "authorization_url": "https://hub.matemail.pro/app/integrations/authorize?request=mmr_test",
             "poll_token": "mmp_test",
         }
 
@@ -163,3 +166,45 @@ class MateMailConnectedAppTest(TestCase):
         self.assertEqual(settings.matemail_mailbox_email, "")
         self.assertFalse(settings.imap_enabled)
         self.assertFalse(settings.smtp_enabled)
+
+
+class MateMailApiClientTest(SimpleTestCase):
+    def test_default_api_host_is_current_production(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.MATEMAIL_BASE_URL, "https://portal.matemail.pro")
+
+    @override_settings(MATEMAIL_BASE_URL="https://portal.matemail.pro/")
+    @patch("apps.email_ingestion.matemail.urllib.request.urlopen")
+    def test_connection_start_posts_to_current_api_host(self, urlopen):
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "authorization_url": "https://hub.matemail.pro/app/integrations/authorize?request=test",
+            "poll_token": "test_poll_token",
+        }).encode()
+        urlopen.return_value.__enter__.return_value = response
+
+        result = matemail.start_connection("tenant-id", "one-time-secret")
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(
+            request.full_url,
+            "https://portal.matemail.pro/api/integrations/connect/start/",
+        )
+        self.assertEqual(request.get_method(), "POST")
+        self.assertEqual(json.loads(request.data), {
+            "tenant_id": "tenant-id",
+            "integration_secret": "one-time-secret",
+        })
+        self.assertEqual(urlopen.call_args.kwargs["timeout"], 20)
+        self.assertEqual(result["poll_token"], "test_poll_token")
+
+    @override_settings(MATEMAIL_BASE_URL="https://portal.matemail.pro")
+    @patch("apps.email_ingestion.matemail.urllib.request.urlopen")
+    def test_unavailable_api_returns_safe_error(self, urlopen):
+        urlopen.side_effect = URLError("private connection diagnostic")
+
+        with self.assertRaisesRegex(
+            matemail.MateMailError, "^MateMail is temporarily unavailable\\.$"
+        ):
+            matemail.start_connection("tenant-id", "one-time-secret")

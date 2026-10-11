@@ -998,3 +998,80 @@ class NotificationMarkAllReadView(APIView):
             return Response({'ok': True})
         Notification.objects.filter(
             tenant=tenant, recipient=request.user, is_read=False
+        ).update(is_read=True)
+        return Response({'ok': True})
+
+
+# ── Support Groups ────────────────────────────────────────────────────────────
+
+class SupportGroupViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated, IsTenantUser]
+
+    def get_queryset(self):
+        tenant = _resolve_tenant(self.request)
+        if tenant is None:
+            return SupportGroup.objects.none()
+        return SupportGroup.objects.filter(tenant=tenant).annotate(
+            ticket_count=Count('tickets')
+        )
+
+    def list(self, request):
+        return Response(SupportGroupSerializer(self.get_queryset(), many=True).data)
+
+    def create(self, request):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied.'}, status=403)
+        tenant = _resolve_tenant(request)
+        name = (request.data.get('name') or '').strip()
+        if not name:
+            return Response({'detail': 'name is required.'}, status=400)
+        description = (request.data.get('description') or '').strip()
+        if SupportGroup.objects.filter(tenant=tenant, name=name).exists():
+            return Response({'detail': 'A group with this name already exists.'}, status=400)
+        group = SupportGroup.objects.create(tenant=tenant, name=name, description=description)
+        return Response(SupportGroupSerializer(group).data, status=201)
+
+    def partial_update(self, request, pk=None):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied.'}, status=403)
+        group = get_object_or_404(self.get_queryset(), pk=pk)
+        name = (request.data.get('name') or '').strip()
+        description = request.data.get('description', group.description)
+        if name and name != group.name:
+            if SupportGroup.objects.filter(tenant=group.tenant, name=name).exclude(pk=group.pk).exists():
+                return Response({'detail': 'A group with this name already exists.'}, status=400)
+            group.name = name
+        group.description = description
+        group.save()
+        return Response(SupportGroupSerializer(group).data)
+
+    def destroy(self, request, pk=None):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied.'}, status=403)
+        group = get_object_or_404(self.get_queryset(), pk=pk)
+        group.delete()  # Ticket.group SET_NULL on delete
+        return Response(status=204)
+
+    @action(detail=True, methods=['post'], url_path='agents')
+    def add_agent(self, request, pk=None):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied.'}, status=403)
+        group = get_object_or_404(self.get_queryset(), pk=pk)
+        agent_id = request.data.get('agent_id')
+        if not agent_id:
+            return Response({'detail': 'agent_id required.'}, status=400)
+        agent = User.objects.filter(id=agent_id, tenant=group.tenant, is_active=True, role__in=MSP_ROLES).first()
+        if not agent:
+            return Response({'detail': 'Agent not found.'}, status=404)
+        group.agents.add(agent)
+        return Response(SupportGroupSerializer(group).data)
+
+    @action(detail=True, methods=['delete'], url_path='agents/(?P<agent_id>[^/.]+)')
+    def remove_agent(self, request, pk=None, agent_id=None):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'Permission denied.'}, status=403)
+        group = get_object_or_404(self.get_queryset(), pk=pk)
+        agent = User.objects.filter(id=agent_id, tenant=group.tenant).first()
+        if agent:
+            group.agents.remove(agent)
+        return Response(SupportGroupSerializer(group).data)

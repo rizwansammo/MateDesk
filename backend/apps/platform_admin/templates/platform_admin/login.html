@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'platform_admin/splash.css' %}">
   <style>
     @font-face {
       font-family: 'HemiHead';
@@ -39,27 +40,6 @@
       color: var(--fg-1);
       -webkit-font-smoothing: antialiased;
     }
-
-    /* ── Splash overlay ── */
-    #pto {
-      opacity: 1;
-      pointer-events: all;
-      transition: opacity 0.35s ease;
-    }
-    #pto.out {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .pto-arc {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2.5px solid transparent;
-      border-top-color: #fff;
-      border-right-color: rgba(255,255,255,0.55);
-      animation: pto-spin 0.85s linear infinite;
-    }
-    @keyframes pto-spin { to { transform: rotate(360deg); } }
 
     /* ── Background ── */
     .login-bg {
@@ -300,20 +280,7 @@
 </head>
 <body>
 
-<!-- Splash overlay -->
-<div id="pto" role="status" aria-label="Loading"
-     style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:999999;
-            background:#0d1117;display:flex;align-items:center;justify-content:center;">
-  <div style="position:relative;width:160px;height:160px;
-              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <div style="position:absolute;top:0;right:0;bottom:0;left:0;
-                border-radius:50%;border:2px solid rgba(255,255,255,0.12);"></div>
-    <div class="pto-arc"></div>
-    <img src="{% static 'platform_admin/img/NetaMate.png' %}" alt="" draggable="false"
-         style="width:104px;height:104px;object-fit:contain;display:block;flex-shrink:0;
-                position:relative;z-index:1;" />
-  </div>
-</div>
+{% include "platform_admin/_splash.html" %}
 
 <div class="login-bg">
   <div class="login-card">
@@ -387,33 +354,6 @@
   </div>
 </div>
 
-<script>
-(function () {
-  var overlay = document.getElementById('pto');
-  if (!overlay) return;
-
-  window._ptoShow = function () { overlay.classList.remove('out'); };
-
-  // Dismiss once page content is painted
-  requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      overlay.classList.add('out');
-    });
-  });
-
-  // Show on form submit (sign-in) or any link navigation
-  document.addEventListener('submit', function (e) {
-    if (!e.defaultPrevented) window._ptoShow();
-  });
-  document.addEventListener('click', function (e) {
-    var link = e.target.closest('a[href]');
-    if (!link) return;
-    var href = link.getAttribute('href');
-    if (!href || href === '#' || href.startsWith('#') ||
-        href.startsWith('javascript') || link.target === '_blank') return;
-    window._ptoShow();
-  });
-})();
-</script>
+<script src="{% static 'platform_admin/splash.js' %}"></script>
 </body>
 </html>

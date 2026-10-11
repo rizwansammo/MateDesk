@@ -249,48 +249,8 @@
     });
   }
 
-  // ── Page Transition Splash ──────────────────────────────────
-  function initPageTransition() {
-    var overlay = document.getElementById('pto');
-    if (!overlay) return;
-
-    // Expose a show helper so the confirm modal can call it before form.submit().
-    window._ptoShow = function () {
-      overlay.classList.remove('out');
-    };
-
-    // Fade out once the current page is ready.
-    // Two rAF calls ensure at least one browser paint has happened so the
-    // page content is visible underneath before the overlay disappears.
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        overlay.classList.add('out');
-      });
-    });
-
-    // Show when clicking any link that causes a real navigation.
-    document.addEventListener('click', function (e) {
-      var link = e.target.closest('a[href]');
-      if (!link) return;
-      var href = link.getAttribute('href');
-      // Ignore: hash anchors, javascript: pseudo-links, new-tab targets.
-      if (!href || href === '#' || href.startsWith('#') ||
-          href.startsWith('javascript') || link.target === '_blank') return;
-      window._ptoShow();
-    });
-
-    // Show for form submissions that are not intercepted by JS
-    // (i.e. the form's own handler did not call e.preventDefault()).
-    document.addEventListener('submit', function (e) {
-      if (!e.defaultPrevented) {
-        window._ptoShow();
-      }
-    });
-  }
-
   // ── Init all on DOMContentLoaded ───────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
-    initPageTransition();   // must be first so overlay dismisses ASAP
     initFlashMessages();
     initTabs();
     initSlugDerive();

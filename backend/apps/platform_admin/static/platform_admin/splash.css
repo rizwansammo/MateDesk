@@ -1,0 +1,80 @@
+/* Mirrors the MateDesk application splash in frontend/src/app/layout.tsx. */
+@font-face {
+  font-family: 'MateDeskSplashHemi';
+  src: url('fonts/HemiHead-Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+}
+
+@keyframes md-splash-spin { to { transform: rotate(360deg); } }
+@keyframes md-splash-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#pto {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #0f1117;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.38s ease;
+}
+#pto.out { opacity: 0; pointer-events: none; }
+
+#pto .md-splash-ring { position: relative; width: 88px; height: 88px; }
+#pto .md-splash-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(31, 78, 216, 0.15);
+}
+#pto .md-splash-arc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #1f4ed8;
+  border-right-color: #1f4ed8;
+  animation: md-splash-spin 0.9s linear infinite;
+}
+#pto .md-splash-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background: #1f4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#pto .md-splash-wordmark {
+  position: relative;
+  top: 2px;
+  margin-top: 22px;
+  color: #f8fafc;
+  font: 700 18px/1 'MateDeskSplashHemi', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: md-splash-fadein 0.5s ease 0.15s both;
+}
+#pto .md-splash-wordmark span { color: #1f4ed8; }
+#pto .md-splash-subtitle {
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+@media (prefers-reduced-motion: reduce) {
+  #pto .md-splash-arc, #pto .md-splash-wordmark { animation: none; }
+  #pto { transition-duration: 0.01ms; }
+}

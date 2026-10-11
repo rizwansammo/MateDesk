@@ -10,29 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'platform_admin/admin.css' %}">
+  <link rel="stylesheet" href="{% static 'platform_admin/splash.css' %}">
   <link rel="icon" type="image/png" href="{% static 'platform_admin/img/NetaMate.png' %}">
   <link rel="shortcut icon" href="{% static 'platform_admin/img/NetaMate.png' %}">
 </head>
 <body>
 
-<!-- Page Transition Splash -->
-<div id="pto" role="status" aria-label="Loading"
-     style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:999999;
-            background:#0d1117;display:flex;align-items:center;justify-content:center;">
-  <!-- Ring wrapper — fixed 160×160 square, logo centered inside -->
-  <div style="position:relative;width:160px;height:160px;
-              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <!-- Track ring -->
-    <div style="position:absolute;top:0;right:0;bottom:0;left:0;
-                border-radius:50%;border:2px solid rgba(255,255,255,0.12);"></div>
-    <!-- Spinning arc — class only for @keyframes -->
-    <div class="pto-arc"></div>
-    <!-- Logo capped at 104×104 inside the ring -->
-    <img src="{% static 'platform_admin/img/NetaMate.png' %}" alt="" draggable="false"
-         style="width:104px;height:104px;object-fit:contain;display:block;flex-shrink:0;
-                position:relative;z-index:1;" />
-  </div>
-</div>
+{% include "platform_admin/_splash.html" %}
 
 <!-- Mobile Sidebar Overlay -->
 <div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99;"></div>
@@ -381,6 +365,7 @@
   </div>
 </div>
 
+<script src="{% static 'platform_admin/splash.js' %}"></script>
 <script src="{% static 'platform_admin/admin.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>

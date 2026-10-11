@@ -243,6 +243,18 @@ class TicketViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
+        # A linked ticket cannot be reassigned to a different client organization.
+        # Agents must remove Work Item links and the Project Association first.
+        if 'client_org_id' in data:
+            from apps.projects.models import TicketProjectAssociation
+            association = TicketProjectAssociation.objects.filter(
+                ticket=ticket,
+            ).select_related('project').first()
+            if association and data['client_org_id'] != association.project.client_org_id:
+                return Response({
+                    'client_org_id': 'Unlink this ticket from its project before changing the client organization.',
+                }, status=400)
+
         old_status = ticket.status
 
         if 'assignee_id' in data:

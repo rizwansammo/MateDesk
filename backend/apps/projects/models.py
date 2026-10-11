@@ -215,3 +215,90 @@ class WorkItemComment(ValidatedModel):
                     raise ValidationError({'author': 'Client cannot comment on this work item.'})
             elif author.role not in MSP_ROLES:
                 raise ValidationError({'author': 'Unsupported commenter role.'})
+
+
+class TicketProjectAssociation(ValidatedModel):
+    """A support ticket belongs to at most one delivery project.
+
+    Work items remain independent of support ticket status and SLA.
+    Automation rules will reuse this domain model in a later phase.
+    """
+
+    SOURCES = [('manual', 'Manual'), ('automation', 'Automation')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ticket = models.OneToOneField(
+        'tickets.Ticket', on_delete=models.CASCADE, related_name='project_association',
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.PROTECT, related_name='ticket_associations',
+    )
+    source = models.CharField(max_length=20, choices=SOURCES, default='manual')
+    linked_by = models.ForeignKey(
+        'users.User', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='linked_ticket_projects',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_ticket_associations'
+
+    def clean(self):
+        if not self.ticket_id or not self.project_id:
+            return
+        ticket = self.ticket
+        project = self.project
+        if ticket.tenant_id != project.tenant_id:
+            raise ValidationError({'project': 'Ticket and project must belong to the same tenant.'})
+        if (not ticket.client_org_id or ticket.client_org_id != project.client_org_id
+                or ticket.client_org.name == 'Walk-In'):
+            raise ValidationError({'project': 'Assign the ticket to the correct client organization first.'})
+        if self.linked_by_id and (
+            self.linked_by.tenant_id != ticket.tenant_id
+            or self.linked_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'linked_by': 'Linking user must be support staff from this tenant.'})
+
+
+class TicketWorkItemLink(ValidatedModel):
+    """Optional links to one or more Work Items of the associated project."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ticket = models.ForeignKey(
+        'tickets.Ticket', on_delete=models.CASCADE, related_name='project_work_item_links',
+    )
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, related_name='support_ticket_links',
+    )
+    linked_by = models.ForeignKey(
+        'users.User', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='linked_ticket_work_items',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_ticket_work_item_links'
+        ordering = ['created_at', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ticket', 'work_item'], name='unique_ticket_work_item_link',
+            ),
+        ]
+
+    def clean(self):
+        if not self.ticket_id or not self.work_item_id:
+            return
+        try:
+            association = self.ticket.project_association
+        except TicketProjectAssociation.DoesNotExist:
+            raise ValidationError({'ticket': 'Link the ticket to a project first.'}) from None
+        if (self.work_item.project_id != association.project_id
+                or self.ticket.tenant_id != self.work_item.project.tenant_id
+                or self.ticket.client_org_id != self.work_item.project.client_org_id):
+            raise ValidationError({'work_item': 'Work item must belong to the associated project.'})
+        if self.linked_by_id and (
+            self.linked_by.tenant_id != self.ticket.tenant_id
+            or self.linked_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'linked_by': 'Linking user must be support staff from this tenant.'})

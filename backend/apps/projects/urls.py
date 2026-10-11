@@ -1,5 +1,11 @@
 from django.urls import path
 
+from .ticket_links import (
+    TicketProjectAssociationView, TicketWorkItemLinkView,
+    TicketWorkItemLinkDetailView, TicketCreateLinkedWorkItemView,
+    WorkItemSupportTicketsView,
+)
+
 from .views import (
     ProjectListView, ProjectDetailView,
     ProjectMembersView, ProjectMemberDetailView,
@@ -8,6 +14,11 @@ from .views import (
 )
 
 urlpatterns = [
+    path('tickets/<str:ticket_ref>/project-association/', TicketProjectAssociationView.as_view(), name='ticket-project-association'),
+    path('tickets/<str:ticket_ref>/project-work-items/', TicketWorkItemLinkView.as_view(), name='ticket-project-work-items'),
+    path('tickets/<str:ticket_ref>/project-work-items/create/', TicketCreateLinkedWorkItemView.as_view(), name='ticket-create-project-work-item'),
+    path('tickets/<str:ticket_ref>/project-work-items/<uuid:work_item_id>/', TicketWorkItemLinkDetailView.as_view(), name='ticket-project-work-item-detail'),
+    path('work-items/<uuid:work_item_id>/support-tickets/', WorkItemSupportTicketsView.as_view(), name='work-item-support-tickets'),
     path('projects/', ProjectListView.as_view(), name='projects-list'),
     path('projects/<uuid:pk>/', ProjectDetailView.as_view(), name='projects-detail'),
     path('projects/<uuid:pk>/members/', ProjectMembersView.as_view(), name='projects-members'),

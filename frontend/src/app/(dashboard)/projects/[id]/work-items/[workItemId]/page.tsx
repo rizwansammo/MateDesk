@@ -11,6 +11,8 @@ import {
   useProject, useProjectMembers, useProjectMilestones, useWorkItem,
   useWorkItemComments, useUpdateWorkItem, useAddWorkItemComment,
 } from '@/hooks/useProjects';
+import { useWorkItemSupportTickets } from '@/hooks/useTicketProjects';
+import { useAuthStore } from '@/store/useAuthStore';
 import type {
   WorkItem, WorkItemKind, WorkItemPriority, WorkItemStatus, WorkVisibility,
 } from '@/types/projects';
@@ -94,6 +96,8 @@ export default function WorkItemDetailPage() {
   const milestonesQuery = useProjectMilestones(projectId);
   const membersQuery = useProjectMembers(projectId, canManage);
   const commentsQuery = useWorkItemComments(workItemId);
+  const isStaff = useAuthStore(state => ['msp_owner', 'msp_manager', 'msp_agent'].includes(state.user?.role || ''));
+  const linkedTicketQuery = useWorkItemSupportTickets(workItemId, isStaff);
   const update = useUpdateWorkItem(projectId);
   const addComment = useAddWorkItemComment(workItemId);
   const [editing, setEditing] = useState(false);
@@ -291,11 +295,41 @@ export default function WorkItemDetailPage() {
                     style={{ color: 'var(--accent-info-fg)' }}>
                     <ClipboardList size={15} /> {project.name}
                   </Link>
-                  <div className="mt-2 text-[11px]" style={{ color: 'var(--text-3)' }}>
-                    Support Ticket linking will be available in Phase 4.
-                  </div>
+
                 </div>
               </section>
+              {isStaff && <section className="panel">
+                <div className="panel-header">
+                  <span className="panel-title">Linked Support Tickets</span>
+                  <span className="font-mono text-[11px]" style={{ color: 'var(--text-3)' }}>
+                    {linkedTicketQuery.data?.length ?? 0}
+                  </span>
+                </div>
+                {linkedTicketQuery.isLoading ? (
+                  <div className="p-3 text-xs" style={{ color: 'var(--text-3)' }}>Loading ticket links…</div>
+                ) : linkedTicketQuery.isError ? (
+                  <div className="p-3"><ProjectError error={linkedTicketQuery.error}
+                    retry={() => { void linkedTicketQuery.refetch(); }} /></div>
+                ) : linkedTicketQuery.data?.length ? (
+                  <div className="space-y-1 p-2">
+                    {linkedTicketQuery.data.map(linked => (
+                      <Link key={linked.ref} href={`/requests/${encodeURIComponent(linked.ref)}`}
+                        className="block border p-2 text-xs hover:bg-[var(--bg-hover)]"
+                        style={{ borderColor: 'var(--border-subtle)' }}>
+                        <span className="font-mono" style={{ color: 'var(--accent-info-fg)' }}>{linked.ref}</span>
+                        <span className="mt-1 block break-words" style={{ color: 'var(--text-1)' }}>{linked.subject}</span>
+                        <span className="mt-1 block text-[11px]" style={{ color: 'var(--text-3)' }}>
+                          {linked.status.replace(/_/g, ' ')}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="p-3 text-xs" style={{ color: 'var(--text-3)' }}>
+                    No linked Support Tickets.
+                  </p>
+                )}
+              </section>}
               <Link href={`/projects/${projectId}`} className="btn-secondary justify-center">
                 <ArrowLeft size={13} /> Back to Project
               </Link>

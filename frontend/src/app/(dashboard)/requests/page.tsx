@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import type { TicketListItem, TicketStatus, TicketPriority, SupportGroup, SLAStatus } from '@/types/tickets';
 import type { ClientOrg } from '@/types/tickets';
 import { ApiError } from '@/lib/api';
+import { UnifiedRequestsPanel } from '@/components/requests/UnifiedRequestsPanel';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,7 @@ export default function RequestsPage() {
   const { user } = useAuthStore();
   const isMSP = ['msp_owner', 'msp_manager', 'msp_agent'].includes(user?.role ?? '');
 
+  const [workspaceMode, setWorkspaceMode] = useState<'unified' | 'tickets'>('unified');
   const [view,           setView]           = useState('');
   const [search,         setSearch]         = useState('');
   const [searchInput,    setSearchInput]    = useState('');
@@ -165,6 +167,10 @@ export default function RequestsPage() {
   // Detect if filtered org is Walk-In (only Walk-In tickets can have org changed)
   const selectedOrgName = orgs?.find(o => o.id === orgFilter)?.name ?? '';
   const isWalkInFilter  = selectedOrgName === 'Walk-In';
+
+  if (workspaceMode === 'unified') {
+    return <UnifiedRequestsPanel onTicketTools={() => setWorkspaceMode('tickets')} />;
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -291,6 +297,8 @@ export default function RequestsPage() {
           {bulkError && (
             <span style={{ fontSize: 11, color: 'var(--accent-danger-fg)' }}>{bulkError}</span>
           )}
+          <button type="button" className="btn-secondary gap-1"
+            onClick={() => setWorkspaceMode('unified')}>Unified Requests</button>
           <button
             className="btn-primary gap-1"
             style={{ height: 28, paddingTop: 0, paddingBottom: 0, fontSize: 11 }}

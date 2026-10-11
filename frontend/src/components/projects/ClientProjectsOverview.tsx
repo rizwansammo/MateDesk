@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, CalendarDays, CheckCircle2, FolderKanban, Search } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, CheckCircle2, FolderKanban, Search, Plus } from 'lucide-react';
 import type { Project } from '@/types/projects';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate,
@@ -27,7 +27,11 @@ export function ClientProjectsOverview({
 
   return (
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
-      <ProjectTitleBar eyebrow="Client Portal" title="My Projects" />
+      <ProjectTitleBar eyebrow="Client Portal" title="My Projects" right={
+        <Link href="/requests/project/new" className="btn-primary inline-flex items-center gap-1.5 text-xs">
+          <Plus size={14}/> Request New Project
+        </Link>
+      } />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
         <div className="mx-auto max-w-[1200px] space-y-3">
           <div className="grid grid-cols-2 gap-2">

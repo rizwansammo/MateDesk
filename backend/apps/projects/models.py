@@ -412,3 +412,105 @@ class ProjectEmailReply(ValidatedModel):
                 or self.comment.visibility != 'client'
                 or self.from_email.casefold() != self.notification.recipient.email.casefold()):
             raise ValidationError({'comment': 'Inbound Project Reply must match its notification and recipient.'})
+
+
+class ProjectAgentPermission(ValidatedModel):
+    """Explicit manager-granted project creation access for MSP agents."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='project_agent_permissions')
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE, related_name='project_creation_permission')
+    granted_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='granted_project_permissions')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_agent_permissions'
+
+    def clean(self):
+        if self.user_id and (
+            self.user.tenant_id != self.tenant_id or self.user.role != 'msp_agent' or not self.user.is_active
+        ):
+            raise ValidationError({'user': 'Only an active agent from the same tenant may receive this permission.'})
+        if self.granted_by_id and (
+            self.granted_by.tenant_id != self.tenant_id or
+            self.granted_by.role not in ('msp_owner', 'msp_manager')
+        ):
+            raise ValidationError({'granted_by': 'Only an owner or manager may grant project permissions.'})
+
+
+class ProjectRequest(ValidatedModel):
+    """Client request with a real support ticket for discussion and attachments.
+
+    Conversion changes the request lifecycle, not the support ticket data.
+    The original ticket remains available for history and conversation.
+    """
+
+    KINDS = [
+        ('web_development', 'Web Development'),
+        ('app_development', 'App Development'),
+        ('website_redesign', 'Website Redesign'),
+        ('infrastructure', 'Infrastructure'),
+        ('other', 'Other'),
+    ]
+    STATUSES = [
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('awaiting_details', 'Awaiting Details'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('converted', 'Converted'),
+    ]
+    CURRENCIES = [('USD', 'USD'), ('EUR', 'EUR'), ('GBP', 'GBP'), ('CAD', 'CAD'),
+                  ('AUD', 'AUD'), ('BDT', 'BDT')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='project_requests')
+    client_org = models.ForeignKey('tenants.ClientOrganization', on_delete=models.PROTECT, related_name='project_requests')
+    ticket = models.OneToOneField('tickets.Ticket', on_delete=models.PROTECT, related_name='project_request')
+    requested_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='project_requests')
+    name = models.CharField(max_length=200)
+    kind = models.CharField(max_length=32, choices=KINDS, default='other')
+    requirements = models.TextField(blank=True)
+    budget = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    budget_currency = models.CharField(max_length=3, choices=CURRENCIES, default='USD')
+    expected_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=24, choices=STATUSES, default='submitted')
+    reviewed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_project_requests')
+    converted_project = models.OneToOneField(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='originating_request'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_requests'
+        ordering = ['-updated_at', '-created_at']
+        indexes = [models.Index(fields=['tenant', 'status'], name='project_request_tenant_status')]
+
+    def clean(self):
+        if not self.tenant_id:
+            return
+        if self.client_org_id and (
+            self.client_org.tenant_id != self.tenant_id or not self.client_org.is_active
+        ):
+            raise ValidationError({'client_org': 'Client organization must be active and belong to this tenant.'})
+        if self.ticket_id and (
+            self.ticket.tenant_id != self.tenant_id or self.ticket.client_org_id != self.client_org_id or
+            self.ticket.is_internal
+        ):
+            raise ValidationError({'ticket': 'Request ticket must belong to the same tenant and client organization.'})
+        if self.requested_by_id and (
+            self.requested_by.tenant_id != self.tenant_id or
+            self.requested_by.client_org_id != self.client_org_id or
+            self.requested_by.role not in CLIENT_ROLES
+        ):
+            raise ValidationError({'requested_by': 'Requester must be a client from the same organization.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != self.tenant_id or self.reviewed_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'reviewed_by': 'Reviewer must be staff from this tenant.'})
+        if self.converted_project_id and (
+            self.converted_project.tenant_id != self.tenant_id or
+            self.converted_project.client_org_id != self.client_org_id
+        ):
+            raise ValidationError({'converted_project': 'Converted project belongs to another tenant or organization.'})

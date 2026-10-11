@@ -87,8 +87,9 @@ class ProjectListView(APIView):
         return Response(ProjectReadSerializer(projects, many=True, context={'request': request}).data)
 
     def post(self, request):
-        if request.user.role not in ('msp_owner', 'msp_manager'):
-            raise PermissionDenied('Only MSP owners and managers can create projects.')
+        from .requests import can_create_project
+        if not can_create_project(request.user):
+            raise PermissionDenied('Project creation permission required.')
         data = ProjectCreateSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()

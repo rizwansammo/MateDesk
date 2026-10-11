@@ -36,15 +36,10 @@ export function MainSidebar() {
           title: 'SUPPORT',
           items: [
             { label: 'Requests',       href: '/requests', icon: Ticket    },
+            { label: 'Projects',       href: '/projects', icon: FolderKanban },
             { label: 'Events',         href: '/events',   icon: CalendarDays },
             { label: 'Calendar',       href: '/calendar', icon: Calendar  },
             { label: 'Knowledge Base', href: '/kb',       icon: BookOpen  },
-          ],
-        },
-        {
-          title: 'PROJECTS',
-          items: [
-            { label: 'Projects', href: '/projects', icon: FolderKanban },
           ],
         },
         {
@@ -66,11 +61,6 @@ export function MainSidebar() {
           title: 'SUPPORT',
           items: [
             { label: 'Requests', href: '/requests', icon: Ticket },
-          ],
-        },
-        {
-          title: 'PROJECTS',
-          items: [
             { label: 'My Projects', href: '/projects', icon: FolderKanban },
           ],
         },

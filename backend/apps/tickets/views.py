@@ -380,6 +380,13 @@ class TicketViewSet(viewsets.GenericViewSet):
         if not tickets:
             return Response({'detail': 'No matching tickets.'}, status=404)
 
+        if action_name == 'delete' and any(
+            getattr(ticket, 'project_request', None) is not None for ticket in tickets
+        ):
+            return Response({
+                'detail': 'Project Request tickets are retained as part of their approval and project history.'
+            }, status=400)
+
         with transaction.atomic():
             if action_name == 'delete':
                 count = len(tickets)
@@ -503,6 +510,8 @@ class TicketViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'This ticket is already absorbed by another ticket.'}, status=400)
         if target.merge_status == 'secondary':
             return Response({'detail': 'Target ticket is itself a secondary — cannot merge into it.'}, status=400)
+        if (hasattr(ticket, 'project_request') or hasattr(target, 'project_request')):
+            return Response({'detail': 'Project Request history cannot be merged.'}, status=400)
 
         with transaction.atomic():
             ticket.merge_status = 'secondary'
@@ -551,6 +560,8 @@ class TicketViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'That ticket is already absorbed by another ticket.'}, status=400)
         if ticket.merge_status == 'secondary':
             return Response({'detail': 'This ticket is already a secondary — cannot absorb into it.'}, status=400)
+        if (hasattr(ticket, 'project_request') or hasattr(source, 'project_request')):
+            return Response({'detail': 'Project Request history cannot be absorbed.'}, status=400)
 
         with transaction.atomic():
             source.merge_status = 'secondary'
@@ -737,14 +748,42 @@ class AttachmentFileView(APIView):
         tenant = _resolve_tenant(request)
         if tenant is None:
             raise Http404
-        attachment = get_object_or_404(Attachment, pk=pk, tenant=tenant)
+        attachment = get_object_or_404(
+            Attachment.objects.select_related('ticket', 'reply__ticket'),
+            pk=pk, tenant=tenant,
+        )
+        ticket = attachment.ticket or (attachment.reply.ticket if attachment.reply_id else None)
+        if ticket is None or ticket.tenant_id != tenant.id:
+            raise Http404
+        user = request.user
+        if user.role not in MSP_ROLES:
+            if ticket.is_internal or (attachment.reply_id and attachment.reply.type == 'internal_note'):
+                raise Http404
+            org_reader = (
+                user.role == ROLE_CLIENT_OWNER or
+                (user.role == ROLE_END_USER and getattr(user, 'is_vip', False))
+            )
+            if org_reader:
+                if not user.client_org_id or ticket.client_org_id != user.client_org_id:
+                    raise Http404
+            elif user.role == ROLE_END_USER:
+                if ticket.requester_id != user.id:
+                    raise Http404
+            else:
+                raise Http404
         try:
             fh = attachment.file.open('rb')
         except Exception:
             raise Http404
         content_type, _ = mimetypes.guess_type(attachment.filename or str(attachment.file.name))
-        response = FileResponse(fh, content_type=content_type or 'application/octet-stream')
+        content_type = content_type or 'application/octet-stream'
+        response = FileResponse(
+            fh, content_type=content_type,
+            as_attachment=not content_type.startswith('image/'),
+            filename=attachment.filename,
+        )
         response['Cache-Control'] = 'private, max-age=86400'
+        response['X-Content-Type-Options'] = 'nosniff'
         return response
 
 
@@ -959,80 +998,3 @@ class NotificationMarkAllReadView(APIView):
             return Response({'ok': True})
         Notification.objects.filter(
             tenant=tenant, recipient=request.user, is_read=False
-        ).update(is_read=True)
-        return Response({'ok': True})
-
-
-# ── Support Groups ────────────────────────────────────────────────────────────
-
-class SupportGroupViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated, IsTenantUser]
-
-    def get_queryset(self):
-        tenant = _resolve_tenant(self.request)
-        if tenant is None:
-            return SupportGroup.objects.none()
-        return SupportGroup.objects.filter(tenant=tenant).annotate(
-            ticket_count=Count('tickets')
-        )
-
-    def list(self, request):
-        return Response(SupportGroupSerializer(self.get_queryset(), many=True).data)
-
-    def create(self, request):
-        if request.user.role not in MSP_ROLES:
-            return Response({'detail': 'Permission denied.'}, status=403)
-        tenant = _resolve_tenant(request)
-        name = (request.data.get('name') or '').strip()
-        if not name:
-            return Response({'detail': 'name is required.'}, status=400)
-        description = (request.data.get('description') or '').strip()
-        if SupportGroup.objects.filter(tenant=tenant, name=name).exists():
-            return Response({'detail': 'A group with this name already exists.'}, status=400)
-        group = SupportGroup.objects.create(tenant=tenant, name=name, description=description)
-        return Response(SupportGroupSerializer(group).data, status=201)
-
-    def partial_update(self, request, pk=None):
-        if request.user.role not in MSP_ROLES:
-            return Response({'detail': 'Permission denied.'}, status=403)
-        group = get_object_or_404(self.get_queryset(), pk=pk)
-        name = (request.data.get('name') or '').strip()
-        description = request.data.get('description', group.description)
-        if name and name != group.name:
-            if SupportGroup.objects.filter(tenant=group.tenant, name=name).exclude(pk=group.pk).exists():
-                return Response({'detail': 'A group with this name already exists.'}, status=400)
-            group.name = name
-        group.description = description
-        group.save()
-        return Response(SupportGroupSerializer(group).data)
-
-    def destroy(self, request, pk=None):
-        if request.user.role not in MSP_ROLES:
-            return Response({'detail': 'Permission denied.'}, status=403)
-        group = get_object_or_404(self.get_queryset(), pk=pk)
-        group.delete()  # Ticket.group SET_NULL on delete
-        return Response(status=204)
-
-    @action(detail=True, methods=['post'], url_path='agents')
-    def add_agent(self, request, pk=None):
-        if request.user.role not in MSP_ROLES:
-            return Response({'detail': 'Permission denied.'}, status=403)
-        group = get_object_or_404(self.get_queryset(), pk=pk)
-        agent_id = request.data.get('agent_id')
-        if not agent_id:
-            return Response({'detail': 'agent_id required.'}, status=400)
-        agent = User.objects.filter(id=agent_id, tenant=group.tenant, is_active=True, role__in=MSP_ROLES).first()
-        if not agent:
-            return Response({'detail': 'Agent not found.'}, status=404)
-        group.agents.add(agent)
-        return Response(SupportGroupSerializer(group).data)
-
-    @action(detail=True, methods=['delete'], url_path='agents/(?P<agent_id>[^/.]+)')
-    def remove_agent(self, request, pk=None, agent_id=None):
-        if request.user.role not in MSP_ROLES:
-            return Response({'detail': 'Permission denied.'}, status=403)
-        group = get_object_or_404(self.get_queryset(), pk=pk)
-        agent = User.objects.filter(id=agent_id, tenant=group.tenant).first()
-        if agent:
-            group.agents.remove(agent)
-        return Response(SupportGroupSerializer(group).data)

@@ -126,7 +126,10 @@ def _apply_action(ticket, action, trigger=''):
         # A ticket can be associated with one Project only. Never override
         # an agent's choice or a higher priority matching automation rule.
         # Only the new ticket event is eligible, even for legacy malformed rules.
-        if trigger != 'ticket_created' or not ticket.client_org_id:
+        # Project Requests must pass through staff approval before a Project
+        # is attached. They are still real Tickets for all other automations.
+        if (trigger != 'ticket_created' or not ticket.client_org_id
+                or ticket.category == 'Project Request'):
             return None
 
         import uuid as _uuid

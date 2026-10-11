@@ -42,6 +42,19 @@ class PlatformAdminSplashTests(unittest.TestCase):
         self.assertNotIn("pto-arc", (TEMPLATES / "login.html").read_text())
         self.assertTrue((STATIC / "img" / "NetaMate.png").is_file())
 
+    def test_login_and_dashboard_use_main_app_favicon(self):
+        icon = STATIC / "img" / "MateDesk.svg"
+        self.assertEqual(icon.read_bytes(), (
+            APP.parents[2] / "frontend" / "public" / "favicon.svg"
+        ).read_bytes())
+        for screen in ("base.html", "login.html"):
+            with self.subTest(screen=screen):
+                text = (TEMPLATES / screen).read_text()
+                self.assertIn("platform_admin/img/MateDesk.svg", text)
+                self.assertIn('rel="icon" type="image/svg+xml"', text)
+                self.assertIn('rel="shortcut icon" type="image/svg+xml"', text)
+                self.assertNotIn("platform_admin/img/NetaMate.png", text)
+
     def test_js_retains_navigation_and_modal_helper(self):
         js = (STATIC / "splash.js").read_text()
         self.assertIn("window._ptoShow = showSplash", js)

@@ -42,14 +42,14 @@ export interface FieldDef {
 export interface ActionDef {
   type:         string;
   label:        string;
-  valueType:    'text' | 'choice' | 'group' | 'agent' | 'none';
+  valueType:    'text' | 'choice' | 'group' | 'agent' | 'project' | 'none';
   choices?:     string[];
   placeholder?: string;
 }
 
 export const FIELDS: FieldDef[] = [
   // Ticket scalar
-  { key: 'ticket.title',            label: 'Ticket Title',              type: 'text' },
+  { key: 'ticket.title',            label: 'Ticket Subject',              type: 'text' },
   { key: 'ticket.description',      label: 'Description',               type: 'text' },
   { key: 'ticket.status',           label: 'Status',                    type: 'choice', choices: ['open','pending','in_progress','waiting_on_customer','solved','closed'] },
   { key: 'ticket.priority',         label: 'Priority',                  type: 'choice', choices: ['low','normal','high','critical'] },
@@ -100,6 +100,7 @@ export const OPERATOR_LABELS: Record<string, string> = {
 export const NO_VALUE_OPERATORS = new Set(['is_empty', 'is_not_empty']);
 
 export const ACTIONS: ActionDef[] = [
+  { type: 'link_to_project', label: 'Link to Project', valueType: 'project' },
   { type: 'set_priority',          label: 'Set Priority',                   valueType: 'choice',  choices: ['low','normal','high','critical'] },
   { type: 'set_status',            label: 'Set Status',                     valueType: 'choice',  choices: ['open','pending','in_progress','waiting_on_customer','solved','closed'] },
   { type: 'set_group',             label: 'Set Group',                      valueType: 'group' },

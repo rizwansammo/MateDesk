@@ -22,7 +22,9 @@ class AutomationRuleListView(APIView):
         return Response(AutomationRuleSerializer(rules, many=True).data)
 
     def post(self, request):
-        ser = AutomationRuleWriteSerializer(data=request.data)
+        ser = AutomationRuleWriteSerializer(data=request.data, context={
+            'tenant': request.tenant, 'actor': request.user,
+        })
         ser.is_valid(raise_exception=True)
         rule = AutomationRule.objects.create(tenant=request.tenant, **ser.validated_data)
         return Response(AutomationRuleSerializer(rule).data, status=status.HTTP_201_CREATED)
@@ -39,7 +41,9 @@ class AutomationRuleDetailView(APIView):
 
     def patch(self, request, pk):
         rule = self._rule(request, pk)
-        ser  = AutomationRuleWriteSerializer(data=request.data, partial=True)
+        ser  = AutomationRuleWriteSerializer(data=request.data, partial=True, context={
+            'tenant': request.tenant, 'actor': request.user, 'rule': rule,
+        })
         ser.is_valid(raise_exception=True)
         for k, v in ser.validated_data.items():
             setattr(rule, k, v)

@@ -15,6 +15,7 @@ import {
 import { useGroups } from '@/hooks/useGroups';
 import { useAgents } from '@/hooks/useAgents';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { useProjects } from '@/hooks/useProjects';
 
 // ── Shared input styles ───────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
   const { data: groups = [] } = useGroups();
   const { data: agents = [] } = useAgents();
   const { data: orgs   = [] } = useOrganizations();
+  const { data: projects = [], isError: projectsError } = useProjects();
 
   const create = useCreateAutomationRule();
   const update = useUpdateAutomationRule();
@@ -87,6 +89,11 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
   const [saved,          setSaved]          = useState(false);
 
   const isPending = create.isPending || update.isPending;
+  const routedProjects = projects.filter(project =>
+    project.can_manage && project.status !== 'archived' &&
+    (scopeType !== 'specific_org' || project.client_org === scopeOrgId)
+  );
+  const projectActions = actions.filter(action => action.type === 'link_to_project');
 
   // ── Condition helpers ──
 
@@ -152,6 +159,30 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
     const actionDef = ACTIONS.find(a => a.type === action.type);
     if (!actionDef) return null;
 
+    if (actionDef.valueType === 'project') {
+      return (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <select aria-label="Target Project" value={action.value}
+            onChange={e => updateAction(i, { value: e.target.value })}
+            style={{ ...SEL, width: '100%' }} onFocus={fi} onBlur={fo}>
+            <option value="">Select Project</option>
+            {routedProjects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name} ({project.key} · {project.client_org_name})
+              </option>
+            ))}
+          </select>
+          {projectsError && <span style={{ fontSize: 11, color: 'var(--accent-danger-fg)' }}>
+            Could not load Projects.
+          </span>}
+          {!projectsError && routedProjects.length === 0 && (
+            <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
+              No manageable Project for the selected organization.
+            </span>
+          )}
+        </div>
+      );
+    }
     if (actionDef.valueType === 'none') {
       return <span style={{ fontSize: 11, color: 'var(--text-3)', fontStyle: 'italic', flex: 1, padding: '0 8px' }}>No value needed</span>;
     }
@@ -190,6 +221,28 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
   function handleSave() {
     if (!name.trim())      { setError('Rule name is required.');          return; }
     if (!actions.length)   { setError('Add at least one action.');        return; }
+    if (projectActions.length > 0) {
+      if (trigger !== 'ticket_created') {
+        setError('Link to Project can run only when a Ticket is created.');
+        return;
+      }
+      if (projectActions.length > 1) {
+        setError('Use only one Link to Project action per rule.');
+        return;
+      }
+      if (scopeType === 'specific_org' && !scopeOrgId) {
+        setError('Select the Client Organization.');
+        return;
+      }
+      if (scopeType === 'all_orgs' && !conditions.length) {
+        setError('Add a condition or choose a specific Client Organization.');
+        return;
+      }
+      if (!routedProjects.some(project => project.id === projectActions[0].value)) {
+        setError('Select an available Project for this rule.');
+        return;
+      }
+    }
     setError('');
 
     const payload = {
@@ -208,7 +261,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
 
     const opts = {
       onSuccess: () => { setSaved(true); setTimeout(() => { setSaved(false); onClose(); }, 600); },
-      onError:   () => setError('Failed to save rule.'),
+      onError:   (err: Error) => setError(err.message || 'Failed to save rule.'),
     };
 
     editing ? update.mutate({ id: editing.id, data: payload }, opts) : create.mutate(payload, opts);
@@ -325,7 +378,7 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
 
             {conditions.length === 0 && (
               <p style={{ fontSize: 12, color: 'var(--text-3)', fontStyle: 'italic', marginBottom: 10 }}>
-                No conditions — rule fires on every {TRIGGER_LABELS[trigger].toLowerCase()} event.
+                No conditions — rule fires on every {(TRIGGER_LABELS[trigger] ?? trigger).toLowerCase()} event.
               </p>
             )}
 
@@ -381,12 +434,26 @@ function RulePanel({ editing, onClose, onDelete }: PanelProps) {
                 <select value={action.type}
                   onChange={e => updateAction(i, { type: e.target.value, value: '' })}
                   style={{ ...SEL, width: 185 }} onFocus={fi} onBlur={fo}>
-                  {ACTIONS.map(a => <option key={a.type} value={a.type}>{a.label}</option>)}
+                  {ACTIONS.map(a => (
+                    <option key={a.type} value={a.type}
+                      disabled={a.type === 'link_to_project' && trigger !== 'ticket_created'}>
+                      {a.label}
+                    </option>
+                  ))}
                 </select>
                 <div style={{ flex: 1 }}>{renderActionValue(action, i)}</div>
                 <XBtn onClick={() => removeAction(i)} />
               </div>
             ))}
+
+            {projectActions.length > 0 && (
+              <p style={{ fontSize: 11, lineHeight: 1.6, marginTop: 8, marginBottom: 10,
+                color: 'var(--text-3)' }}>
+                Routing applies only when a new Ticket is created. Rules run by order.
+                The first Project association wins; existing links are never replaced.
+                A Work Item is not created automatically.
+              </p>
+            )}
 
             <button type="button" onClick={addAction}
               style={{ display: 'flex', alignItems: 'center', gap: 5, height: 28, padding: '0 12px', fontSize: 12, background: 'none', border: '1px dashed var(--border-md)', color: 'var(--text-4)', cursor: 'pointer', marginTop: 4 }}

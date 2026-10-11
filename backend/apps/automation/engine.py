@@ -122,6 +122,49 @@ def _apply_action(ticket, action, trigger=''):
     action_type = action.get('type', '')
     value       = str(action.get('value', ''))
 
+    if action_type == 'link_to_project':
+        # A ticket can be associated with one Project only. Never override
+        # an agent's choice or a higher priority matching automation rule.
+        # Only the new ticket event is eligible, even for legacy malformed rules.
+        if trigger != 'ticket_created' or not ticket.client_org_id:
+            return None
+
+        import uuid as _uuid
+        from django.db import transaction
+        from apps.projects.models import Project, TicketProjectAssociation
+
+        try:
+            project_id = _uuid.UUID(value)
+        except (ValueError, AttributeError, TypeError):
+            return None
+
+        with transaction.atomic():
+            # Serialize competing project routing rules and simultaneous manual
+            # edits on the same ticket, without joining nullable relationships.
+            locked_ticket = Ticket.objects.select_for_update().get(pk=ticket.pk)
+            if (not locked_ticket.client_org_id
+                    or locked_ticket.merge_status == 'secondary'):
+                return None
+            if TicketProjectAssociation.objects.filter(ticket=locked_ticket).exists():
+                return None
+
+            project = Project.objects.filter(
+                pk=project_id,
+                tenant_id=locked_ticket.tenant_id,
+                client_org_id=locked_ticket.client_org_id,
+                client_org__is_active=True,
+            ).exclude(status='archived').select_related('client_org').first()
+            if not project or project.client_org.name == 'Walk-In':
+                return None
+
+            association = TicketProjectAssociation(
+                ticket=locked_ticket,
+                project=project,
+                source='automation',
+            )
+            association.save()
+            return f'Linked to Project: {project.key} ({project.name})'
+
     if action_type == 'set_priority':
         if value in ('low', 'normal', 'high', 'critical'):
             Ticket.objects.filter(pk=ticket.pk).update(priority=value)
@@ -405,7 +448,7 @@ def dry_run_automation_rules(ticket, trigger, reply=None):
         AutomationRule.objects
         .filter(tenant_id=ticket.tenant_id, is_active=True, trigger=trigger)
         .select_related('scope_org')
-        .order_by('priority_order', 'name')
+        .order_by('priority_order', 'name', 'id')
     )
 
     results = []
@@ -461,7 +504,7 @@ def run_automation_rules(ticket, trigger, reply=None):
             AutomationRule.objects
             .filter(tenant_id=ticket.tenant_id, is_active=True, trigger=trigger)
             .select_related('scope_org')
-            .order_by('priority_order', 'name')
+            .order_by('priority_order', 'name', 'id')
         )
 
         for rule in rules:

@@ -149,7 +149,7 @@ export default function ProjectWorkspacePage() {
     event.dataTransfer.setData('text/plain', id);
     event.dataTransfer.effectAllowed = 'move';
   }
-  function drop(event: DragEvent<HTMLDivElement>, nextStatus: WorkItemStatus) {
+  function drop(event: DragEvent<HTMLElement>, nextStatus: WorkItemStatus) {
     event.preventDefault();
     const id = dragId || event.dataTransfer.getData('text/plain');
     if (id && items.some(i => i.id === id)) move(id, nextStatus);

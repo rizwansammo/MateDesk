@@ -63,7 +63,7 @@ export default function ProjectsPage() {
           </button>}
         </div>} />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
+        <div className="flex w-full min-w-0 flex-col gap-3">
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             {([
               { name: 'Total Projects', count: stats.all, Icon: FolderKanban, tint: 'var(--accent-info-fg)' },
@@ -112,7 +112,7 @@ export default function ProjectsPage() {
                     action={!projects.length && canCreate && <button className="btn-primary mt-2" onClick={() => setCreateOpen(true)}><Plus size={13} /> Create Project</button>} />
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="data-table">
+                    <table className="data-table w-full">
                       <thead><tr>
                         <th>Project</th><th>Client</th><th>Status</th><th>Visibility</th><th>Due Date</th><th aria-label="Open" />
                       </tr></thead>

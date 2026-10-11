@@ -31,7 +31,7 @@ def _api(user):
     token['tenant_id'] = str(user.tenant_id)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
-    client.defaults['SERVER_NAME'] = 'localhost'
+    client.defaults['HTTP_HOST'] = f'{user.tenant.slug}.matedesk.pro'
     return client
 
 
@@ -50,7 +50,10 @@ def _message(sender, reference='', mid='<incoming@client.test>',
     return message_from_string('\n'.join(headers) + '\n\n' + body + '\n')
 
 
-@override_settings(DEBUG=True, APP_DOMAIN='matedesk.pro', DEPLOYMENT_MODE='multi_tenant')
+@override_settings(
+    DEBUG=True, APP_DOMAIN='matedesk.pro', DEPLOYMENT_MODE='multi_tenant',
+    ALLOWED_HOSTS=['.matedesk.pro', 'localhost', 'testserver'],
+)
 class ProjectNotificationTests(TestCase):
     def setUp(self):
         self.tenant = Tenant.objects.create(name='Phase Six', slug='phase6-test')

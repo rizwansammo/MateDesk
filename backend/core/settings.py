@@ -329,4 +329,4 @@ if not DEBUG:
 
 # MateMail Connected Apps API. Override only when using a non-production
 # MateMail environment; no mailbox password or PostBox master secret is used.
-MATEMAIL_BASE_URL = config('MATEMAIL_BASE_URL', default='https://portal.matemail.online').rstrip('/')
+MATEMAIL_BASE_URL = config('MATEMAIL_BASE_URL', default='https://portal.matemail.pro').rstrip('/')

@@ -98,6 +98,11 @@ class TicketListSerializer(serializers.ModelSerializer):
     from_email                 = serializers.SerializerMethodField()
     group_id                   = serializers.SerializerMethodField()
     group_name                 = serializers.SerializerMethodField()
+    project_request_id         = serializers.SerializerMethodField()
+
+    def get_project_request_id(self, obj):
+        linked_id = getattr(obj, 'linked_project_request_id', None)
+        return str(linked_id) if linked_id else None
 
     def get_requester(self, obj):
         return obj.requester_display
@@ -150,7 +155,7 @@ class TicketListSerializer(serializers.ModelSerializer):
             'category', 'tags', 'requester', 'assignee', 'assignee_id',
             'client_org', 'client_org_id', 'from_email',
             'last_reply_author_is_agent', 'group_id', 'group_name',
-            'sla_status', 'is_internal', 'created_at', 'updated_at',
+            'sla_status', 'is_internal', 'project_request_id', 'created_at', 'updated_at',
         ]
 
 

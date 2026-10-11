@@ -27,7 +27,7 @@ export function ProjectActivityPanel({ projectId }: { projectId: string }) {
   const totalPages = Math.max(1, Math.ceil((activity?.count ?? 0) / 25));
 
   return (
-    <section className="panel mx-auto max-w-[1150px]">
+    <section className="panel w-full min-w-0">
       <div className="panel-header flex-wrap gap-2">
         <div>
           <div className="flex items-center gap-2">

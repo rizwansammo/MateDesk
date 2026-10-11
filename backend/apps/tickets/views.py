@@ -119,7 +119,13 @@ class TicketViewSet(viewsets.GenericViewSet):
         return qs
 
     def list(self, request):
+        from apps.projects.models import ProjectRequest
         qs = self.get_queryset().annotate(
+            linked_project_request_id=Subquery(
+                ProjectRequest.objects.filter(
+                    ticket_id=OuterRef('pk'),
+                ).values('id')[:1]
+            ),
             last_reply_author_role=Subquery(
                 Reply.objects.filter(
                     ticket=OuterRef('pk'),

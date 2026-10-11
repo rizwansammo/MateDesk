@@ -17,7 +17,6 @@ import { useAuthStore } from '@/store/useAuthStore';
 import type { TicketListItem, TicketStatus, TicketPriority, SupportGroup, SLAStatus } from '@/types/tickets';
 import type { ClientOrg } from '@/types/tickets';
 import { ApiError } from '@/lib/api';
-import { UnifiedRequestsPanel } from '@/components/requests/UnifiedRequestsPanel';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -51,13 +50,13 @@ const PRIORITY_CFG: Record<string, { label: string; color: string; bg: string }>
 };
 
 const VIEW_OPTIONS = [
-  { value: '',                   label: 'All Requests'        },
-  { value: 'open',               label: 'Open Requests'       },
+  { value: '',                   label: 'All Tickets'        },
+  { value: 'open',               label: 'Open Tickets'       },
   { value: 'in_progress',        label: 'In Progress'         },
-  { value: 'unassigned',         label: 'Unassigned Requests' },
+  { value: 'unassigned',         label: 'Unassigned Tickets' },
   { value: 'waiting_on_customer',label: 'Waiting on Customer' },
-  { value: 'solved',             label: 'Resolved Requests'   },
-  { value: 'closed',             label: 'Closed Requests'     },
+  { value: 'solved',             label: 'Resolved Tickets'   },
+  { value: 'closed',             label: 'Closed Tickets'     },
   { value: 'pending',            label: 'Waiting for Client'  },
 ];
 
@@ -77,7 +76,6 @@ export default function RequestsPage() {
   const { user } = useAuthStore();
   const isMSP = ['msp_owner', 'msp_manager', 'msp_agent'].includes(user?.role ?? '');
 
-  const [workspaceMode, setWorkspaceMode] = useState<'unified' | 'tickets'>('unified');
   const [view,           setView]           = useState('');
   const [search,         setSearch]         = useState('');
   const [searchInput,    setSearchInput]    = useState('');
@@ -167,10 +165,6 @@ export default function RequestsPage() {
   // Detect if filtered org is Walk-In (only Walk-In tickets can have org changed)
   const selectedOrgName = orgs?.find(o => o.id === orgFilter)?.name ?? '';
   const isWalkInFilter  = selectedOrgName === 'Walk-In';
-
-  if (workspaceMode === 'unified') {
-    return <UnifiedRequestsPanel onTicketTools={() => setWorkspaceMode('tickets')} />;
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -297,8 +291,6 @@ export default function RequestsPage() {
           {bulkError && (
             <span style={{ fontSize: 11, color: 'var(--accent-danger-fg)' }}>{bulkError}</span>
           )}
-          <button type="button" className="btn-secondary gap-1"
-            onClick={() => setWorkspaceMode('unified')}>Unified Requests</button>
           <button
             className="btn-primary gap-1"
             style={{ height: 28, paddingTop: 0, paddingBottom: 0, fontSize: 11 }}
@@ -386,7 +378,7 @@ export default function RequestsPage() {
                   ticket={ticket}
                   isSelected={selectedIds.has(ticket.id)}
                   onToggle={() => toggleOne(ticket.id)}
-                  onNavigate={() => router.push(`/requests/${ticket.ref}`)}
+                  onNavigate={() => router.push(ticket.project_request_id ? '/requests/project/' + ticket.project_request_id : '/requests/' + ticket.ref)}
                   onOpenAssign={isMSP
                     ? (ref, assigneeId, pos) => setAssignPopup({ ticketRef: ref, assigneeId, groupId: ticket.group_id, pos })
                     : () => {}}
@@ -880,14 +872,22 @@ function TicketRow({ ticket, isSelected, onToggle, onNavigate, onOpenAssign, can
         </span>
       </td>
       <td style={{ maxWidth: 260 }}>
-        <span
-          className="block truncate font-medium transition-colors"
-          style={{ color: 'var(--text-1)', fontSize: 13 }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-0)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
-        >
-          {ticket.subject}
-        </span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span
+            className="min-w-0 flex-1 truncate font-medium transition-colors"
+            style={{ color: 'var(--text-1)', fontSize: 13 }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-0)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-1)'; }}
+          >
+            {ticket.subject}
+          </span>
+          {ticket.project_request_id && (
+            <span className="inline-flex shrink-0 items-center px-1.5 py-0.5 text-[10px] font-semibold"
+              style={{ background: 'var(--accent-info-bg)', color: 'var(--accent-info-fg)' }}>
+              Project
+            </span>
+          )}
+        </div>
       </td>
       <td style={{ maxWidth: 120, color: 'var(--text-2)', fontSize: 13 }}>
         <span className="block truncate">{ticket.requester}</span>

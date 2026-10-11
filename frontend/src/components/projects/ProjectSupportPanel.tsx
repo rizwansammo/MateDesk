@@ -59,13 +59,13 @@ export function ProjectSupportPanel({
   }
 
   return (
-    <div className="mx-auto flex max-w-[1250px] flex-col gap-3">
+    <div className="flex w-full min-w-0 flex-col gap-3">
       <section className="panel">
         <div className="panel-header flex-wrap gap-3">
           <div>
             <h2 className="panel-title">Project Support</h2>
             <p className="mt-1 text-[11px]" style={{ color: 'var(--text-3)' }}>
-              Every Support Ticket is linked to {project.key} and remains in Requests.
+              Every Support Ticket is linked to {project.key} and remains in Tickets.
             </p>
           </div>
           <div className="flex items-center gap-2">

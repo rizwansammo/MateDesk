@@ -40,6 +40,7 @@ export interface TicketListItem {
   group_name:  string | null;
   sla_status:  SLAStatus;
   is_internal: boolean;
+  project_request_id: string | null;
   // null = no replies yet; true = last reply from agent; false = last reply from user
   last_reply_author_is_agent: boolean | null;
   created_at:  string;

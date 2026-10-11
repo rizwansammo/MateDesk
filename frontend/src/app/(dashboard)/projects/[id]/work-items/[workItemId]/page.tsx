@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ArrowLeft, CalendarDays, ClipboardList, Eye, FolderKanban, Lock,
-  MessageSquare, Pencil, Send, UserRound,
+  Mail, MessageSquare, Pencil, Send, UserRound,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useWorkItem,
@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useProjects';
 import { useWorkItemSupportTickets } from '@/hooks/useTicketProjects';
 import { useAuthStore } from '@/store/useAuthStore';
+import { ProjectEmailDialog } from '@/components/projects/ProjectEmailDialog';
 import type {
   WorkItem, WorkItemKind, WorkItemPriority, WorkItemStatus, WorkVisibility,
 } from '@/types/projects';
@@ -101,6 +102,7 @@ export default function WorkItemDetailPage() {
   const update = useUpdateWorkItem(projectId);
   const addComment = useAddWorkItemComment(workItemId);
   const [editing, setEditing] = useState(false);
+  const [notifyOpen, setNotifyOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [visibility, setVisibility] = useState<WorkVisibility>('internal');
 
@@ -134,7 +136,18 @@ export default function WorkItemDetailPage() {
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
       <ProjectTitleBar back={`/projects/${projectId}`} eyebrow={`${project.key} / ${item.ref}`}
         title={item.title}
-        right={canEdit && <button className="btn-secondary" onClick={() => setEditing(true)}><Pencil size={13} /> Edit Work Item</button>} />
+        right={<div className="flex flex-wrap items-center gap-2">
+          {canManage && item.visibility === 'client' && project.visibility === 'client' && (
+            <button className="btn-primary" onClick={() => setNotifyOpen(true)}>
+              <Mail size={13} /> Notify Client
+            </button>
+          )}
+          {canEdit && (
+            <button className="btn-secondary" onClick={() => setEditing(true)}>
+              <Pencil size={13} /> Edit Work Item
+            </button>
+          )}
+        </div>} />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
         <div className="mx-auto flex max-w-[1400px] flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -189,6 +202,12 @@ export default function WorkItemDetailPage() {
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                               <span className="text-xs font-semibold" style={{ color: 'var(--text-1)' }}>{comment.author_name || 'Former Member'}</span>
                               <StatePill value={comment.visibility} label={comment.visibility === 'client' ? 'Client Visible' : 'Internal'} />
+                              {comment.source === 'email' && (
+                                <span className="flex items-center gap-1 text-[11px]"
+                                  style={{ color: 'var(--text-3)' }}>
+                                  <Mail size={12} /> via Email
+                                </span>
+                              )}
                               <span className="ml-auto text-[11px]" style={{ color: 'var(--text-3)' }}>
                                 {new Date(comment.created_at).toLocaleString()}
                               </span>
@@ -337,6 +356,8 @@ export default function WorkItemDetailPage() {
           </div>
         </div>
       </div>
+      {notifyOpen && <ProjectEmailDialog workItemId={workItemId}
+        onClose={() => setNotifyOpen(false)} />}
       {editing && <EditWorkItemDialog key={item.updated_at} item={item} projectId={projectId}
         canManage={canManage} onClose={() => setEditing(false)} />}
     </div>

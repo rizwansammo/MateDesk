@@ -302,3 +302,109 @@ class TicketWorkItemLink(ValidatedModel):
             or self.linked_by.role not in MSP_ROLES
         ):
             raise ValidationError({'linked_by': 'Linking user must be support staff from this tenant.'})
+
+
+class ProjectEmailNotification(ValidatedModel):
+    """One deliberate, audited notification to a named client reviewer."""
+
+    STATUSES = [
+        ('pending', 'Pending'),
+        ('sent', 'Sent'),
+        ('failed', 'Failed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        'tenants.Tenant', on_delete=models.CASCADE, related_name='project_email_notifications',
+    )
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, related_name='email_notifications',
+    )
+    recipient = models.ForeignKey(
+        'users.User', on_delete=models.PROTECT, related_name='received_project_emails',
+    )
+    sent_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, related_name='sent_project_emails',
+    )
+    idempotency_key = models.UUIDField()
+    message_id = models.CharField(max_length=998, null=True, blank=True)
+    subject = models.CharField(max_length=500)
+    note = models.TextField(blank=True)
+    status = models.CharField(max_length=12, choices=STATUSES, default='pending')
+    last_error = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'project_email_notifications'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tenant', 'idempotency_key'],
+                name='unique_project_email_idempotency',
+            ),
+            models.UniqueConstraint(
+                fields=['tenant', 'message_id'],
+                name='unique_project_email_message_id',
+            ),
+        ]
+
+    def clean(self):
+        if not self.work_item_id or not self.tenant_id or not self.recipient_id:
+            return
+        item = self.work_item
+        project = item.project
+        reviewer = self.recipient
+        if project.tenant_id != self.tenant_id:
+            raise ValidationError({'tenant': 'Notification tenant must match the project.'})
+        if (project.visibility != 'client' or item.visibility != 'client'
+                or project.status == 'archived'):
+            raise ValidationError({'work_item': 'Only active client visible work can be emailed.'})
+        if (reviewer.tenant_id != self.tenant_id
+                or reviewer.client_org_id != project.client_org_id
+                or reviewer.role not in CLIENT_ROLES
+                or not reviewer.is_active
+                or not project.members.filter(user=reviewer, role='client_reviewer').exists()):
+            raise ValidationError({'recipient': 'Recipient must be an active client reviewer in this project.'})
+        if self.sent_by_id and (
+            self.sent_by.tenant_id != self.tenant_id
+            or self.sent_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'sent_by': 'Only staff from this tenant can notify a reviewer.'})
+
+
+class ProjectEmailReply(ValidatedModel):
+    """Accepted inbound message with a single client visible work item comment."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        'tenants.Tenant', on_delete=models.CASCADE, related_name='project_email_replies',
+    )
+    notification = models.ForeignKey(
+        ProjectEmailNotification, on_delete=models.PROTECT, related_name='email_replies',
+    )
+    comment = models.OneToOneField(
+        WorkItemComment, on_delete=models.CASCADE, related_name='email_reply',
+    )
+    message_id = models.CharField(max_length=998)
+    from_email = models.EmailField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_email_replies'
+        ordering = ['received_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tenant', 'message_id'], name='unique_project_inbound_message_id',
+            ),
+        ]
+
+    def clean(self):
+        if not self.notification_id or not self.comment_id or not self.tenant_id:
+            return
+        if (self.tenant_id != self.notification.tenant_id
+                or self.comment.work_item_id != self.notification.work_item_id
+                or self.comment.author_id != self.notification.recipient_id
+                or self.comment.visibility != 'client'
+                or self.from_email.casefold() != self.notification.recipient.email.casefold()):
+            raise ValidationError({'comment': 'Inbound Project Reply must match its notification and recipient.'})

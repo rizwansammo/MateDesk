@@ -422,6 +422,16 @@ def _process_email(tenant, msg):
                       [_decode_header_str(msg.get('Cc', '') or '')]
                   ) if addr]
 
+    # Phase 6: securely route replies to deliberate client project notices
+    # before ticket subject and Message-ID threading. Unauthorized project
+    # replies are consumed rather than falling back to ticket creation.
+    from apps.projects.email_notifications import route_project_email_reply
+    if route_project_email_reply(
+        tenant, msg, message_id=message_id,
+        from_address=from_email_addr, from_name=from_name, subject=subject,
+    ):
+        return
+
     existing = _find_existing_ticket(tenant, subject, in_reply_to)
 
     if existing:

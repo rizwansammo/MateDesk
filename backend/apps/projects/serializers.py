@@ -130,10 +130,14 @@ class WorkItemWriteSerializer(serializers.Serializer):
 
 class WorkItemCommentReadSerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.full_name', read_only=True, allow_null=True)
+    source = serializers.SerializerMethodField()
+
+    def get_source(self, obj):
+        return 'email' if hasattr(obj, 'email_reply') else 'web'
 
     class Meta:
         model = WorkItemComment
-        fields = ['id', 'author', 'author_name', 'body', 'visibility', 'created_at']
+        fields = ['id', 'author', 'author_name', 'body', 'visibility', 'source', 'created_at']
 
 
 class WorkItemCommentWriteSerializer(serializers.Serializer):

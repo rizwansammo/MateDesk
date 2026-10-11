@@ -63,6 +63,7 @@ export interface WorkItem {
 }
 export interface WorkItemComment {
   id: string;
+  source?: 'web' | 'email';
   author: string | null;
   author_name: string | null;
   body: string;

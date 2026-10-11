@@ -11,6 +11,9 @@ export interface Project {
   id: string;
   client_org: string;
   client_org_name: string;
+  my_role: ProjectRole | null;
+  can_manage: boolean;
+  can_edit: boolean;
   key: string;
   name: string;
   description: string;

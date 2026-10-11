@@ -91,6 +91,32 @@ class ProjectBackendAPITest(TestCase):
         r = self.owner_api.patch(self.project_url(), {'key': 'EVIL'}, format='json')
         self.assertEqual(r.status_code, 400)
 
+    def test_permissions_exposed_for_current_user(self):
+        owner = self.owner_api.get(self.project_url()).data
+        self.assertTrue(owner['can_manage'])
+        self.assertTrue(owner['can_edit'])
+        self.assertEqual(owner['my_role'], 'manager')
+
+        member = ProjectMember.objects.create(
+            project=self.project, user=self.agent, role='contributor',
+        )
+        contributor = authenticated(self.agent).get(self.project_url()).data
+        self.assertFalse(contributor['can_manage'])
+        self.assertTrue(contributor['can_edit'])
+        self.assertEqual(contributor['my_role'], 'contributor')
+
+        member.role = 'manager'
+        member.save()
+        manager = authenticated(self.agent).get(self.project_url()).data
+        self.assertTrue(manager['can_manage'])
+        self.assertTrue(manager['can_edit'])
+
+        member.role = 'viewer'
+        member.save()
+        viewer = authenticated(self.agent).get(self.project_url()).data
+        self.assertFalse(viewer['can_manage'])
+        self.assertFalse(viewer['can_edit'])
+
     def test_client_visibility_requires_membership(self):
         api = authenticated(self.client_user)
         self.assertEqual(api.get('/api/projects/').data, [])

@@ -16,11 +16,35 @@ MEMBER_ROLES = [item[0] for item in ProjectMember.ROLES]
 
 class ProjectReadSerializer(serializers.ModelSerializer):
     client_org_name = serializers.CharField(source='client_org.name', read_only=True)
+    my_role = serializers.SerializerMethodField()
+    can_manage = serializers.SerializerMethodField()
+    can_edit = serializers.SerializerMethodField()
+
+    def get_my_role(self, obj):
+        request = self.context.get('request')
+        if request is None or not request.user.is_authenticated:
+            return None
+        return obj.members.filter(user=request.user).values_list('role', flat=True).first()
+
+    def get_can_manage(self, obj):
+        request = self.context.get('request')
+        if request is None or not request.user.is_authenticated:
+            return False
+        from .permissions import can_manage_project
+        return can_manage_project(request.user, obj)
+
+    def get_can_edit(self, obj):
+        request = self.context.get('request')
+        if request is None or not request.user.is_authenticated:
+            return False
+        from .permissions import can_edit_work
+        return can_edit_work(request.user, obj)
 
     class Meta:
         model = Project
         fields = [
             'id', 'client_org', 'client_org_name', 'key', 'name', 'description',
+            'my_role', 'can_manage', 'can_edit',
             'status', 'visibility', 'start_date', 'due_date', 'created_at', 'updated_at',
         ]
 

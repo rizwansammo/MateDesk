@@ -84,7 +84,7 @@ class ProjectListView(APIView):
         org = request.query_params.get('client_org_id')
         if org:
             projects = projects.filter(client_org_id=org)
-        return Response(ProjectReadSerializer(projects, many=True).data)
+        return Response(ProjectReadSerializer(projects, many=True, context={'request': request}).data)
 
     def post(self, request):
         if request.user.role not in ('msp_owner', 'msp_manager'):
@@ -101,14 +101,14 @@ class ProjectListView(APIView):
         with transaction.atomic():
             _save_validated(project)
             _save_validated(ProjectMember(project=project, user=request.user, role='manager'))
-        return Response(ProjectReadSerializer(project).data, status=status.HTTP_201_CREATED)
+        return Response(ProjectReadSerializer(project, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class ProjectDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request, pk):
-        return Response(ProjectReadSerializer(_project(request, pk)).data)
+        return Response(ProjectReadSerializer(_project(request, pk), context={'request': request}).data)
 
     def patch(self, request, pk):
         project = _project(request, pk)

@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'apps.tenants',
     'apps.users',
     'apps.tickets',
+    'apps.projects',
     'apps.email_ingestion',
     'apps.kb',
     'apps.events',

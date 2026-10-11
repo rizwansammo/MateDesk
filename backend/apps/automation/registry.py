@@ -112,6 +112,10 @@ OPERATOR_REGISTRY = {
 }
 
 ACTION_REGISTRY = {
+    'link_to_project': {
+        'label': 'Link to Project',
+        'value_type': 'project_id',
+    },
     'set_priority': {
         'label':      'Set Priority',
         'value_type': 'choice',

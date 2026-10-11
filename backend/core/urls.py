@@ -92,6 +92,7 @@ urlpatterns = [
     path('api/instance/branding-logo/', public_instance_branding_logo),
     path('api/',        include('apps.users.urls')),
     path('api/',        include('apps.tickets.urls')),
+    path('api/',        include('apps.projects.urls')),
     path('api/',        include('apps.tenants.urls')),
     path('api/',        include('apps.email_ingestion.urls')),
     path('api/',        include('apps.kb.urls')),

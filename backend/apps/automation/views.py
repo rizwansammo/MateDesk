@@ -1,8 +1,10 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from apps.users.permissions import IsMSPUser, IsTenantUser
+from apps.projects.permissions import tenant_for_request
 from .models import AutomationRule, AutomationLog
 from .serializers import AutomationRuleSerializer, AutomationRuleWriteSerializer, AutomationLogSerializer
 from .registry import FIELD_REGISTRY, OPERATOR_REGISTRY, ACTION_REGISTRY
@@ -16,15 +18,17 @@ class AutomationRuleListView(APIView):
     def get(self, request):
         rules = (
             AutomationRule.objects
-            .filter(tenant=request.tenant)
+            .filter(tenant=tenant_for_request(request))
             .select_related('scope_org')
         )
         return Response(AutomationRuleSerializer(rules, many=True).data)
 
     def post(self, request):
-        ser = AutomationRuleWriteSerializer(data=request.data)
+        ser = AutomationRuleWriteSerializer(data=request.data, context={
+            'tenant': tenant_for_request(request), 'actor': request.user,
+        })
         ser.is_valid(raise_exception=True)
-        rule = AutomationRule.objects.create(tenant=request.tenant, **ser.validated_data)
+        rule = AutomationRule.objects.create(tenant=tenant_for_request(request), **ser.validated_data)
         return Response(AutomationRuleSerializer(rule).data, status=status.HTTP_201_CREATED)
 
 
@@ -32,14 +36,16 @@ class AutomationRuleDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
 
     def _rule(self, request, pk):
-        return AutomationRule.objects.select_related('scope_org').get(pk=pk, tenant=request.tenant)
+        return get_object_or_404(AutomationRule.objects.select_related('scope_org'), pk=pk, tenant=tenant_for_request(request))
 
     def get(self, request, pk):
         return Response(AutomationRuleSerializer(self._rule(request, pk)).data)
 
     def patch(self, request, pk):
         rule = self._rule(request, pk)
-        ser  = AutomationRuleWriteSerializer(data=request.data, partial=True)
+        ser  = AutomationRuleWriteSerializer(data=request.data, partial=True, context={
+            'tenant': tenant_for_request(request), 'actor': request.user, 'rule': rule,
+        })
         ser.is_valid(raise_exception=True)
         for k, v in ser.validated_data.items():
             setattr(rule, k, v)
@@ -73,7 +79,7 @@ class AutomationLogListView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser, IsMSPUser]
 
     def get(self, request):
-        qs = AutomationLog.objects.filter(tenant=request.tenant)
+        qs = AutomationLog.objects.filter(tenant=tenant_for_request(request))
         ticket_ref = request.query_params.get('ticket')
         rule_id    = request.query_params.get('rule')
         if ticket_ref:
@@ -109,7 +115,7 @@ class AutomationTestView(APIView):
             ticket = (
                 Ticket.objects
                 .select_related('client_org', 'group', 'assignee', 'requester')
-                .get(ticket_ref=ticket_ref, tenant=request.tenant)
+                .get(ticket_ref=ticket_ref, tenant=tenant_for_request(request))
             )
         except Ticket.DoesNotExist:
             return Response({'error': 'Ticket not found'}, status=status.HTTP_404_NOT_FOUND)

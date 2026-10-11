@@ -36,6 +36,79 @@ class AutomationRuleWriteSerializer(serializers.Serializer):
     actions         = serializers.ListField(child=serializers.DictField(), required=False, default=list)
     stop_processing = serializers.BooleanField(required=False, default=False)
 
+    def validate(self, attrs):
+        """Check Project routing targets and scope before accepting a rule.
+
+        Use the effective saved state on PATCH, including changes to trigger or
+        organization. A forged tenant or foreign Project ID cannot be stored.
+        """
+        from apps.projects.models import Project
+        from apps.projects.permissions import can_manage_project
+
+        rule = self.context.get('rule')
+        tenant = self.context.get('tenant')
+        actor = self.context.get('actor')
+        actions = attrs.get('actions', rule.actions if rule else [])
+        project_actions = [action for action in actions if action.get('type') == 'link_to_project']
+        if not project_actions:
+            return attrs
+
+        trigger = attrs.get('trigger', rule.trigger if rule else None)
+        if trigger != 'ticket_created':
+            raise serializers.ValidationError({
+                'actions': 'Link to Project is available only for Ticket Created.',
+            })
+        if len(project_actions) > 1:
+            raise serializers.ValidationError({
+                'actions': 'Use only one Link to Project action in a rule.',
+            })
+
+        scope_type = attrs.get('scope_type', rule.scope_type if rule else 'all_orgs')
+        scope_org_id = attrs.get('scope_org_id', rule.scope_org_id if rule else None)
+        conditions = attrs.get('conditions', rule.conditions if rule else [])
+        if scope_type == 'specific_org' and not scope_org_id:
+            raise serializers.ValidationError({
+                'scope_org_id': 'Select the organization for this Project rule.',
+            })
+        if scope_type == 'all_orgs' and not conditions:
+            raise serializers.ValidationError({
+                'conditions': 'Add at least one condition or select a specific organization.',
+            })
+
+        from apps.tenants.models import ClientOrganization
+        if scope_type == 'specific_org' and not ClientOrganization.objects.filter(
+            pk=scope_org_id, tenant=tenant, is_active=True,
+        ).exists():
+            raise serializers.ValidationError({
+                'scope_org_id': 'Organization must be active and belong to this tenant.',
+            })
+
+        raw_value = project_actions[0].get('value', '')
+        try:
+            import uuid
+            project_pk = uuid.UUID(str(raw_value))
+        except (ValueError, AttributeError, TypeError):
+            raise serializers.ValidationError({
+                'actions': 'Select a valid Project.',
+            })
+
+        project = Project.objects.filter(
+            pk=project_pk, tenant=tenant, client_org__is_active=True,
+        ).exclude(status='archived').select_related('client_org').first()
+        if not project or project.client_org.name == 'Walk-In':
+            raise serializers.ValidationError({
+                'actions': 'Project must belong to an active client organization in this tenant.',
+            })
+        if scope_type == 'specific_org' and project.client_org_id != scope_org_id:
+            raise serializers.ValidationError({
+                'actions': 'Project must belong to the selected organization.',
+            })
+        if not actor or not can_manage_project(actor, project):
+            raise serializers.ValidationError({
+                'actions': 'Only Project Managers can configure Project routing.',
+            })
+        return attrs
+
 
 class AutomationLogSerializer(serializers.ModelSerializer):
     class Meta:

@@ -21,6 +21,7 @@ import { useOrgUsers } from '@/hooks/useOrganizations';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCreateKBArticle, useKBArticles, useLinkTicketToArticle, useUnlinkTicketFromArticle, useKBArticle } from '@/hooks/useKB';
 import { useAutomationLogs, TRIGGER_LABELS, TRIGGER_COLORS } from '@/hooks/useAutomation';
+import { TicketProjectAssociationCard } from '@/components/projects/TicketProjectAssociationCard';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -1837,6 +1838,13 @@ export default function TicketDetailPage() {
               )}
             </div>
           )}
+
+          {/* PROJECT ASSOCIATION card: Ticketing remains unchanged. */}
+          <TicketProjectAssociationCard
+            ticketRef={ticket.ref}
+            clientOrgId={ticket.client_org?.id ?? null}
+            clientOrgName={ticket.client_org?.name ?? null}
+          />
 
           {/* REQUESTER DETAIL card */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-md)' }}>

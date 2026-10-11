@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Home, LayoutDashboard, Ticket, CalendarDays, Calendar,
   Settings, ChevronLeft, ChevronRight, BookOpen,
-  Users, UserCog,
+  Users, UserCog, FolderKanban,
 } from 'lucide-react';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -39,6 +39,12 @@ export function MainSidebar() {
             { label: 'Events',         href: '/events',   icon: CalendarDays },
             { label: 'Calendar',       href: '/calendar', icon: Calendar  },
             { label: 'Knowledge Base', href: '/kb',       icon: BookOpen  },
+          ],
+        },
+        {
+          title: 'PROJECTS',
+          items: [
+            { label: 'Projects', href: '/projects', icon: FolderKanban },
           ],
         },
         {

@@ -4,6 +4,7 @@ from .requests import (
     ProjectRequestConvertView, ProjectCapabilitiesView, ProjectAgentPermissionsView,
     UnifiedRequestsView,
 )
+from .support import ProjectSupportTicketsView, ProjectActivityView, ProjectActivityReadView
 from .reviewers import ProjectReviewerCandidatesView
 from .email_views import WorkItemNotificationView
 
@@ -29,6 +30,9 @@ urlpatterns = [
     path('projects/capabilities/', ProjectCapabilitiesView.as_view(), name='project-capabilities'),
     path('projects/agent-permissions/', ProjectAgentPermissionsView.as_view(), name='project-agent-permissions'),
     path('projects/agent-permissions/<uuid:user_id>/', ProjectAgentPermissionsView.as_view(), name='project-agent-permission-detail'),
+    path('projects/<uuid:pk>/support-tickets/', ProjectSupportTicketsView.as_view(), name='project-support-tickets'),
+    path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
+    path('projects/<uuid:pk>/activity/read/', ProjectActivityReadView.as_view(), name='project-activity-read'),
     path('projects/<uuid:pk>/reviewer-candidates/', ProjectReviewerCandidatesView.as_view(), name='project-reviewer-candidates'),
     path('work-items/<uuid:pk>/email-notifications/', WorkItemNotificationView.as_view(), name='work-item-email-notifications'),
     path('tickets/<str:ticket_ref>/project-association/', TicketProjectAssociationView.as_view(), name='ticket-project-association'),

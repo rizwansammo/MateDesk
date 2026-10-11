@@ -514,3 +514,93 @@ class ProjectRequest(ValidatedModel):
             self.converted_project.client_org_id != self.client_org_id
         ):
             raise ValidationError({'converted_project': 'Converted project belongs to another tenant or organization.'})
+
+
+class ProjectActivity(ValidatedModel):
+    """Audited event for a delivery Project with explicit visibility boundaries."""
+
+    KINDS = [
+        ('project_created', 'Project Created'),
+        ('project_updated', 'Project Updated'),
+        ('work_item_created', 'Work Item Created'),
+        ('work_item_updated', 'Work Item Updated'),
+        ('milestone_created', 'Milestone Created'),
+        ('milestone_updated', 'Milestone Updated'),
+        ('client_feedback', 'Client Feedback'),
+        ('staff_feedback', 'Team Feedback'),
+        ('ticket_linked', 'Ticket Linked'),
+        ('support_ticket_created', 'Support Ticket Created'),
+        ('client_ticket_reply', 'Client Ticket Reply'),
+        ('staff_ticket_reply', 'Team Ticket Reply'),
+    ]
+    VISIBILITY = [('internal', 'Staff Only'), ('client', 'Client Visible')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities')
+    actor = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='project_activities',
+    )
+    kind = models.CharField(max_length=32, choices=KINDS)
+    visibility = models.CharField(max_length=12, choices=VISIBILITY, default='internal')
+    summary = models.CharField(max_length=320)
+    ticket = models.ForeignKey(
+        'tickets.Ticket', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='project_activities',
+    )
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='activity_events',
+    )
+    milestone = models.ForeignKey(
+        ProjectMilestone, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='activity_events',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_activities'
+        ordering = ['-created_at', '-id']
+        indexes = [
+            models.Index(fields=['project', '-created_at'], name='project_activity_recent'),
+            models.Index(fields=['project', 'kind', '-created_at'], name='project_activity_attention'),
+        ]
+
+    def clean(self):
+        if not self.project_id:
+            return
+        if self.actor_id and self.actor.tenant_id != self.project.tenant_id:
+            raise ValidationError({'actor': 'Activity actor belongs to a different tenant.'})
+        if self.ticket_id and (
+            self.ticket.tenant_id != self.project.tenant_id
+            or self.ticket.client_org_id != self.project.client_org_id
+        ):
+            raise ValidationError({'ticket': 'Activity ticket must match the project client organization.'})
+        if self.work_item_id and self.work_item.project_id != self.project_id:
+            raise ValidationError({'work_item': 'Activity work item must belong to this project.'})
+        if self.milestone_id and self.milestone.project_id != self.project_id:
+            raise ValidationError({'milestone': 'Activity milestone must belong to this project.'})
+
+
+class ProjectActivityRead(ValidatedModel):
+    """Per-user activity acknowledgement. GET requests never mark events read."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activity_reads')
+    user = models.ForeignKey(
+        'users.User', on_delete=models.CASCADE, related_name='project_activity_reads',
+    )
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_activity_reads'
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'user'], name='unique_project_activity_read'),
+        ]
+
+    def clean(self):
+        if self.project_id and self.user_id and (
+            self.user.tenant_id != self.project.tenant_id or not self.user.is_active
+        ):
+            raise ValidationError({'user': 'Activity acknowledgement requires an active project tenant user.'})

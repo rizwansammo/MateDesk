@@ -4,7 +4,7 @@ import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import {
   ChevronLeft, ChevronRight, ClipboardList, FolderKanban, Plus,
-  RefreshCw, Search, Ticket, ArrowUpRight, SlidersHorizontal,
+  RefreshCw, Search, Ticket, ArrowUpRight, SlidersHorizontal, CircleDot, UserRound,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useWorkQueue } from '@/hooks/useProjectRequests';
@@ -36,10 +36,11 @@ export function UnifiedRequestsPanel({ onTicketTools }: { onTicketTools: () => v
   const user = useAuthStore(state => state.user);
   const isStaff = ['msp_owner', 'msp_manager', 'msp_agent'].includes(user?.role ?? '');
   const [kind, setKind] = useState<WorkQueueFilter>('all');
+  const [scope, setScope] = useState<'all' | 'attention' | 'mine'>('all');
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const { data, isLoading, isError, error, refetch } = useWorkQueue(kind, page, search);
+  const { data, isLoading, isError, error, refetch } = useWorkQueue(kind, page, search, scope);
   const rows = data?.results ?? [];
   const count = data?.count ?? 0;
   const maxPage = Math.max(1, Math.ceil(count / 25));
@@ -102,6 +103,19 @@ export function UnifiedRequestsPanel({ onTicketTools }: { onTicketTools: () => v
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button type="button" aria-pressed={scope === 'all'} className="btn-secondary gap-1"
+            style={{ color: scope === 'all' ? 'var(--accent-info-fg)' : undefined }}
+            onClick={() => { setScope('all'); setPage(1); }}>All</button>
+          <button type="button" aria-pressed={scope === 'attention'} className="btn-secondary gap-1"
+            style={{ color: scope === 'attention' ? 'var(--accent-warn-fg)' : undefined }}
+            onClick={() => { setScope('attention'); setPage(1); }}>
+            <CircleDot size={13}/> Needs Attention
+          </button>
+          {isStaff && <button type="button" aria-pressed={scope === 'mine'} className="btn-secondary gap-1"
+            style={{ color: scope === 'mine' ? 'var(--accent-info-fg)' : undefined }}
+            onClick={() => { setScope('mine'); setPage(1); }}>
+            <UserRound size={13}/> Assigned to Me
+          </button>}
           <form onSubmit={commitSearch} className="flex items-center gap-1">
             <input className="input w-[170px] py-1.5 text-xs sm:w-[215px]"
               aria-label="Search all Requests" value={searchInput}
@@ -148,8 +162,15 @@ export function UnifiedRequestsPanel({ onTicketTools }: { onTicketTools: () => v
                       <Link href={item.href} className="inline-flex items-center gap-1 text-xs font-semibold hover:underline"
                         style={{ color: 'var(--text-0)' }}>
                         <span className="truncate">{item.title}</span>
+                        {item.needs_attention && <CircleDot size={13} className="shrink-0"
+                          aria-label="Needs Attention" style={{ color: 'var(--accent-warn-fg)' }}/>}
                         <ArrowUpRight size={12} className="shrink-0" style={{ color: 'var(--text-3)' }}/>
                       </Link>
+                      {item.kind === 'ticket' && item.project_key && (
+                        <span className="ml-2 text-[11px]" style={{ color: 'var(--accent-indigo-fg)' }}>
+                          · {item.project_key}
+                        </span>
+                      )}
                     </td>
                     <td><span className="whitespace-nowrap text-xs" style={{ color: 'var(--text-2)' }}>{item.client_org || '—'}</span></td>
                     <td><span className="whitespace-nowrap text-xs" style={{ color: item.assigned_to_me ? 'var(--accent-info-fg)' : 'var(--text-3)' }}>

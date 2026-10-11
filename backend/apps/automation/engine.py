@@ -129,7 +129,7 @@ def _apply_action(ticket, action, trigger=''):
         # Project Requests must pass through staff approval before a Project
         # is attached. They are still real Tickets for all other automations.
         if (trigger != 'ticket_created' or not ticket.client_org_id
-                or ticket.category == 'Project Request'):
+                or ticket.category in ('Project Request', 'Project Support')):
             return None
 
         import uuid as _uuid

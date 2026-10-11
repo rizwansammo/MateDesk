@@ -13,12 +13,18 @@ const invalidateWorkflow = (qc: ReturnType<typeof useQueryClient>) => {
   void qc.invalidateQueries({ queryKey: ['projects'] });
 };
 
-export function useWorkQueue(kind: WorkQueueFilter, page: number, query: string) {
+export function useWorkQueue(
+  kind: WorkQueueFilter, page: number, query: string,
+  scope: 'all' | 'attention' | 'mine' = 'all',
+) {
   const qs = new URLSearchParams({ kind, page: String(page) });
   if (query) qs.set('q', query);
+  if (scope === 'attention') qs.set('attention', '1');
+  if (scope === 'mine') qs.set('assigned', 'mine');
   return useQuery({
-    queryKey: ['work-queue', kind, page, query],
+    queryKey: ['work-queue', kind, page, query, scope],
     queryFn: () => apiFetch<WorkQueuePage>('/api/requests/workspace/?' + qs.toString()),
+    refetchInterval: 60_000,
   });
 }
 export function useProjectRequest(id: string) {

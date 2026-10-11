@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   CalendarDays, Check, ChevronRight, Clock3, Columns3, FolderKanban,
-  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users,
+  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useProjectWorkItems,
@@ -17,12 +17,14 @@ import {
 } from '@/components/projects/ProjectForms';
 import { ProjectReviewerDialog } from '@/components/projects/ProjectReviewerDialog';
 import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorkspace';
+import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
+import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'support' | 'activity' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -174,6 +176,8 @@ export default function ProjectWorkspacePage() {
     { value: 'board', label: 'Board', Icon: Columns3 },
     { value: 'list', label: 'List', Icon: LayoutList },
     { value: 'milestones', label: 'Milestones', Icon: CalendarDays },
+    { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
+    { value: 'activity', label: 'Activity', Icon: Activity },
     ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
   ];
 
@@ -211,6 +215,8 @@ export default function ProjectWorkspacePage() {
         {patchMilestone.error && <div className="mb-3"><ProjectError error={patchMilestone.error} /></div>}
         {removeMember.error && <div className="mb-3"><ProjectError error={removeMember.error} /></div>}
 
+        {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
+        {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
         {tab === 'overview' && (
           <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">

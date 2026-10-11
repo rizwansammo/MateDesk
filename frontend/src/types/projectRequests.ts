@@ -34,6 +34,8 @@ export interface WorkQueueItem {
   status: string;
   assigned_to: string | null;
   assigned_to_me: boolean;
+  needs_attention: boolean;
+  project_key: string | null;
   priority: string | null;
   href: string;
   created_at: string;

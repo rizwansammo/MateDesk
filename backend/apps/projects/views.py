@@ -13,6 +13,7 @@ from apps.users.models import User
 from apps.users.permissions import CLIENT_ROLES, IsTenantUser
 
 from .models import Project, ProjectMember, ProjectMilestone, WorkItem, WorkItemComment
+from .activity import record_activity
 from .permissions import can_edit_work, can_manage_project, tenant_for_request, visible_projects
 from .serializers import (
     ProjectCreateSerializer, ProjectUpdateSerializer, ProjectReadSerializer,
@@ -102,6 +103,8 @@ class ProjectListView(APIView):
         with transaction.atomic():
             _save_validated(project)
             _save_validated(ProjectMember(project=project, user=request.user, role='manager'))
+            record_activity(project, kind='project_created', actor=request.user,
+                            summary='Project created', visibility='client' if project.visibility == 'client' else 'internal')
         return Response(ProjectReadSerializer(project, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
@@ -122,6 +125,9 @@ class ProjectDetailView(APIView):
         for field, value in data.validated_data.items():
             setattr(project, field, value)
         _save_validated(project)
+        record_activity(project, kind='project_updated', actor=request.user,
+                        summary='Project details updated',
+                        visibility='client' if project.visibility == 'client' else 'internal')
         return Response(ProjectReadSerializer(project).data)
 
 
@@ -181,6 +187,9 @@ class ProjectMilestonesView(APIView):
         if not data.validated_data.get('name'):
             raise ValidationError({'name': 'Name is required.'})
         milestone = _save_validated(ProjectMilestone(project=project, **data.validated_data))
+        record_activity(project, kind='milestone_created', actor=request.user,
+                        summary=f'Milestone added: {milestone.name}',
+                        visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data, status=status.HTTP_201_CREATED)
 
 
@@ -196,6 +205,9 @@ class ProjectMilestoneDetailView(APIView):
         for field, value in data.validated_data.items():
             setattr(milestone, field, value)
         _save_validated(milestone)
+        record_activity(project, kind='milestone_updated', actor=request.user,
+                        summary=f'Milestone updated: {milestone.name}',
+                        visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data)
 
 
@@ -234,6 +246,9 @@ class ProjectWorkItemsView(APIView):
             _save_validated(item)
             locked.next_item_number += 1
             _save_validated(locked)
+            record_activity(locked, kind='work_item_created', actor=request.user,
+                            summary=f'Work Item added: {item.ref}', visibility=item.visibility,
+                            work_item=item)
         return Response(WorkItemReadSerializer(item).data, status=status.HTTP_201_CREATED)
 
 
@@ -258,6 +273,9 @@ class WorkItemDetailView(APIView):
         for field, value in attrs.items():
             setattr(item, field, value)
         _save_validated(item)
+        record_activity(item.project, kind='work_item_updated', actor=request.user,
+                        summary=f'Work Item updated: {item.ref}', visibility=item.visibility,
+                        work_item=item)
         return Response(WorkItemReadSerializer(item).data)
 
 

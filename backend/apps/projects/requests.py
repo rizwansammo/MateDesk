@@ -28,6 +28,7 @@ from .models import (
     TicketProjectAssociation,
 )
 from .permissions import tenant_for_request, visible_projects
+from .activity import record_activity, attention_projects
 from .views import _save_validated
 
 
@@ -316,6 +317,9 @@ class ProjectRequestConvertView(APIView):
             _save_validated(TicketProjectAssociation(
                 ticket=row.ticket, project=project, source='manual', linked_by=request.user,
             ))
+            record_activity(project, kind='project_created', actor=request.user,
+                            summary='Project created from approved request',
+                            visibility='client')
             row.converted_project = project
             row.status = 'converted'
             row.reviewed_by = request.user
@@ -395,17 +399,21 @@ def _visible_tickets(request):
 
 
 class UnifiedRequestsView(APIView):
-    """The same Requests inbox lists general tickets, project requests and projects.
+    """One queue for Tickets, Project Requests, and Projects.
 
-    Converted requests have exactly one current row: the Project. Historical
-    tickets and discussions remain accessible via the Tickets view.
+    Attention filters are applied in SQL before counting and pagination.
+    This keeps the same visible items and ordering when an Agent switches tabs.
     """
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request):
+        from django.db.models import F, OuterRef, Subquery
+        from apps.users.permissions import CLIENT_ROLES
+        from apps.tickets.models import Reply
+
         try:
             page = max(1, min(100, int(request.query_params.get('page', '1'))))
-        except ValueError:
+        except (ValueError, TypeError):
             page = 1
         size = 25
         limit = page * size
@@ -413,28 +421,102 @@ class UnifiedRequestsView(APIView):
         kind = request.query_params.get('kind', 'all')
         if kind not in ('all', 'tickets', 'project_requests', 'projects'):
             kind = 'all'
+        attention_only = request.query_params.get('attention') == '1'
+        assigned_only = request.query_params.get('assigned') == 'mine'
+        user = request.user
+        staff = user.role in MSP_ROLES
+
+        accessible_projects = visible_projects(request)
+        allowed_project_ids = set(accessible_projects.values_list('id', flat=True))
+        project_attention_ids = attention_projects(request, allowed_project_ids)
 
         rows = []
         total = 0
+
         if kind in ('all', 'tickets'):
-            tickets = _visible_tickets(request).filter(project_request__isnull=True)
+            tickets = _visible_tickets(request).filter(
+                project_request__isnull=True
+            ).select_related('project_association__project')
             if query:
                 tickets = tickets.filter(
-                    Q(subject__icontains=query) | Q(ticket_ref__icontains=query) |
+                    Q(subject__icontains=query) |
+                    Q(ticket_ref__icontains=query) |
                     Q(client_org__name__icontains=query)
                 )
+            if assigned_only and staff:
+                tickets = tickets.filter(assignee=user)
+            recent_client = Reply.objects.filter(
+                ticket=OuterRef('pk'),
+                type='public_reply',
+                author__role__in=CLIENT_ROLES,
+            ).order_by('-created_at').values('created_at')[:1]
+            recent_staff = Reply.objects.filter(
+                ticket=OuterRef('pk'),
+                type='public_reply',
+                author__role__in=MSP_ROLES,
+            ).order_by('-created_at').values('created_at')[:1]
+            tickets = tickets.annotate(
+                last_client_reply=Subquery(recent_client),
+                last_staff_reply=Subquery(recent_staff),
+            )
+            if attention_only:
+                if staff:
+                    pending_reply = (
+                        Q(last_client_reply__isnull=False) &
+                        (Q(last_staff_reply__isnull=True) |
+                         Q(last_client_reply__gt=F('last_staff_reply')))
+                    )
+                    if user.role == 'msp_agent':
+                        tickets = tickets.filter(
+                            Q(status__in=('open', 'pending', 'in_progress', 'waiting_on_customer')) &
+                            (Q(assignee__isnull=True) |
+                             (Q(assignee=user) & pending_reply))
+                        )
+                    else:
+                        tickets = tickets.filter(
+                            Q(status__in=('open', 'pending', 'in_progress', 'waiting_on_customer')) &
+                            (Q(assignee__isnull=True) | pending_reply)
+                        )
+                else:
+                    tickets = tickets.filter(
+                        Q(last_staff_reply__isnull=False) &
+                        (Q(last_client_reply__isnull=True) |
+                         Q(last_staff_reply__gt=F('last_client_reply')))
+                    )
+
             total += tickets.count()
-            for item in tickets.order_by('-updated_at')[:limit]:
+            for item in tickets.order_by('-updated_at', '-id')[:limit]:
+                association = getattr(item, 'project_association', None)
+                visible_project = (
+                    association and association.project_id in allowed_project_ids
+                )
+                if staff:
+                    attention = item.status not in ('solved', 'closed') and (
+                        item.assignee_id is None or (
+                            user.role in ('msp_owner', 'msp_manager') or
+                            item.assignee_id == user.id
+                        ) and (
+                            getattr(item, 'last_client_reply', None) is not None
+                            and (
+                                getattr(item, 'last_staff_reply', None) is None
+                                or item.last_client_reply > item.last_staff_reply
+                            )
+                        )
+                    )
+                else:
+                    attention = bool(attention_only)
                 rows.append({
                     'id': str(item.id), 'kind': 'ticket',
                     'ref': item.ticket_ref, 'title': item.subject, 'status': item.status,
                     'client_org': item.client_org.name if item.client_org else '',
                     'assigned_to': item.assignee.full_name if item.assignee else None,
-                    'assigned_to_me': item.assignee_id == request.user.id,
-                    'priority': item.priority,
+                    'assigned_to_me': item.assignee_id == user.id,
+                    'priority': item.priority, 'needs_attention': bool(attention),
+                    'project_key': association.project.key if visible_project else None,
                     'href': f'/requests/{item.ticket_ref}',
                     'created_at': item.created_at, 'updated_at': item.updated_at,
                 })
+
         if kind in ('all', 'project_requests'):
             pending = visible_project_requests(request).exclude(status='converted')
             if query:
@@ -442,42 +524,79 @@ class UnifiedRequestsView(APIView):
                     Q(name__icontains=query) | Q(ticket__ticket_ref__icontains=query) |
                     Q(client_org__name__icontains=query)
                 )
+            if assigned_only and staff:
+                pending = pending.filter(ticket__assignee=user)
+            if attention_only:
+                if staff:
+                    pending = pending.filter(
+                        status__in=('submitted', 'approved')
+                    )
+                    if user.role == 'msp_agent':
+                        pending = pending.filter(
+                            Q(ticket__assignee__isnull=True) | Q(ticket__assignee=user)
+                        )
+                else:
+                    pending = pending.filter(status='awaiting_details')
             total += pending.count()
-            for item in pending.order_by('-updated_at')[:limit]:
+            for item in pending.order_by('-updated_at', '-id')[:limit]:
+                needs_attention = (
+                    (staff and item.status in ('submitted', 'approved') and (
+                        user.role != 'msp_agent' or
+                        item.ticket.assignee_id in (None, user.id)
+                    )) or
+                    (not staff and item.status == 'awaiting_details')
+                )
                 rows.append({
                     'id': str(item.id), 'kind': 'project_request',
                     'ref': item.ticket.ticket_ref, 'title': item.name,
                     'status': item.status, 'client_org': item.client_org.name,
                     'assigned_to': item.ticket.assignee.full_name if item.ticket.assignee else None,
-                    'assigned_to_me': item.ticket.assignee_id == request.user.id,
+                    'assigned_to_me': item.ticket.assignee_id == user.id,
                     'priority': item.ticket.priority,
+                    'needs_attention': needs_attention,
+                    'project_key': None,
                     'href': f'/requests/project/{item.id}',
                     'created_at': item.created_at, 'updated_at': item.updated_at,
                 })
+
         if kind in ('all', 'projects'):
-            projects = visible_projects(request)
+            projects = accessible_projects
             if query:
                 projects = projects.filter(
                     Q(name__icontains=query) | Q(key__icontains=query) |
                     Q(client_org__name__icontains=query)
                 )
+            if attention_only:
+                projects = projects.filter(id__in=project_attention_ids)
+            if assigned_only and staff:
+                projects = projects.filter(members__user=user)
             total += projects.count()
-            for item in projects.prefetch_related('members__user').order_by('-updated_at')[:limit]:
-                managers = [member.user for member in item.members.all() if member.role == 'manager']
+            for item in projects.prefetch_related('members__user').order_by('-updated_at', '-id')[:limit]:
+                managers = [
+                    member.user for member in item.members.all()
+                    if member.role == 'manager'
+                ]
                 primary = managers[0] if managers else item.created_by
                 rows.append({
                     'id': str(item.id), 'kind': 'project', 'ref': item.key,
-                    'title': item.name, 'status': item.status, 'client_org': item.client_org.name,
+                    'title': item.name, 'status': item.status,
+                    'client_org': item.client_org.name,
                     'assigned_to': primary.full_name if primary else None,
-                    'assigned_to_me': any(member.user_id == request.user.id for member in item.members.all()),
-                    'priority': None, 'href': f'/projects/{item.id}',
+                    'assigned_to_me': (
+                        any(member.user_id == user.id for member in item.members.all())
+                        or item.created_by_id == user.id
+                    ),
+                    'priority': None,
+                    'needs_attention': item.id in project_attention_ids,
+                    'project_key': item.key,
+                    'href': f'/projects/{item.id}',
                     'created_at': item.created_at, 'updated_at': item.updated_at,
                 })
+
         rows.sort(key=lambda row: row['updated_at'], reverse=True)
         start = (page - 1) * size
         return Response({
             'count': total,
-            'page': page,
-            'page_size': size,
+            'page': page, 'page_size': size,
             'results': rows[start:start + size],
         })

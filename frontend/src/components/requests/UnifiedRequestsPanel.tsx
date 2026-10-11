@@ -57,37 +57,9 @@ export function UnifiedRequestsPanel({ onTicketTools }: { onTicketTools: () => v
 
   return (
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-3 md:px-4"
-        style={{ borderColor: 'var(--border-md)', background: 'var(--bg-surface)' }}>
-        <div>
-          <h1 className="text-lg font-semibold" style={{ color: 'var(--text-0)' }}>Requests</h1>
-          <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>
-            Support Tickets, Project Requests and Projects in one workspace
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {isStaff ? (
-            <Link className="btn-primary inline-flex items-center gap-1.5 text-xs" href="/requests/new">
-              <Plus size={14}/> New Ticket
-            </Link>
-          ) : (
-            <>
-              <Link href="/requests/new" className="btn-secondary inline-flex items-center gap-1.5 text-xs">
-                <Plus size={14}/> New Ticket
-              </Link>
-              <Link className="btn-primary inline-flex items-center gap-1.5 text-xs"
-                href="/requests/project/new"><FolderKanban size={14}/> Request Project</Link>
-            </>
-          )}
-          {isStaff && <Link href="/projects" className="btn-secondary inline-flex items-center gap-1.5 text-xs">
-            <FolderKanban size={14}/> Projects
-          </Link>}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2"
+      <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2 md:px-4 xl:flex-nowrap"
         style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
           {FILTERS.map(filter => (
             <button type="button" key={filter.value}
               className="shrink-0 border px-3 py-1.5 text-xs font-medium transition-colors"
@@ -102,34 +74,44 @@ export function UnifiedRequestsPanel({ onTicketTools }: { onTicketTools: () => v
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" aria-pressed={scope === 'all'} className="btn-secondary gap-1"
+        <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+          <button type="button" aria-pressed={scope === 'all'} className="btn-secondary shrink-0 gap-1"
             style={{ color: scope === 'all' ? 'var(--accent-info-fg)' : undefined }}
             onClick={() => { setScope('all'); setPage(1); }}>All</button>
-          <button type="button" aria-pressed={scope === 'attention'} className="btn-secondary gap-1"
+          <button type="button" aria-pressed={scope === 'attention'} className="btn-secondary shrink-0 gap-1"
             style={{ color: scope === 'attention' ? 'var(--accent-warn-fg)' : undefined }}
             onClick={() => { setScope('attention'); setPage(1); }}>
             <CircleDot size={13}/> Needs Attention
           </button>
-          {isStaff && <button type="button" aria-pressed={scope === 'mine'} className="btn-secondary gap-1"
+          {isStaff && <button type="button" aria-pressed={scope === 'mine'} className="btn-secondary shrink-0 gap-1"
             style={{ color: scope === 'mine' ? 'var(--accent-info-fg)' : undefined }}
             onClick={() => { setScope('mine'); setPage(1); }}>
             <UserRound size={13}/> Assigned to Me
           </button>}
-          <form onSubmit={commitSearch} className="flex items-center gap-1">
-            <input className="input w-[170px] py-1.5 text-xs sm:w-[215px]"
+          <form onSubmit={commitSearch} className="flex min-w-0 items-center gap-1">
+            <input className="input w-[155px] py-1.5 text-xs sm:w-[185px] xl:w-[200px]"
               aria-label="Search all Requests" value={searchInput}
               onChange={event => setSearchInput(event.target.value)}
               placeholder="Search requests or clients"/>
-            <button type="submit" className="icon-btn" title="Search" aria-label="Search"><Search size={15}/></button>
+            <button type="submit" className="icon-btn shrink-0" title="Search" aria-label="Search"><Search size={15}/></button>
           </form>
-          <button type="button" className="icon-btn" title="Refresh" aria-label="Refresh"
+          <button type="button" className="icon-btn shrink-0" title="Refresh" aria-label="Refresh"
             onClick={() => { void refetch(); }}><RefreshCw size={15} className={isLoading ? 'animate-spin' : ''}/></button>
           <button type="button" onClick={onTicketTools}
-            className="btn-secondary inline-flex items-center gap-1 text-xs">
+            className="btn-secondary inline-flex shrink-0 items-center gap-1 text-xs">
             <SlidersHorizontal size={13}/> Ticket Tools
           </button>
         </div>
+        {!isStaff && (
+          <Link className="btn-primary inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs"
+            href="/requests/project/new"><FolderKanban size={14}/> Request Project</Link>
+        )}
+        <Link href="/requests/new"
+          className={isStaff
+            ? 'btn-primary ml-auto inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs'
+            : 'btn-secondary ml-auto inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs'}>
+          <Plus size={14}/> New Ticket
+        </Link>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">

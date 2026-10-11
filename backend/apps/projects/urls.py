@@ -1,4 +1,13 @@
 from django.urls import path
+from .requests import (
+    ProjectRequestListView, ProjectRequestDetailView, ProjectRequestClaimView,
+    ProjectRequestConvertView, ProjectCapabilitiesView, ProjectAgentPermissionsView,
+    UnifiedRequestsView,
+)
+from .support import ProjectSupportTicketsView, ProjectActivityView, ProjectActivityReadView
+from .delivery import (ProjectDeliveryView, ProjectDeliverySubmitView,
+    ProjectDeliveryDecisionView, ProjectDeliveryCompleteView,
+    ProjectDeliveryArchiveView, ProjectDeliveryReopenView)
 from .reviewers import ProjectReviewerCandidatesView
 from .email_views import WorkItemNotificationView
 
@@ -16,6 +25,23 @@ from .views import (
 )
 
 urlpatterns = [
+    path('requests/workspace/', UnifiedRequestsView.as_view(), name='requests-workspace'),
+    path('project-requests/', ProjectRequestListView.as_view(), name='project-requests-list'),
+    path('project-requests/<uuid:pk>/', ProjectRequestDetailView.as_view(), name='project-requests-detail'),
+    path('project-requests/<uuid:pk>/claim/', ProjectRequestClaimView.as_view(), name='project-requests-claim'),
+    path('project-requests/<uuid:pk>/convert/', ProjectRequestConvertView.as_view(), name='project-requests-convert'),
+    path('projects/capabilities/', ProjectCapabilitiesView.as_view(), name='project-capabilities'),
+    path('projects/agent-permissions/', ProjectAgentPermissionsView.as_view(), name='project-agent-permissions'),
+    path('projects/agent-permissions/<uuid:user_id>/', ProjectAgentPermissionsView.as_view(), name='project-agent-permission-detail'),
+    path('projects/<uuid:pk>/delivery/', ProjectDeliveryView.as_view(), name='project-delivery'),
+    path('projects/<uuid:pk>/delivery/submit/', ProjectDeliverySubmitView.as_view(), name='project-delivery-submit'),
+    path('projects/<uuid:pk>/delivery/decision/', ProjectDeliveryDecisionView.as_view(), name='project-delivery-decision'),
+    path('projects/<uuid:pk>/delivery/complete/', ProjectDeliveryCompleteView.as_view(), name='project-delivery-complete'),
+    path('projects/<uuid:pk>/delivery/archive/', ProjectDeliveryArchiveView.as_view(), name='project-delivery-archive'),
+    path('projects/<uuid:pk>/delivery/reopen/', ProjectDeliveryReopenView.as_view(), name='project-delivery-reopen'),
+    path('projects/<uuid:pk>/support-tickets/', ProjectSupportTicketsView.as_view(), name='project-support-tickets'),
+    path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
+    path('projects/<uuid:pk>/activity/read/', ProjectActivityReadView.as_view(), name='project-activity-read'),
     path('projects/<uuid:pk>/reviewer-candidates/', ProjectReviewerCandidatesView.as_view(), name='project-reviewer-candidates'),
     path('work-items/<uuid:pk>/email-notifications/', WorkItemNotificationView.as_view(), name='work-item-email-notifications'),
     path('tickets/<str:ticket_ref>/project-association/', TicketProjectAssociationView.as_view(), name='ticket-project-association'),

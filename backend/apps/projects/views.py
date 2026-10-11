@@ -13,6 +13,7 @@ from apps.users.models import User
 from apps.users.permissions import CLIENT_ROLES, IsTenantUser
 
 from .models import Project, ProjectMember, ProjectMilestone, WorkItem, WorkItemComment
+from .activity import record_activity
 from .permissions import can_edit_work, can_manage_project, tenant_for_request, visible_projects
 from .serializers import (
     ProjectCreateSerializer, ProjectUpdateSerializer, ProjectReadSerializer,
@@ -87,11 +88,14 @@ class ProjectListView(APIView):
         return Response(ProjectReadSerializer(projects, many=True, context={'request': request}).data)
 
     def post(self, request):
-        if request.user.role not in ('msp_owner', 'msp_manager'):
-            raise PermissionDenied('Only MSP owners and managers can create projects.')
+        from .requests import can_create_project
+        if not can_create_project(request.user):
+            raise PermissionDenied('Project creation permission required.')
         data = ProjectCreateSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
+        if attrs.get('status') in ('completed', 'archived'):
+            raise ValidationError({'status': 'Use the Delivery workflow for completion and archiving.'})
         tenant = tenant_for_request(request)
         org = get_object_or_404(
             ClientOrganization.objects.filter(tenant=tenant, is_active=True),
@@ -101,6 +105,8 @@ class ProjectListView(APIView):
         with transaction.atomic():
             _save_validated(project)
             _save_validated(ProjectMember(project=project, user=request.user, role='manager'))
+            record_activity(project, kind='project_created', actor=request.user,
+                            summary='Project created', visibility='client' if project.visibility == 'client' else 'internal')
         return Response(ProjectReadSerializer(project, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
@@ -116,11 +122,18 @@ class ProjectDetailView(APIView):
         forbidden = {'client_org', 'client_org_id', 'tenant', 'tenant_id', 'key', 'created_by'}
         if forbidden.intersection(request.data):
             raise ValidationError({'detail': 'Project identity and client organization cannot be changed.'})
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = ProjectUpdateSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
+        if data.validated_data.get('status') in ('completed', 'archived'):
+            raise ValidationError({'status': 'Use the Client Approval and Completion workflow.'})
         for field, value in data.validated_data.items():
             setattr(project, field, value)
         _save_validated(project)
+        record_activity(project, kind='project_updated', actor=request.user,
+                        summary='Project details updated',
+                        visibility='client' if project.visibility == 'client' else 'internal')
         return Response(ProjectReadSerializer(project).data)
 
 
@@ -175,11 +188,16 @@ class ProjectMilestonesView(APIView):
     def post(self, request, pk):
         project = _project(request, pk)
         _manage(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = ProjectMilestoneWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         if not data.validated_data.get('name'):
             raise ValidationError({'name': 'Name is required.'})
         milestone = _save_validated(ProjectMilestone(project=project, **data.validated_data))
+        record_activity(project, kind='milestone_created', actor=request.user,
+                        summary=f'Milestone added: {milestone.name}',
+                        visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data, status=status.HTTP_201_CREATED)
 
 
@@ -189,12 +207,17 @@ class ProjectMilestoneDetailView(APIView):
     def patch(self, request, pk, milestone_id):
         project = _project(request, pk)
         _manage(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         milestone = get_object_or_404(project.milestones.all(), pk=milestone_id)
         data = ProjectMilestoneWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         for field, value in data.validated_data.items():
             setattr(milestone, field, value)
         _save_validated(milestone)
+        record_activity(project, kind='milestone_updated', actor=request.user,
+                        summary=f'Milestone updated: {milestone.name}',
+                        visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data)
 
 
@@ -214,6 +237,8 @@ class ProjectWorkItemsView(APIView):
     def post(self, request, pk):
         project = _project(request, pk)
         _edit(request.user, project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(project)
         data = WorkItemWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
@@ -233,6 +258,9 @@ class ProjectWorkItemsView(APIView):
             _save_validated(item)
             locked.next_item_number += 1
             _save_validated(locked)
+            record_activity(locked, kind='work_item_created', actor=request.user,
+                            summary=f'Work Item added: {item.ref}', visibility=item.visibility,
+                            work_item=item)
         return Response(WorkItemReadSerializer(item).data, status=status.HTTP_201_CREATED)
 
 
@@ -245,6 +273,8 @@ class WorkItemDetailView(APIView):
     def patch(self, request, pk):
         item = _work_item(request, pk)
         _edit(request.user, item.project)
+        from .delivery import ensure_delivery_unlocked
+        ensure_delivery_unlocked(item.project)
         data = WorkItemWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
@@ -257,6 +287,9 @@ class WorkItemDetailView(APIView):
         for field, value in attrs.items():
             setattr(item, field, value)
         _save_validated(item)
+        record_activity(item.project, kind='work_item_updated', actor=request.user,
+                        summary=f'Work Item updated: {item.ref}', visibility=item.visibility,
+                        work_item=item)
         return Response(WorkItemReadSerializer(item).data)
 
 

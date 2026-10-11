@@ -380,6 +380,13 @@ class TicketViewSet(viewsets.GenericViewSet):
         if not tickets:
             return Response({'detail': 'No matching tickets.'}, status=404)
 
+        if action_name == 'delete' and any(
+            getattr(ticket, 'project_request', None) is not None for ticket in tickets
+        ):
+            return Response({
+                'detail': 'Project Request tickets are retained as part of their approval and project history.'
+            }, status=400)
+
         with transaction.atomic():
             if action_name == 'delete':
                 count = len(tickets)
@@ -503,6 +510,8 @@ class TicketViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'This ticket is already absorbed by another ticket.'}, status=400)
         if target.merge_status == 'secondary':
             return Response({'detail': 'Target ticket is itself a secondary — cannot merge into it.'}, status=400)
+        if (hasattr(ticket, 'project_request') or hasattr(target, 'project_request')):
+            return Response({'detail': 'Project Request history cannot be merged.'}, status=400)
 
         with transaction.atomic():
             ticket.merge_status = 'secondary'
@@ -551,6 +560,8 @@ class TicketViewSet(viewsets.GenericViewSet):
             return Response({'detail': 'That ticket is already absorbed by another ticket.'}, status=400)
         if ticket.merge_status == 'secondary':
             return Response({'detail': 'This ticket is already a secondary — cannot absorb into it.'}, status=400)
+        if (hasattr(ticket, 'project_request') or hasattr(source, 'project_request')):
+            return Response({'detail': 'Project Request history cannot be absorbed.'}, status=400)
 
         with transaction.atomic():
             source.merge_status = 'secondary'
@@ -737,14 +748,42 @@ class AttachmentFileView(APIView):
         tenant = _resolve_tenant(request)
         if tenant is None:
             raise Http404
-        attachment = get_object_or_404(Attachment, pk=pk, tenant=tenant)
+        attachment = get_object_or_404(
+            Attachment.objects.select_related('ticket', 'reply__ticket'),
+            pk=pk, tenant=tenant,
+        )
+        ticket = attachment.ticket or (attachment.reply.ticket if attachment.reply_id else None)
+        if ticket is None or ticket.tenant_id != tenant.id:
+            raise Http404
+        user = request.user
+        if user.role not in MSP_ROLES:
+            if ticket.is_internal or (attachment.reply_id and attachment.reply.type == 'internal_note'):
+                raise Http404
+            org_reader = (
+                user.role == ROLE_CLIENT_OWNER or
+                (user.role == ROLE_END_USER and getattr(user, 'is_vip', False))
+            )
+            if org_reader:
+                if not user.client_org_id or ticket.client_org_id != user.client_org_id:
+                    raise Http404
+            elif user.role == ROLE_END_USER:
+                if ticket.requester_id != user.id:
+                    raise Http404
+            else:
+                raise Http404
         try:
             fh = attachment.file.open('rb')
         except Exception:
             raise Http404
         content_type, _ = mimetypes.guess_type(attachment.filename or str(attachment.file.name))
-        response = FileResponse(fh, content_type=content_type or 'application/octet-stream')
+        content_type = content_type or 'application/octet-stream'
+        response = FileResponse(
+            fh, content_type=content_type,
+            as_attachment=not content_type.startswith('image/'),
+            filename=attachment.filename,
+        )
         response['Cache-Control'] = 'private, max-age=86400'
+        response['X-Content-Type-Options'] = 'nosniff'
         return response
 
 

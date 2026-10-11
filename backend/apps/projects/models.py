@@ -45,6 +45,9 @@ class Project(ValidatedModel):
     created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='created_projects')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    archived_at = models.DateTimeField(null=True, blank=True)
+    reopened_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'projects'
@@ -412,3 +415,257 @@ class ProjectEmailReply(ValidatedModel):
                 or self.comment.visibility != 'client'
                 or self.from_email.casefold() != self.notification.recipient.email.casefold()):
             raise ValidationError({'comment': 'Inbound Project Reply must match its notification and recipient.'})
+
+
+class ProjectAgentPermission(ValidatedModel):
+    """Explicit manager-granted project creation access for MSP agents."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='project_agent_permissions')
+    user = models.OneToOneField('users.User', on_delete=models.CASCADE, related_name='project_creation_permission')
+    granted_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='granted_project_permissions')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_agent_permissions'
+
+    def clean(self):
+        if self.user_id and (
+            self.user.tenant_id != self.tenant_id or self.user.role != 'msp_agent' or not self.user.is_active
+        ):
+            raise ValidationError({'user': 'Only an active agent from the same tenant may receive this permission.'})
+        if self.granted_by_id and (
+            self.granted_by.tenant_id != self.tenant_id or
+            self.granted_by.role not in ('msp_owner', 'msp_manager')
+        ):
+            raise ValidationError({'granted_by': 'Only an owner or manager may grant project permissions.'})
+
+
+class ProjectRequest(ValidatedModel):
+    """Client request with a real support ticket for discussion and attachments.
+
+    Conversion changes the request lifecycle, not the support ticket data.
+    The original ticket remains available for history and conversation.
+    """
+
+    KINDS = [
+        ('web_development', 'Web Development'),
+        ('app_development', 'App Development'),
+        ('website_redesign', 'Website Redesign'),
+        ('infrastructure', 'Infrastructure'),
+        ('other', 'Other'),
+    ]
+    STATUSES = [
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('awaiting_details', 'Awaiting Details'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('converted', 'Converted'),
+    ]
+    CURRENCIES = [('USD', 'USD'), ('EUR', 'EUR'), ('GBP', 'GBP'), ('CAD', 'CAD'),
+                  ('AUD', 'AUD'), ('BDT', 'BDT')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='project_requests')
+    client_org = models.ForeignKey('tenants.ClientOrganization', on_delete=models.PROTECT, related_name='project_requests')
+    ticket = models.OneToOneField('tickets.Ticket', on_delete=models.PROTECT, related_name='project_request')
+    requested_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='project_requests')
+    name = models.CharField(max_length=200)
+    kind = models.CharField(max_length=32, choices=KINDS, default='other')
+    requirements = models.TextField(blank=True)
+    budget = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    budget_currency = models.CharField(max_length=3, choices=CURRENCIES, default='USD')
+    expected_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=24, choices=STATUSES, default='submitted')
+    reviewed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_project_requests')
+    converted_project = models.OneToOneField(
+        Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='originating_request'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_requests'
+        ordering = ['-updated_at', '-created_at']
+        indexes = [models.Index(fields=['tenant', 'status'], name='project_request_tenant_status')]
+
+    def clean(self):
+        if not self.tenant_id:
+            return
+        if self.client_org_id and (
+            self.client_org.tenant_id != self.tenant_id or not self.client_org.is_active
+        ):
+            raise ValidationError({'client_org': 'Client organization must be active and belong to this tenant.'})
+        if self.ticket_id and (
+            self.ticket.tenant_id != self.tenant_id or self.ticket.client_org_id != self.client_org_id or
+            self.ticket.is_internal
+        ):
+            raise ValidationError({'ticket': 'Request ticket must belong to the same tenant and client organization.'})
+        if self.requested_by_id and (
+            self.requested_by.tenant_id != self.tenant_id or
+            self.requested_by.client_org_id != self.client_org_id or
+            self.requested_by.role not in CLIENT_ROLES
+        ):
+            raise ValidationError({'requested_by': 'Requester must be a client from the same organization.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != self.tenant_id or self.reviewed_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'reviewed_by': 'Reviewer must be staff from this tenant.'})
+        if self.converted_project_id and (
+            self.converted_project.tenant_id != self.tenant_id or
+            self.converted_project.client_org_id != self.client_org_id
+        ):
+            raise ValidationError({'converted_project': 'Converted project belongs to another tenant or organization.'})
+
+
+class ProjectActivity(ValidatedModel):
+    """Audited event for a delivery Project with explicit visibility boundaries."""
+
+    KINDS = [
+        ('project_created', 'Project Created'),
+        ('project_updated', 'Project Updated'),
+        ('work_item_created', 'Work Item Created'),
+        ('work_item_updated', 'Work Item Updated'),
+        ('milestone_created', 'Milestone Created'),
+        ('milestone_updated', 'Milestone Updated'),
+        ('client_feedback', 'Client Feedback'),
+        ('staff_feedback', 'Team Feedback'),
+        ('ticket_linked', 'Ticket Linked'),
+        ('support_ticket_created', 'Support Ticket Created'),
+        ('client_ticket_reply', 'Client Ticket Reply'),
+        ('staff_ticket_reply', 'Team Ticket Reply'),
+        ('delivery_submitted', 'Delivery Submitted'),
+        ('delivery_approved', 'Delivery Approved'),
+        ('delivery_changes_requested', 'Delivery Changes Requested'),
+        ('project_completed', 'Project Completed'),
+        ('project_reopened', 'Project Reopened'),
+        ('project_archived', 'Project Archived'),
+    ]
+    VISIBILITY = [('internal', 'Staff Only'), ('client', 'Client Visible')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities')
+    actor = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='project_activities',
+    )
+    kind = models.CharField(max_length=32, choices=KINDS)
+    visibility = models.CharField(max_length=12, choices=VISIBILITY, default='internal')
+    summary = models.CharField(max_length=320)
+    ticket = models.ForeignKey(
+        'tickets.Ticket', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='project_activities',
+    )
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='activity_events',
+    )
+    milestone = models.ForeignKey(
+        ProjectMilestone, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='activity_events',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_activities'
+        ordering = ['-created_at', '-id']
+        indexes = [
+            models.Index(fields=['project', '-created_at'], name='project_activity_recent'),
+            models.Index(fields=['project', 'kind', '-created_at'], name='project_activity_attention'),
+        ]
+
+    def clean(self):
+        if not self.project_id:
+            return
+        if self.actor_id and self.actor.tenant_id != self.project.tenant_id:
+            raise ValidationError({'actor': 'Activity actor belongs to a different tenant.'})
+        if self.ticket_id and (
+            self.ticket.tenant_id != self.project.tenant_id
+            or self.ticket.client_org_id != self.project.client_org_id
+        ):
+            raise ValidationError({'ticket': 'Activity ticket must match the project client organization.'})
+        if self.work_item_id and self.work_item.project_id != self.project_id:
+            raise ValidationError({'work_item': 'Activity work item must belong to this project.'})
+        if self.milestone_id and self.milestone.project_id != self.project_id:
+            raise ValidationError({'milestone': 'Activity milestone must belong to this project.'})
+
+
+class ProjectActivityRead(ValidatedModel):
+    """Per-user activity acknowledgement. GET requests never mark events read."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activity_reads')
+    user = models.ForeignKey(
+        'users.User', on_delete=models.CASCADE, related_name='project_activity_reads',
+    )
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_activity_reads'
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'user'], name='unique_project_activity_read'),
+        ]
+
+    def clean(self):
+        if self.project_id and self.user_id and (
+            self.user.tenant_id != self.project.tenant_id or not self.user.is_active
+        ):
+            raise ValidationError({'user': 'Activity acknowledgement requires an active project tenant user.'})
+
+
+class ProjectDeliveryReview(ValidatedModel):
+    """One immutable submission per client-review round.
+
+    Revising delivery creates another round rather than overwriting the
+    original client decision. Lifecycle actions are enforced by dedicated APIs.
+    """
+    STATUS = [
+        ('pending', 'Awaiting Client Review'),
+        ('changes_requested', 'Changes Requested'),
+        ('approved', 'Approved'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name='delivery_reviews')
+    round_number = models.PositiveIntegerField()
+    summary = models.TextField()
+    delivery_url = models.URLField(max_length=2000, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, default='pending')
+    submitted_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='submitted_project_deliveries',
+    )
+    reviewed_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_project_deliveries',
+    )
+    feedback = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'project_delivery_reviews'
+        ordering = ['-round_number']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'round_number'], name='uniq_project_delivery_round'),
+        ]
+
+    def clean(self):
+        if not self.project_id:
+            return
+        project = self.project
+        if self.submitted_by_id and (
+            self.submitted_by.tenant_id != project.tenant_id
+            or self.submitted_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'submitted_by': 'Delivery must be submitted by staff from this tenant.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != project.tenant_id
+            or self.reviewed_by.role not in CLIENT_ROLES
+            or self.reviewed_by.client_org_id != project.client_org_id
+            or not project.members.filter(
+                user=self.reviewed_by, role='client_reviewer'
+            ).exists()
+        ):
+            raise ValidationError({'reviewed_by': 'Review must be made by an authorized client reviewer.'})

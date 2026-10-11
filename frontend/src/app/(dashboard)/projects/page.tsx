@@ -7,6 +7,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Project, ProjectStatus } from '@/types/projects';
 import { CreateProjectDialog } from '@/components/projects/ProjectForms';
+import { AgentProjectAccessDialog } from '@/components/projects/AgentProjectAccessDialog';
+import { useProjectCapabilities } from '@/hooks/useProjectRequests';
 import { ClientProjectsOverview } from '@/components/projects/ClientProjectsOverview';
 import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
 
@@ -22,11 +24,13 @@ const STATUSES: { value: ProjectStatus | 'all'; label: string }[] = [
 export default function ProjectsPage() {
   const { user } = useAuthStore();
   const isStaff = ['msp_owner', 'msp_manager', 'msp_agent'].includes(user?.role ?? '');
-  const canCreate = ['msp_owner', 'msp_manager'].includes(user?.role ?? '');
+  const { data: capabilities } = useProjectCapabilities();
+  const canCreate = Boolean(capabilities?.can_create_projects);
   const { data: projects = [], isLoading, isError, error, refetch } = useProjects();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<ProjectStatus | 'all'>('all');
   const [createOpen, setCreateOpen] = useState(false);
+  const [accessOpen, setAccessOpen] = useState(false);
 
   const stats = useMemo(() => ({
     all: projects.length,
@@ -50,9 +54,14 @@ export default function ProjectsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
       <ProjectTitleBar title="Projects" eyebrow="Workspace"
-        right={canCreate && <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-          <Plus size={14} /> New Project
-        </button>} />
+        right={<div className="flex flex-wrap items-center gap-2">
+          {capabilities?.can_manage_agent_permissions && <button className="btn-secondary" onClick={() => setAccessOpen(true)}>
+            Agent Project Access
+          </button>}
+          {canCreate && <button className="btn-primary" onClick={() => setCreateOpen(true)}>
+            <Plus size={14} /> New Project
+          </button>}
+        </div>} />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
@@ -142,6 +151,7 @@ export default function ProjectsPage() {
         </div>
       </div>
       {createOpen && <CreateProjectDialog onClose={() => setCreateOpen(false)} />}
+      {accessOpen && <AgentProjectAccessDialog onClose={() => setAccessOpen(false)} />}
     </div>
   );
 }

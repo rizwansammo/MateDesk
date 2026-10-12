@@ -14,6 +14,7 @@ from apps.users.permissions import CLIENT_ROLES, IsTenantUser
 
 from .models import Project, ProjectMember, ProjectMilestone, WorkItem, WorkItemComment
 from .activity import record_activity
+from .lifecycle import activate_on_work_start, project_status_indicators
 from .permissions import can_edit_work, can_manage_project, tenant_for_request, visible_projects
 from .serializers import (
     ProjectCreateSerializer, ProjectUpdateSerializer, ProjectReadSerializer,
@@ -85,7 +86,11 @@ class ProjectListView(APIView):
         org = request.query_params.get('client_org_id')
         if org:
             projects = projects.filter(client_org_id=org)
-        return Response(ProjectReadSerializer(projects, many=True, context={'request': request}).data)
+        rows = list(projects)
+        indicators = project_status_indicators(rows)
+        return Response(ProjectReadSerializer(rows, many=True, context={
+            'request': request, 'status_indicators': indicators,
+        }).data)
 
     def post(self, request):
         from .requests import can_create_project
@@ -122,19 +127,23 @@ class ProjectDetailView(APIView):
         forbidden = {'client_org', 'client_org_id', 'tenant', 'tenant_id', 'key', 'created_by'}
         if forbidden.intersection(request.data):
             raise ValidationError({'detail': 'Project identity and client organization cannot be changed.'})
-        from .delivery import ensure_delivery_unlocked
-        ensure_delivery_unlocked(project)
         data = ProjectUpdateSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         if data.validated_data.get('status') in ('completed', 'archived'):
             raise ValidationError({'status': 'Use the Client Approval and Completion workflow.'})
-        for field, value in data.validated_data.items():
-            setattr(project, field, value)
-        _save_validated(project)
-        record_activity(project, kind='project_updated', actor=request.user,
-                        summary='Project details updated',
-                        visibility='client' if project.visibility == 'client' else 'internal')
-        return Response(ProjectReadSerializer(project).data)
+        with transaction.atomic():
+            # Manual manager decisions share a lock with automatic work progress.
+            # An automated start must never override an On Hold decision.
+            project = Project.objects.select_for_update().get(pk=project.pk)
+            from .delivery import ensure_delivery_unlocked
+            ensure_delivery_unlocked(project)
+            for field, value in data.validated_data.items():
+                setattr(project, field, value)
+            _save_validated(project)
+            record_activity(project, kind='project_updated', actor=request.user,
+                            summary='Project details updated',
+                            visibility='client' if project.visibility == 'client' else 'internal')
+        return Response(ProjectReadSerializer(project, context={'request': request}).data)
 
 
 class ProjectMembersView(APIView):
@@ -256,6 +265,7 @@ class ProjectWorkItemsView(APIView):
                 created_by=request.user, **attrs,
             )
             _save_validated(item)
+            activate_on_work_start(locked, actor=request.user, work_item=item)
             locked.next_item_number += 1
             _save_validated(locked)
             record_activity(locked, kind='work_item_created', actor=request.user,
@@ -273,23 +283,33 @@ class WorkItemDetailView(APIView):
     def patch(self, request, pk):
         item = _work_item(request, pk)
         _edit(request.user, item.project)
-        from .delivery import ensure_delivery_unlocked
-        ensure_delivery_unlocked(item.project)
         data = WorkItemWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         attrs = data.validated_data.copy()
         if attrs.get('visibility') == 'client' and not can_manage_project(request.user, item.project):
             raise PermissionDenied('Only a project manager can publish client visible work.')
-        if 'milestone_id' in attrs:
-            item.milestone = _milestone(item.project, attrs.pop('milestone_id'))
-        if 'assignee_id' in attrs:
-            item.assignee = _assignee(item.project, attrs.pop('assignee_id'))
-        for field, value in attrs.items():
-            setattr(item, field, value)
-        _save_validated(item)
-        record_activity(item.project, kind='work_item_updated', actor=request.user,
-                        summary=f'Work Item updated: {item.ref}', visibility=item.visibility,
-                        work_item=item)
+        with transaction.atomic():
+            # Lock the project before any work change so a concurrent manual
+            # On Hold/Delivery decision cannot be overridden by auto activation.
+            project = Project.objects.select_for_update().get(pk=item.project_id)
+            from .delivery import ensure_delivery_unlocked
+            ensure_delivery_unlocked(project)
+            # Do not join optional FK fields with FOR UPDATE; PostgreSQL
+            # rejects row locks on nullable outer-joined relations.
+            item = WorkItem.objects.select_for_update().get(pk=item.pk, project=project)
+            old_status = item.status
+            if 'milestone_id' in attrs:
+                item.milestone = _milestone(project, attrs.pop('milestone_id'))
+            if 'assignee_id' in attrs:
+                item.assignee = _assignee(project, attrs.pop('assignee_id'))
+            for field, value in attrs.items():
+                setattr(item, field, value)
+            _save_validated(item)
+            if old_status != item.status:
+                activate_on_work_start(project, actor=request.user, work_item=item)
+            record_activity(project, kind='work_item_updated', actor=request.user,
+                            summary=f'Work Item updated: {item.ref}', visibility=item.visibility,
+                            work_item=item)
         return Response(WorkItemReadSerializer(item).data)
 
 

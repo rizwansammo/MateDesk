@@ -69,6 +69,9 @@ export function useCreateProjectSupportTicket(projectId: string) {
     ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['projects', projectId, 'supportTickets'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      void qc.invalidateQueries({ queryKey: ['projects'] });
       void qc.invalidateQueries({ queryKey: ['projects', projectId, 'activity'] });
       void qc.invalidateQueries({ queryKey: ['work-queue'] });
       void qc.invalidateQueries({ queryKey: ['tickets'] });

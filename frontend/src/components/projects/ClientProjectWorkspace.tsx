@@ -11,7 +11,7 @@ import { ProjectSupportPanel } from './ProjectSupportPanel';
 import { ProjectActivityPanel } from './ProjectActivityPanel';
 import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import {
-  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
+  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, formatProjectDate,
 } from './ProjectUI';
 
@@ -62,7 +62,10 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
   return (
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
       <ProjectTitleBar back="/projects" eyebrow={`Client Portal / ${project.key}`}
-        title={project.name} right={<StatePill value={project.status} />} />
+        title={project.name} right={<div className="flex flex-wrap items-center gap-2">
+          <StatePill value={project.status} />
+          <ProjectProgressIndicator indicator={project.status_indicator} />
+        </div>} />
       <nav role="tablist" aria-label="Client project views"
         className="flex gap-1 overflow-x-auto border-b px-3"
         style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-surface)' }}>

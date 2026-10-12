@@ -21,7 +21,7 @@ import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import {
-  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill,
+  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
@@ -189,6 +189,7 @@ export default function ProjectWorkspacePage() {
         right={
           <div className="flex flex-wrap items-center gap-2">
             <StatePill value={project.status} label={project.status === 'on_hold' ? 'On Hold' : undefined} />
+            <ProjectProgressIndicator indicator={project.status_indicator} />
             {canManage && !['completed','archived'].includes(project.status) && <button type="button" className="btn-secondary" onClick={() => setShowSettings(true)}>
               <Settings2 size={13} /> Settings</button>}
             {canEdit && !['completed','archived'].includes(project.status) && <button type="button" className="btn-primary" onClick={() => setShowNewWork(true)}>

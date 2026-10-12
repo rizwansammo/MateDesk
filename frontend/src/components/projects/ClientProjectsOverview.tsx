@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowUpRight, CalendarDays, CheckCircle2, FolderKanban, Search, Plus } from 'lucide-react';
 import type { Project } from '@/types/projects';
 import {
-  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate,
+  ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill, formatProjectDate,
 } from './ProjectUI';
 
 export function ClientProjectsOverview({
@@ -95,7 +95,10 @@ export function ClientProjectsOverview({
                       style={{ color: 'var(--text-2)' }}>{project.description}</p>}
                     <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t pt-3"
                       style={{ borderColor: 'var(--border-subtle)' }}>
-                      <StatePill value={project.status} />
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <StatePill value={project.status} />
+                        <ProjectProgressIndicator indicator={project.status_indicator} />
+                      </span>
                       <span className="inline-flex items-center gap-1 text-[11px]"
                         style={{ color: 'var(--text-3)' }}>
                         <CalendarDays size={12} /> {formatProjectDate(project.due_date)}

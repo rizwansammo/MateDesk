@@ -1,4 +1,5 @@
 export type ProjectStatus = 'planned' | 'active' | 'on_hold' | 'completed' | 'archived';
+export type ProjectStatusIndicator = 'ready_for_delivery' | 'awaiting_client_review' | 'changes_requested';
 export type ProjectVisibility = 'internal' | 'client';
 export type ProjectRole = 'manager' | 'contributor' | 'viewer' | 'client_reviewer';
 export type MilestoneStatus = 'planned' | 'in_progress' | 'completed';
@@ -19,6 +20,7 @@ export interface Project {
   name: string;
   description: string;
   status: ProjectStatus;
+  status_indicator: ProjectStatusIndicator | null;
   visibility: ProjectVisibility;
   start_date: string | null;
   due_date: string | null;

@@ -10,7 +10,7 @@ import { CreateProjectDialog } from '@/components/projects/ProjectForms';
 import { AgentProjectAccessDialog } from '@/components/projects/AgentProjectAccessDialog';
 import { useProjectCapabilities } from '@/hooks/useProjectRequests';
 import { ClientProjectsOverview } from '@/components/projects/ClientProjectsOverview';
-import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
+import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
 
 const STATUSES: { value: ProjectStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All Projects' },
@@ -133,7 +133,10 @@ export default function ProjectsPage() {
                             </td>
                             <td><span className="inline-flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-2)' }}>
                               <Users size={13} /> {project.client_org_name}</span></td>
-                            <td><StatePill value={project.status} /></td>
+                            <td><span className="flex flex-wrap items-center gap-1.5">
+                              <StatePill value={project.status} />
+                              <ProjectProgressIndicator indicator={project.status_indicator} />
+                            </span></td>
                             <td><span className="text-xs" style={{ color: 'var(--text-3)' }}>{project.visibility === 'client' ? 'Client Visible' : 'Internal'}</span></td>
                             <td><span className="text-xs" style={{ color: 'var(--text-3)' }}>{formatProjectDate(project.due_date)}</span></td>
                             <td className="text-right"><Link aria-label={`Open ${project.name}`} href={`/projects/${project.id}`}

@@ -22,6 +22,14 @@ class ProjectReadSerializer(serializers.ModelSerializer):
     can_manage = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
     project_email_enabled = serializers.SerializerMethodField()
+    status_indicator = serializers.SerializerMethodField()
+
+    def get_status_indicator(self, obj):
+        cached = self.context.get('status_indicators')
+        if cached is not None:
+            return cached.get(obj.pk)
+        from .lifecycle import project_status_indicator
+        return project_status_indicator(obj)
 
     def get_project_email_enabled(self, obj):
         return bool(settings.PROJECT_EMAIL_REPLIES_ENABLED)
@@ -51,7 +59,7 @@ class ProjectReadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'client_org', 'client_org_name', 'key', 'name', 'description',
             'my_role', 'can_manage', 'can_edit', 'project_email_enabled',
-            'status', 'visibility', 'start_date', 'due_date', 'completed_at', 'archived_at', 'reopened_at', 'created_at', 'updated_at',
+            'status', 'status_indicator', 'visibility', 'start_date', 'due_date', 'completed_at', 'archived_at', 'reopened_at', 'created_at', 'updated_at',
         ]
 
 

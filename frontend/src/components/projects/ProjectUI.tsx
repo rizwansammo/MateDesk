@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { AlertCircle, ArrowLeft, FolderKanban, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
-import type { ProjectStatus, WorkItemKind, WorkItemPriority, WorkItemStatus } from '@/types/projects';
+import type { ProjectStatus, ProjectStatusIndicator, WorkItemKind, WorkItemPriority, WorkItemStatus } from '@/types/projects';
 
 export const PROJECT_STATES: { value: ProjectStatus; label: string }[] = [
   { value: 'planned', label: 'Planned' },
@@ -50,12 +50,21 @@ const COLORS: Record<string, { fg: string; bg: string }> = {
   low: { fg: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
   archived: { fg: 'var(--text-3)', bg: 'var(--bg-elevated)' },
   cancelled: { fg: 'var(--text-3)', bg: 'var(--bg-elevated)' },
+  ready_for_delivery: { fg: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
+  awaiting_client_review: { fg: 'var(--accent-warn-fg)', bg: 'var(--accent-warn-bg)' },
+  changes_requested: { fg: 'var(--accent-orange-fg)', bg: 'var(--accent-orange-bg)' },
   bug: { fg: 'var(--accent-danger-fg)', bg: 'var(--accent-danger-bg)' },
   task: { fg: 'var(--accent-info-fg)', bg: 'var(--accent-info-bg)' },
   feature: { fg: 'var(--accent-indigo-fg)', bg: 'var(--accent-indigo-bg)' },
   improvement: { fg: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
   internal: { fg: 'var(--text-3)', bg: 'var(--bg-elevated)' },
   client: { fg: 'var(--accent-ok-fg)', bg: 'var(--accent-ok-bg)' },
+};
+
+export const PROJECT_STATUS_INDICATORS: Record<string, string> = {
+  ready_for_delivery: 'Ready for Delivery',
+  awaiting_client_review: 'Awaiting Client Review',
+  changes_requested: 'Changes Requested',
 };
 
 export function StatePill({ value, label }: { value: string; label?: string }) {
@@ -67,6 +76,10 @@ export function StatePill({ value, label }: { value: string; label?: string }) {
     </span>
   );
 }
+export function ProjectProgressIndicator({ indicator }: { indicator: ProjectStatusIndicator | null }) {
+  return indicator ? <StatePill value={indicator} label={PROJECT_STATUS_INDICATORS[indicator]} /> : null;
+}
+
 export function ProjectTitleBar({ title, eyebrow, back, right }: {
   title: string; eyebrow?: string; back?: string; right?: ReactNode;
 }) {

@@ -252,6 +252,8 @@ class TicketCreateLinkedWorkItemView(APIView):
                 created_by=request.user,
                 **attrs,
             ))
+            from .lifecycle import activate_on_work_start
+            activate_on_work_start(project, actor=request.user, work_item=work_item)
             project.next_item_number += 1
             _save_validated(project)
             _save_validated(TicketWorkItemLink(

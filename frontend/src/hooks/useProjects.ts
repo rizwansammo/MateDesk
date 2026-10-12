@@ -83,7 +83,13 @@ export function useCreateMilestone(projectId: string) {
       apiFetch<ProjectMilestone>(`/api/projects/${projectId}/milestones/`, {
         method: 'POST', body: JSON.stringify(payload),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'activity'] });
+    },
   });
 }
 export function useUpdateMilestone(projectId: string) {
@@ -93,7 +99,13 @@ export function useUpdateMilestone(projectId: string) {
       apiFetch<ProjectMilestone>(`/api/projects/${projectId}/milestones/${id}/`, {
         method: 'PATCH', body: JSON.stringify(changes),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'activity'] });
+    },
   });
 }
 export function useCreateWorkItem(projectId: string) {
@@ -103,7 +115,13 @@ export function useCreateWorkItem(projectId: string) {
       apiFetch<WorkItem>(`/api/projects/${projectId}/work-items/`, {
         method: 'POST', body: JSON.stringify(payload),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'workItems'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'workItems'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      void qc.invalidateQueries({ queryKey: ['projects', projectId, 'activity'] });
+    },
   });
 }
 export function useUpdateWorkItem(projectId: string) {
@@ -116,6 +134,9 @@ export function useUpdateWorkItem(projectId: string) {
     onSuccess: (_result, variables) => {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'workItems'] });
       qc.invalidateQueries({ queryKey: ['workItems', variables.id] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
     },
   });
 }
@@ -129,6 +150,9 @@ export function useAddProjectMember(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] });
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'reviewerCandidates'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -140,6 +164,9 @@ export function useRemoveProjectMember(projectId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'members'] });
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'reviewerCandidates'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });
+      qc.invalidateQueries({ queryKey: ['projects', projectId] });
+      qc.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }

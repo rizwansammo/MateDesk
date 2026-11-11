@@ -80,8 +80,8 @@ export default function ProjectRequestDetailPage() {
   const mayClaim = isStaff && !finalized && !row.assigned_agent_id;
 
   return (
-    <div className="h-full overflow-y-auto p-3 md:p-5" style={{ background: 'var(--bg-base)' }}>
-      <div className="mx-auto max-w-[1180px] space-y-4">
+    <div className="h-full min-h-0 overflow-y-auto p-3 md:p-4" style={{ background: 'var(--bg-base)' }}>
+      <div className="w-full min-w-0 space-y-4">
         <Link href="/requests" className="inline-flex items-center gap-2 text-xs"
           style={{ color: 'var(--text-3)' }}><ArrowLeft size={14}/> Tickets</Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -105,8 +105,8 @@ export default function ProjectRequestDetailPage() {
           </div>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <section className="panel space-y-4 p-4">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+          <section className="panel min-w-0 space-y-4 p-4">
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-0)' }}>Request Details</h2>
             <div className="grid grid-cols-1 gap-4 border-b pb-4 sm:grid-cols-2"
               style={{ borderColor: 'var(--border-subtle)' }}>
@@ -123,7 +123,7 @@ export default function ProjectRequestDetailPage() {
             </div>
           </section>
 
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
             {mayClaim && <section className="panel space-y-2 p-4">
               <h2 className="text-sm font-semibold" style={{ color: 'var(--text-0)' }}>Take Ownership</h2>
               <p className="text-xs" style={{ color: 'var(--text-3)' }}>

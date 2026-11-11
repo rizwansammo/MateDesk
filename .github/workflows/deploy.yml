@@ -246,6 +246,23 @@ jobs:
               sleep 10
             done
 
+            # The HTTP API can be healthy while Celery services crash-loop.
+            # Reject a rollout if either background service fails to stay up.
+            sleep 15
+            for service in celery_worker celery_beat; do
+              container_id="$(docker compose ps -a -q "$service")"
+              if [ -z "$container_id" ]; then
+                echo "Background service missing: $service"
+                exit 1
+              fi
+              service_state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
+              restart_count="$(docker inspect --format '{{.RestartCount}}' "$container_id")"
+              if [ "$service_state" != "running" ] || [ "$restart_count" != "0" ]; then
+                echo "Background service unhealthy: $service (state=$service_state restarts=$restart_count)"
+                docker compose logs --tail=80 "$service" || true
+                exit 1
+              fi
+            done
             docker compose ps
 
             # Drop the ephemeral credential; the token is dead after this run anyway.

@@ -13,6 +13,8 @@ uvicorn[standard]==0.30.6
 whitenoise==6.7.0
 reportlab==4.2.5
 celery==5.3.6
+# Keep the last verified Redis 5 compatible broker transport version.
+kombu==5.6.2
 redis==5.0.1
 email-reply-parser==0.5.12
 pyotp==2.9.0

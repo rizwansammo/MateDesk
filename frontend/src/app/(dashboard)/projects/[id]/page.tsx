@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   CalendarDays, Check, ChevronRight, Clock3, Columns3, FolderKanban,
-  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck, Files, FilePenLine,
+  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck, Files, FilePenLine, MessageSquare,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useProjectWorkItems,
@@ -19,6 +19,7 @@ import { ProjectReviewerDialog } from '@/components/projects/ProjectReviewerDial
 import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorkspace';
 import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
+import { ProjectConversationPanel } from '@/components/projects/ProjectConversationPanel';
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import { ProjectScopePanel } from '@/components/projects/ProjectScopePanel';
@@ -28,7 +29,7 @@ import {
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'delivery' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'delivery' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -125,6 +126,9 @@ export default function ProjectWorkspacePage() {
   const removeMember = useRemoveProjectMember(projectId);
 
   const [tab, setTab] = useState<Tab>('overview');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'conversation') setTab('conversation');
+  }, []);
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
   const [priority, setPriority] = useState<PriorityFilter>('all');
@@ -190,6 +194,7 @@ export default function ProjectWorkspacePage() {
     { value: 'scope', label: 'Scope & Changes', Icon: FilePenLine },
     { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
     { value: 'activity', label: 'Activity', Icon: Activity },
+    { value: 'conversation', label: 'Conversation', Icon: MessageSquare },
     { value: 'delivery', label: 'Delivery', Icon: ClipboardCheck },
     ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
   ];
@@ -233,6 +238,7 @@ export default function ProjectWorkspacePage() {
         {tab === 'scope' && <ProjectScopePanel project={project}/>}
         {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
+        {tab === 'conversation' && <ProjectConversationPanel project={project}/>}
         {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
         {tab === 'overview' && (
           <div className="flex w-full min-w-0 flex-col gap-3">

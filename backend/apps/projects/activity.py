@@ -21,6 +21,7 @@ STAFF_ATTENTION_KINDS = (
     'scope_changes_requested',
     'scope_change_requested',
     'delivery_changes_requested',
+    'project_message_client',
 )
 CLIENT_ATTENTION_KINDS = (
     'staff_feedback',
@@ -29,6 +30,7 @@ CLIENT_ATTENTION_KINDS = (
     'scope_proposed',
     'scope_rejected',
     'scope_change_reviewed',
+    'project_message_staff',
 )
 
 
@@ -48,8 +50,13 @@ def record_activity(project, *, kind, actor=None, summary, visibility='internal'
 
 
 def visible_activities(request, project):
+    return visible_activities_for_projects(request, Project.objects.filter(pk=project.pk))
+
+
+def visible_activities_for_projects(request, projects):
+    """Reapply current project, source and membership visibility on every read."""
     user = request.user
-    rows = ProjectActivity.objects.filter(project=project).select_related(
+    rows = ProjectActivity.objects.filter(project__in=projects).select_related(
         'actor', 'work_item', 'ticket', 'milestone',
     )
     if user.role in MSP_ROLES:
@@ -94,6 +101,8 @@ def _events_needing_attention(request, project_ids):
             project__client_org__is_active=True,
         ).filter(
             Q(work_item__isnull=True) | Q(work_item__visibility='client')
+        ).filter(
+            Q(milestone__isnull=True) | Q(milestone__visibility='client')
         ).filter(
             Q(ticket__isnull=True) | Q(ticket__is_internal=False)
         )

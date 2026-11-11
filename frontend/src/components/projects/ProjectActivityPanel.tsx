@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  Activity, ArrowUpRight, CheckCheck, ChevronLeft,
+  Activity, ArrowUpRight, Bell, CheckCheck, ChevronLeft,
   ChevronRight, RefreshCw,
 } from 'lucide-react';
 import {
@@ -44,6 +44,9 @@ export function ProjectActivityPanel({ projectId }: { projectId: string }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Link href="/projects/notifications" className="btn-secondary inline-flex items-center gap-1 text-xs">
+            <Bell size={13}/> Notifications
+          </Link>
           {Boolean(activity?.unread_count) &&
             <button type="button" className="btn-primary gap-1.5" disabled={acknowledge.isPending}
               onClick={() => acknowledge.mutate()}>

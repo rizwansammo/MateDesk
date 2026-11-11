@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, CalendarDays, Check, Clock3, FolderKanban, ListChecks, Search } from 'lucide-react';
 import {
@@ -9,6 +9,7 @@ import {
 import type { Project, WorkItem } from '@/types/projects';
 import { ProjectSupportPanel } from './ProjectSupportPanel';
 import { ProjectActivityPanel } from './ProjectActivityPanel';
+import { ProjectConversationPanel } from './ProjectConversationPanel';
 import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
 import { ProjectScopePanel } from './ProjectScopePanel';
@@ -18,13 +19,16 @@ import {
   WORK_STATES, formatProjectDate,
 } from './ProjectUI';
 
-type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'delivery';
+type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'delivery';
 
 export function ClientProjectWorkspace({ project }: { project: Project }) {
   const projectId = project.id;
   const itemsQuery = useProjectWorkItems(projectId);
   const milestonesQuery = useProjectMilestones(projectId);
   const [tab, setTab] = useState<ClientTab>('overview');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'conversation') setTab('conversation');
+  }, []);
   const [query, setQuery] = useState('');
   const items = useMemo(() =>
     (itemsQuery.data || []).filter(item => item.visibility === 'client'), [itemsQuery.data]);
@@ -81,6 +85,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           { value: 'scope', label: 'Scope & Changes' },
           { value: 'support', label: 'Support Tickets' },
           { value: 'activity', label: 'Activity' },
+          { value: 'conversation', label: 'Conversation' },
           { value: 'delivery', label: 'Delivery & Approval' },
         ] as const).map(item => (
           <button key={item.value} type="button" role="tab"
@@ -102,6 +107,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           {tab === 'scope' && <ProjectScopePanel project={project}/>}
           {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
           {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
+          {tab === 'conversation' && <ProjectConversationPanel project={project}/>}
           {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
           {tab === 'overview' && (
             <>

@@ -20,6 +20,7 @@ from .scope import (
     ProjectScopeChangeRequestsView, ProjectScopeChangeReviewView,
 )
 from .email_views import WorkItemNotificationView
+from .communication import ProjectConversationView, ProjectNotificationInboxView
 
 from .ticket_links import (
     TicketProjectAssociationView, TicketWorkItemLinkView,
@@ -60,6 +61,8 @@ urlpatterns = [
     path('projects/<uuid:pk>/delivery/reopen/', ProjectDeliveryReopenView.as_view(), name='project-delivery-reopen'),
     path('projects/<uuid:pk>/support-tickets/', ProjectSupportTicketsView.as_view(), name='project-support-tickets'),
     path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
+    path('projects/notifications/', ProjectNotificationInboxView.as_view(), name='project-notification-inbox'),
+    path('projects/<uuid:pk>/conversation/', ProjectConversationView.as_view(), name='project-conversation'),
     path('projects/<uuid:pk>/activity/read/', ProjectActivityReadView.as_view(), name='project-activity-read'),
     path('projects/<uuid:pk>/reviewer-candidates/', ProjectReviewerCandidatesView.as_view(), name='project-reviewer-candidates'),
     path('work-items/<uuid:pk>/email-notifications/', WorkItemNotificationView.as_view(), name='work-item-email-notifications'),

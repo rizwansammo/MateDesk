@@ -583,6 +583,8 @@ class ProjectActivity(ValidatedModel):
         ('scope_change_requested', 'Scope Change Requested'),
         ('scope_change_reviewed', 'Scope Change Reviewed'),
         ('scope_rejected', 'Scope Rejected'),
+        ('project_message_client', 'Client Message'),
+        ('project_message_staff', 'Team Update'),
     ]
     VISIBILITY = [('internal', 'Staff Only'), ('client', 'Client Visible')]
 
@@ -1151,3 +1153,63 @@ class WorkItemChecklistEntry(ValidatedModel):
                 raise ValidationError({
                     field: 'Checklist staff must belong to the Project tenant.'
                 })
+
+class ProjectMessage(ValidatedModel):
+    """Immutable project conversation entry, independent from ticket replies."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='conversation_messages')
+    author = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, related_name='project_conversation_messages',
+    )
+    body = models.TextField(max_length=5000)
+    visibility = models.CharField(max_length=20, choices=WorkItem.VISIBILITY, default='internal')
+    request_id = models.UUIDField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_conversation_messages'
+        ordering = ['-created_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'author', 'request_id'], name='uniq_project_message_request',
+            ),
+        ]
+        indexes = [models.Index(fields=['project', '-created_at'], name='project_message_recent')]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError({'detail': 'Project messages are immutable.'})
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if not self.project_id or not self.author_id:
+            return
+        user = self.author
+        project = self.project
+        if project.status == 'archived':
+            raise ValidationError({'project': 'Archived projects are read only.'})
+        if not user.is_active or user.tenant_id != project.tenant_id:
+            raise ValidationError({'author': 'The sender must be an active tenant user.'})
+        if not self.body.strip() or len(self.body) > 5000:
+            raise ValidationError({'body': 'Message must contain 1 to 5000 characters.'})
+        if user.role in CLIENT_ROLES:
+            if (self.visibility != 'client' or project.visibility != 'client'
+                    or not project.client_org.is_active
+                    or user.client_org_id != project.client_org_id
+                    or not project.members.filter(user=user, role='client_reviewer').exists()):
+                raise ValidationError({'author': 'Client message requires an assigned client reviewer.'})
+        elif user.role in MSP_ROLES:
+            if user.role == 'msp_agent' and not project.members.filter(
+                user=user, role__in=['manager', 'contributor'],
+            ).exists():
+                raise ValidationError({'author': 'Only assigned project staff may send messages.'})
+            if self.visibility == 'client' and (
+                project.visibility != 'client' or not project.client_org.is_active
+                or (user.role == 'msp_agent' and not project.members.filter(
+                    user=user, role='manager',
+                ).exists())
+            ):
+                raise ValidationError({'visibility': 'Client updates require a visible project and manager.'})
+        else:
+            raise ValidationError({'author': 'Unsupported project message sender.'})

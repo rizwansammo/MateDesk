@@ -15,7 +15,10 @@ from apps.tenants.models import Tenant
 from apps.tickets.models import Ticket, Reply, SupportGroup
 from apps.tickets.views import MAX_ATTACHMENT_SIZE, _save_attachments
 from apps.users.permissions import CLIENT_ROLES, MSP_ROLES, IsTenantUser
-from .activity import activity_read_cursor, mark_project_activity_read, visible_activities
+from .activity import (
+    activity_read_cursor, mark_project_activity_read, visible_activities,
+    STAFF_ATTENTION_KINDS, CLIENT_ATTENTION_KINDS,
+)
 from .models import TicketProjectAssociation, TicketWorkItemLink, WorkItem
 from .permissions import tenant_for_request, visible_projects
 from .views import _save_validated
@@ -191,9 +194,7 @@ class ProjectActivityView(APIView):
             page = 1
         size = 25
         cursor = activity_read_cursor(request.user, project)
-        relevant = ('client_feedback', 'support_ticket_created', 'client_ticket_reply',
-                    'delivery_approved', 'delivery_changes_requested') \
-            if request.user.role in MSP_ROLES else ('staff_feedback', 'staff_ticket_reply', 'delivery_submitted')
+        relevant = STAFF_ATTENTION_KINDS if request.user.role in MSP_ROLES else CLIENT_ATTENTION_KINDS
         pending = qs.filter(kind__in=relevant).exclude(actor_id=request.user.id)
         if cursor is not None:
             pending = pending.filter(created_at__gt=cursor)

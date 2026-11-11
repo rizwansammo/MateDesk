@@ -17,12 +17,18 @@ STAFF_ATTENTION_KINDS = (
     'support_ticket_created',
     'client_ticket_reply',
     'delivery_approved',
+    'scope_approved',
+    'scope_changes_requested',
+    'scope_change_requested',
     'delivery_changes_requested',
 )
 CLIENT_ATTENTION_KINDS = (
     'staff_feedback',
     'staff_ticket_reply',
     'delivery_submitted',
+    'scope_proposed',
+    'scope_rejected',
+    'scope_change_reviewed',
 )
 
 

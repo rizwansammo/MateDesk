@@ -11,6 +11,10 @@ from .delivery import (ProjectDeliveryView, ProjectDeliverySubmitView,
 from .reviewers import ProjectReviewerCandidatesView
 from .files import (ProjectFilesView, ProjectFileDetailView,
                     ProjectFileVersionsView, ProjectFileDownloadView)
+from .scope import (
+    ProjectScopeView, ProjectScopeProposalsView, ProjectScopeDecisionView,
+    ProjectScopeChangeRequestsView, ProjectScopeChangeReviewView,
+)
 from .email_views import WorkItemNotificationView
 
 from .ticket_links import (
@@ -35,6 +39,11 @@ urlpatterns = [
     path('projects/capabilities/', ProjectCapabilitiesView.as_view(), name='project-capabilities'),
     path('projects/agent-permissions/', ProjectAgentPermissionsView.as_view(), name='project-agent-permissions'),
     path('projects/agent-permissions/<uuid:user_id>/', ProjectAgentPermissionsView.as_view(), name='project-agent-permission-detail'),
+    path('projects/<uuid:pk>/scope/', ProjectScopeView.as_view(), name='project-scope'),
+    path('projects/<uuid:pk>/scope/proposals/', ProjectScopeProposalsView.as_view(), name='project-scope-proposals'),
+    path('projects/<uuid:pk>/scope/proposals/<uuid:proposal_id>/decision/', ProjectScopeDecisionView.as_view(), name='project-scope-decision'),
+    path('projects/<uuid:pk>/scope/change-requests/', ProjectScopeChangeRequestsView.as_view(), name='project-scope-change-requests'),
+    path('projects/<uuid:pk>/scope/change-requests/<uuid:change_id>/review/', ProjectScopeChangeReviewView.as_view(), name='project-scope-change-review'),
     path('projects/<uuid:pk>/files/', ProjectFilesView.as_view(), name='project-files'),
     path('projects/<uuid:pk>/files/<uuid:document_id>/', ProjectFileDetailView.as_view(), name='project-file-detail'),
     path('projects/<uuid:pk>/files/<uuid:document_id>/versions/', ProjectFileVersionsView.as_view(), name='project-file-versions'),

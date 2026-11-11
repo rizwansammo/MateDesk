@@ -11,12 +11,13 @@ import { ProjectSupportPanel } from './ProjectSupportPanel';
 import { ProjectActivityPanel } from './ProjectActivityPanel';
 import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
+import { ProjectScopePanel } from './ProjectScopePanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, formatProjectDate,
 } from './ProjectUI';
 
-type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'support' | 'activity' | 'delivery';
+type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'delivery';
 
 export function ClientProjectWorkspace({ project }: { project: Project }) {
   const projectId = project.id;
@@ -75,6 +76,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           { value: 'work', label: 'Work Items' },
           { value: 'milestones', label: 'Milestones' },
           { value: 'files', label: 'Files' },
+          { value: 'scope', label: 'Scope & Changes' },
           { value: 'support', label: 'Support Tickets' },
           { value: 'activity', label: 'Activity' },
           { value: 'delivery', label: 'Delivery & Approval' },
@@ -95,6 +97,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           {milestonesQuery.isError && <ProjectError error={milestonesQuery.error}
             retry={() => { void milestonesQuery.refetch(); }} />}
           {tab === 'files' && <ProjectFilesPanel project={project}/>}
+          {tab === 'scope' && <ProjectScopePanel project={project}/>}
           {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
           {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
           {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}

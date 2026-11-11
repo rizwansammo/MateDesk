@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   CalendarDays, Check, ChevronRight, Clock3, Columns3, FolderKanban,
-  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck,
+  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck, Files,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useProjectWorkItems,
@@ -20,12 +20,13 @@ import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorks
 import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
+import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'support' | 'activity' | 'delivery' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'support' | 'activity' | 'delivery' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -177,6 +178,7 @@ export default function ProjectWorkspacePage() {
     { value: 'board', label: 'Board', Icon: Columns3 },
     { value: 'list', label: 'List', Icon: LayoutList },
     { value: 'milestones', label: 'Milestones', Icon: CalendarDays },
+    { value: 'files', label: 'Files', Icon: Files },
     { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
     { value: 'activity', label: 'Activity', Icon: Activity },
     { value: 'delivery', label: 'Delivery', Icon: ClipboardCheck },
@@ -218,6 +220,7 @@ export default function ProjectWorkspacePage() {
         {patchMilestone.error && <div className="mb-3"><ProjectError error={patchMilestone.error} /></div>}
         {removeMember.error && <div className="mb-3"><ProjectError error={removeMember.error} /></div>}
 
+        {tab === 'files' && <ProjectFilesPanel project={project}/>}
         {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
         {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}

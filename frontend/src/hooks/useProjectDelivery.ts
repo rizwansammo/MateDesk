@@ -42,6 +42,7 @@ export interface ProjectDelivery {
 function invalidateDelivery(qc: ReturnType<typeof useQueryClient>, id: string) {
   void qc.invalidateQueries({ queryKey: ['projects', id] });
   void qc.invalidateQueries({ queryKey: ['projects', id, 'delivery'] });
+  void qc.invalidateQueries({ queryKey: ['projects', id, 'files'] });
   void qc.invalidateQueries({ queryKey: ['projects', id, 'activity'] });
   void qc.invalidateQueries({ queryKey: ['projects'] });
   void qc.invalidateQueries({ queryKey: ['work-queue'] });

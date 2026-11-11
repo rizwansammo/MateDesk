@@ -10,6 +10,7 @@ import {
   useDecideProjectDelivery, useDeliveryAction,
 } from '@/hooks/useProjectDelivery';
 import { ProjectError, ProjectLoading, StatePill } from './ProjectUI';
+import { ProjectFilesPanel } from './ProjectFilesPanel';
 
 export function ProjectDeliveryPanel({ project }: { project: Project }) {
   const { data, isLoading, error, refetch } = useProjectDelivery(project.id);
@@ -269,6 +270,8 @@ export function ProjectDeliveryPanel({ project }: { project: Project }) {
           style={{ borderColor: 'var(--accent-danger-fg)', color: 'var(--accent-danger-fg)' }}>
           {localError || submit.error?.message || decide.error?.message || lifecycle.error?.message}
         </div>}
+
+      <ProjectFilesPanel project={project} category="delivery" uploadLocked={submitted || approved}/>
 
       {data.history.length > 1 && (
         <section className="panel p-4">

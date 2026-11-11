@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 from apps.users.permissions import CLIENT_ROLES, MSP_ROLES, IsTenantUser
 
 from .activity import record_activity
-from .models import Project, ProjectDeliveryReview, ProjectMember, WorkItem
+from .models import Project, ProjectDeliveryReview, ProjectMember, WorkItem, ProjectDocument
 from .permissions import can_manage_project, visible_projects
 from .views import _save_validated
 
@@ -201,6 +201,12 @@ class ProjectDeliverySubmitView(APIView):
                 submitted_by=request.user,
             )
             _save_validated(review)
+            # Snapshot each draft Delivery File into this immutable review round.
+            # Future revisions must be uploaded as new draft files for the next round.
+            ProjectDocument.objects.filter(
+                project=locked, category='delivery', delivery_review__isnull=True,
+                archived_at__isnull=True,
+            ).update(delivery_review=review)
             record_activity(
                 locked, kind='delivery_submitted', actor=request.user,
                 summary=f'Delivery round {next_round} submitted for Client Review',

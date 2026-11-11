@@ -33,6 +33,9 @@ function EditWorkItemDialog({ item, projectId, canManage, onClose }: {
   const [description, setDescription] = useState(item.description);
   const [kind, setKind] = useState<WorkItemKind>(item.kind);
   const [visibility, setVisibility] = useState<WorkVisibility>(item.visibility);
+  const [startDate, setStartDate] = useState(item.start_date || '');
+  const [dueDate, setDueDate] = useState(item.due_date || '');
+  const [estimatedHours, setEstimatedHours] = useState(String(item.estimated_minutes / 60));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,6 +43,8 @@ function EditWorkItemDialog({ item, projectId, canManage, onClose }: {
       await update.mutateAsync({
         id: item.id, changes: {
           title: title.trim(), description, kind,
+          start_date: startDate || null, due_date: dueDate || null,
+          estimated_minutes: Math.round(Number(estimatedHours || 0) * 60),
           ...(canManage ? { visibility } : {}),
         },
       });
@@ -77,6 +82,24 @@ function EditWorkItemDialog({ item, projectId, canManage, onClose }: {
               <option value="client">Client Visible</option>
             </select>
           </div>}
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label className="label" htmlFor="edit-work-start">Start Date</label>
+            <input id="edit-work-start" type="date" className="input" value={startDate}
+              max={dueDate || undefined} onChange={e => setStartDate(e.target.value)}/>
+          </div>
+          <div>
+            <label className="label" htmlFor="edit-work-due">Due Date</label>
+            <input id="edit-work-due" type="date" className="input" value={dueDate}
+              min={startDate || undefined} onChange={e => setDueDate(e.target.value)}/>
+          </div>
+          <div>
+            <label className="label" htmlFor="edit-work-estimate">Estimated Hours</label>
+            <input id="edit-work-estimate" type="number" min="0" max="16666"
+              step="0.25" className="input" value={estimatedHours}
+              onChange={e => setEstimatedHours(e.target.value)}/>
+          </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <button className="btn-secondary" type="button" disabled={update.isPending} onClick={onClose}>Cancel</button>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   CalendarDays, Check, ChevronRight, Clock3, Columns3, FolderKanban,
-  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck, Files, FilePenLine, MessageSquare,
+  LayoutList, ListChecks, Plus, Search, Settings2, Shield, Trash2, Users, LifeBuoy, Activity, ClipboardCheck, Files, FilePenLine, MessageSquare, BarChart3, CalendarRange, Copy,
 } from 'lucide-react';
 import {
   useProject, useProjectMembers, useProjectMilestones, useProjectWorkItems,
@@ -21,6 +21,9 @@ import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
 import { ProjectConversationPanel } from '@/components/projects/ProjectConversationPanel';
 import { ProjectTimePanel } from '@/components/projects/ProjectTimePanel';
+import { ProjectReportsPanel, ProjectTimelinePanel } from '@/components/projects/ProjectInsightsPanel';
+import { ProjectTemplatesPanel } from '@/components/projects/ProjectTemplatesPanel';
+import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import { ProjectScopePanel } from '@/components/projects/ProjectScopePanel';
@@ -30,7 +33,7 @@ import {
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'time' | 'delivery' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'time' | 'timeline' | 'reports' | 'templates' | 'delivery' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -119,6 +122,8 @@ export default function ProjectWorkspacePage() {
   const project = projectQuery.data;
   const canManage = Boolean(project?.can_manage);
   const canEdit = Boolean(project?.can_edit);
+  const role = useAuthStore(state => state.user?.role);
+  const canTemplates = canManage && (role === 'msp_owner' || role === 'msp_manager');
   const itemsQuery = useProjectWorkItems(projectId);
   const milestonesQuery = useProjectMilestones(projectId);
   const membersQuery = useProjectMembers(projectId, canManage);
@@ -128,7 +133,10 @@ export default function ProjectWorkspacePage() {
 
   const [tab, setTab] = useState<Tab>('overview');
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'conversation') setTab('conversation');
+    const selected = new URLSearchParams(window.location.search).get('tab');
+    if (selected === 'conversation' || selected === 'reports' || selected === 'timeline') {
+      setTab(selected);
+    }
   }, []);
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
@@ -196,6 +204,9 @@ export default function ProjectWorkspacePage() {
     { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
     { value: 'activity', label: 'Activity', Icon: Activity },
     { value: 'conversation', label: 'Conversation', Icon: MessageSquare },
+    { value: 'timeline', label: 'Timeline', Icon: CalendarRange },
+    { value: 'reports', label: 'Reports', Icon: BarChart3 },
+    ...(canTemplates ? [{ value: 'templates' as const, label: 'Templates', Icon: Copy }] : []),
     ...(canEdit ? [{ value: 'time' as const, label: 'Time & Billing', Icon: Clock3 }] : []),
     { value: 'delivery', label: 'Delivery', Icon: ClipboardCheck },
     ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
@@ -241,6 +252,9 @@ export default function ProjectWorkspacePage() {
         {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
         {tab === 'conversation' && <ProjectConversationPanel project={project}/>}
+        {tab === 'timeline' && <ProjectTimelinePanel projectId={projectId}/>}
+        {tab === 'reports' && <ProjectReportsPanel projectId={projectId}/>}
+        {tab === 'templates' && canTemplates && <ProjectTemplatesPanel project={project} milestonesCount={milestones.length} workCount={items.length}/>}
         {tab === 'time' && canEdit && <ProjectTimePanel project={project} workItems={items}/>}
         {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
         {tab === 'overview' && (
@@ -396,6 +410,24 @@ export default function ProjectWorkspacePage() {
                           <CalendarDays size={12} /> {formatProjectDate(milestone.due_date)} · {related.length} work items
                         </span>
                       </div>
+                      {canManage && <>
+                        <label className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                          Start
+                          <input type="date" className="input mt-1" aria-label={`Start date for ${milestone.name}`}
+                            value={milestone.start_date || ''} max={milestone.due_date || undefined}
+                            disabled={patchMilestone.isPending} onChange={e => patchMilestone.mutate({
+                              id: milestone.id, changes: { start_date: e.target.value || null },
+                            })}/>
+                        </label>
+                        <label className="text-[11px]" style={{ color: 'var(--text-3)' }}>
+                          Due
+                          <input type="date" className="input mt-1" aria-label={`Due date for ${milestone.name}`}
+                            value={milestone.due_date || ''} min={milestone.start_date || undefined}
+                            disabled={patchMilestone.isPending} onChange={e => patchMilestone.mutate({
+                              id: milestone.id, changes: { due_date: e.target.value || null },
+                            })}/>
+                        </label>
+                      </>}
                       {canManage && (
                         <select className="select w-auto" aria-label={`Visibility for ${milestone.name}`}
                           disabled={patchMilestone.isPending} value={milestone.visibility}

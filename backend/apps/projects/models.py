@@ -203,6 +203,30 @@ class WorkItem(ValidatedModel):
             or self.created_by.role not in MSP_ROLES
         ):
             raise ValidationError({'created_by': 'Creator must be staff from this tenant.'})
+        # This applies to every normal model save, including bulk work paths
+        # that use WorkItem.save(), not only the Work Item REST PATCH route.
+        if self.pk and not self._state.adding:
+            if self.status in ('in_progress', 'in_review', 'done'):
+                if WorkItemDependency.objects.filter(work_item_id=self.pk).exclude(
+                    prerequisite__status='done',
+                ).exists():
+                    raise ValidationError({
+                        'status': 'Complete all prerequisite Work Items before starting or finishing this item.'
+                    })
+            if self.status == 'done' and WorkItemChecklistEntry.objects.filter(
+                work_item_id=self.pk, is_done=False,
+            ).exists():
+                raise ValidationError({
+                    'status': 'Complete the checklist before marking this Work Item Done.'
+                })
+            previous = WorkItem.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+            if previous == 'done' and self.status != 'done':
+                if WorkItemDependency.objects.filter(prerequisite_id=self.pk).filter(
+                    work_item__status__in=('in_progress', 'in_review', 'done'),
+                ).exists():
+                    raise ValidationError({
+                        'status': 'A dependent Work Item is underway or completed. Reopen it first.'
+                    })
 
 
 class WorkItemComment(ValidatedModel):
@@ -1004,3 +1028,126 @@ class ProjectScopeVersion(ValidatedModel):
             raise ValidationError({
                 'approved_by': 'Only an assigned Client Reviewer may approve Project Scope.'
             })
+
+
+class WorkItemDependency(ValidatedModel):
+    """Directed prerequisite edge: work_item waits for prerequisite to be Done."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, related_name='dependency_edges',
+    )
+    prerequisite = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, related_name='dependent_edges',
+    )
+    created_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='created_work_item_dependencies',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_work_item_dependencies'
+        ordering = ['created_at', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['work_item', 'prerequisite'], name='uniq_work_item_prerequisite',
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(work_item=models.F('prerequisite')),
+                name='work_dep_no_self',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['prerequisite'], name='work_dep_prerequisite_idx'),
+        ]
+
+    def clean(self):
+        if not self.work_item_id or not self.prerequisite_id:
+            return
+        if self.work_item_id == self.prerequisite_id:
+            raise ValidationError({'prerequisite': 'A Work Item cannot depend on itself.'})
+        if self.work_item.project_id != self.prerequisite.project_id:
+            raise ValidationError({'prerequisite': 'Dependencies must belong to the same Project.'})
+        if self._state.adding and self.work_item.status in ('done', 'cancelled'):
+            raise ValidationError({'work_item': 'Reopen the Work Item before changing its dependencies.'})
+        if (self._state.adding and self.prerequisite.status != 'done'
+                and self.work_item.status in ('in_progress', 'in_review')):
+            raise ValidationError({
+                'prerequisite': 'Move the dependent Work Item to To Do before adding an unfinished prerequisite.'
+            })
+        if self.created_by_id and (
+            self.created_by.tenant_id != self.work_item.project.tenant_id
+            or not self.created_by.is_active
+            or self.created_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'created_by': 'Only active Project staff may add dependencies.'})
+        # The caller serializes writes under the Project row lock. A new edge
+        # A -> B is invalid if B can already reach A via prerequisite edges.
+        seen = set()
+        frontier = {self.prerequisite_id}
+        while frontier:
+            if self.work_item_id in frontier:
+                raise ValidationError({'prerequisite': 'Circular dependencies are not allowed.'})
+            seen.update(frontier)
+            frontier = set(
+                WorkItemDependency.objects.filter(work_item_id__in=frontier)
+                .exclude(pk=self.pk).values_list('prerequisite_id', flat=True)
+            ) - seen
+
+
+class WorkItemChecklistEntry(ValidatedModel):
+    """Single checklist line. Completion is manual and audited."""
+
+    VISIBILITY = [('internal', 'Internal'), ('client', 'Client Visible')]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    work_item = models.ForeignKey(
+        WorkItem, on_delete=models.CASCADE, related_name='checklist_entries',
+    )
+    title = models.CharField(max_length=255)
+    is_done = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(default=0)
+    visibility = models.CharField(max_length=20, choices=VISIBILITY, default='internal')
+    created_by = models.ForeignKey(
+        'users.User', null=True, on_delete=models.SET_NULL,
+        related_name='created_work_item_checklist_entries',
+    )
+    completed_by = models.ForeignKey(
+        'users.User', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='completed_work_item_checklist_entries',
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_work_item_checklist'
+        ordering = ['position', 'created_at', 'id']
+        indexes = [
+            models.Index(fields=['work_item', 'position'], name='work_checklist_position'),
+        ]
+
+    def clean(self):
+        if not self.work_item_id:
+            return
+        project = self.work_item.project
+        if self.work_item.status in ('done', 'cancelled'):
+            raise ValidationError({
+                'work_item': 'Reopen the Work Item before editing its checklist.'
+            })
+        if self.visibility == 'client' and self.work_item.visibility != 'client':
+            raise ValidationError({
+                'visibility': 'A private Work Item cannot have a Client Visible checklist line.'
+            })
+        for field in ('created_by', 'completed_by'):
+            user = getattr(self, field, None)
+            if user and (
+                user.tenant_id != project.tenant_id
+                or user.role not in MSP_ROLES
+                or (self._state.adding and not user.is_active)
+            ):
+                # Existing audit history must remain editable even if the
+                # original staff member was later deactivated.
+                raise ValidationError({
+                    field: 'Checklist staff must belong to the Project tenant.'
+                })

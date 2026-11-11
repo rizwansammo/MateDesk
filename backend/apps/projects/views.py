@@ -235,13 +235,15 @@ class ProjectWorkItemsView(APIView):
 
     def get(self, request, pk):
         project = _project(request, pk)
-        items = project.work_items.select_related('project', 'milestone', 'assignee')
+        items = project.work_items.select_related('project', 'milestone', 'assignee').prefetch_related(
+            'dependency_edges__prerequisite', 'checklist_entries',
+        )
         if request.user.role in CLIENT_ROLES:
             items = items.filter(visibility='client')
         milestone_id = request.query_params.get('milestone_id')
         if milestone_id:
             items = items.filter(milestone_id=milestone_id)
-        return Response(WorkItemReadSerializer(items, many=True).data)
+        return Response(WorkItemReadSerializer(items, many=True, context={'request': request}).data)
 
     def post(self, request, pk):
         project = _project(request, pk)
@@ -271,14 +273,14 @@ class ProjectWorkItemsView(APIView):
             record_activity(locked, kind='work_item_created', actor=request.user,
                             summary=f'Work Item added: {item.ref}', visibility=item.visibility,
                             work_item=item)
-        return Response(WorkItemReadSerializer(item).data, status=status.HTTP_201_CREATED)
+        return Response(WorkItemReadSerializer(item, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 
 class WorkItemDetailView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request, pk):
-        return Response(WorkItemReadSerializer(_work_item(request, pk)).data)
+        return Response(WorkItemReadSerializer(_work_item(request, pk), context={'request': request}).data)
 
     def patch(self, request, pk):
         item = _work_item(request, pk)
@@ -310,7 +312,7 @@ class WorkItemDetailView(APIView):
             record_activity(project, kind='work_item_updated', actor=request.user,
                             summary=f'Work Item updated: {item.ref}', visibility=item.visibility,
                             work_item=item)
-        return Response(WorkItemReadSerializer(item).data)
+        return Response(WorkItemReadSerializer(item, context={'request': request}).data)
 
 
 class WorkItemCommentsView(APIView):

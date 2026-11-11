@@ -120,13 +120,60 @@ class WorkItemReadSerializer(serializers.ModelSerializer):
     milestone_id = serializers.UUIDField(read_only=True)
     assignee_id = serializers.UUIDField(read_only=True)
     assignee_name = serializers.CharField(source='assignee.full_name', read_only=True, allow_null=True)
+    is_blocked = serializers.SerializerMethodField()
+    blocked_by_count = serializers.SerializerMethodField()
+    checklist_total = serializers.SerializerMethodField()
+    checklist_completed = serializers.SerializerMethodField()
+
+    def _progress(self, obj):
+        cached = getattr(obj, '_advanced_progress', None)
+        if cached is not None:
+            return cached
+        links = list(obj.dependency_edges.all())
+        unfinished = [
+            edge for edge in links if edge.prerequisite.status != 'done'
+        ] if obj.status not in ('done', 'cancelled') else []
+        all_entries = list(obj.checklist_entries.all())
+        request = self.context.get('request')
+        is_client = False
+        if request is not None:
+            from apps.users.permissions import CLIENT_ROLES
+            is_client = request.user.role in CLIENT_ROLES
+            if is_client:
+                all_entries = [entry for entry in all_entries if entry.visibility == 'client']
+        progress = {
+            'is_blocked': bool(unfinished),
+            # Client sees the generic indicator, not the number of hidden staff Tasks.
+            'blocked_by_count': sum(
+                1 for edge in unfinished if not is_client or edge.prerequisite.visibility == 'client'
+            ),
+            'checklist_total': len(all_entries),
+            'checklist_completed': sum(1 for entry in all_entries if entry.is_done),
+        }
+        obj._advanced_progress = progress
+        return progress
+
+    def get_is_blocked(self, obj):
+        return self._progress(obj)['is_blocked']
+
+    def get_blocked_by_count(self, obj):
+        # No prerequisite titles, IDs, or confidential checklist text exposed.
+        return self._progress(obj)['blocked_by_count']
+
+    def get_checklist_total(self, obj):
+        return self._progress(obj)['checklist_total']
+
+    def get_checklist_completed(self, obj):
+        return self._progress(obj)['checklist_completed']
 
     class Meta:
         model = WorkItem
         fields = [
             'id', 'project', 'ref', 'number', 'milestone_id',
             'title', 'description', 'kind', 'status', 'priority', 'visibility',
-            'assignee_id', 'assignee_name', 'due_date', 'position', 'created_at', 'updated_at',
+            'assignee_id', 'assignee_name', 'due_date', 'position',
+            'is_blocked', 'blocked_by_count', 'checklist_total', 'checklist_completed',
+            'created_at', 'updated_at',
         ]
 
 

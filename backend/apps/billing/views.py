@@ -1,6 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import date
 
+from django.db import transaction
 from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,6 +18,16 @@ from .pdf import generate_invoice_pdf
 
 def _tenant(request):
     return getattr(request, 'tenant', None) or getattr(request.user, 'tenant', None)
+
+def _can_manage_project_invoice(user, invoice):
+    """Legacy Ticket invoices remain available to staff; Project invoices need management rights."""
+    from apps.projects.models import ProjectTimeInvoiceRun
+    from apps.projects.permissions import can_manage_project
+    run = ProjectTimeInvoiceRun.objects.select_related('project').filter(
+        invoice=invoice,
+    ).first()
+    return run is None or can_manage_project(user, run.project)
+
 
 
 def _next_invoice_number(tenant) -> str:
@@ -108,13 +119,22 @@ class InvoiceListView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'MSP staff only.'}, status=403)
         tenant = _tenant(request)
         if not tenant:
             return Response({'detail': 'No tenant.'}, status=400)
         qs = (Invoice.objects
               .filter(tenant=tenant)
-              .select_related('org')
+              .select_related('org', 'project_time_run')
               .prefetch_related('line_items'))
+        if request.user.role == 'msp_agent':
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(project_time_run__isnull=True) |
+                Q(project_time_run__project__members__user=request.user,
+                  project_time_run__project__members__role='manager')
+            ).distinct()
         org_id = request.query_params.get('org_id')
         if org_id:
             qs = qs.filter(org_id=org_id)
@@ -198,21 +218,24 @@ class InvoiceListView(APIView):
         tax_amount = (subtotal * tax_rate / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         total      = subtotal + tax_amount
 
-        invoice = Invoice.objects.create(
-            tenant         = tenant,
-            org            = org,
-            invoice_number = _next_invoice_number(tenant),
-            period_from    = period_from,
-            period_to      = period_to,
-            currency       = rate.currency,
-            subtotal       = subtotal,
-            tax_rate       = tax_rate,
-            tax_amount     = tax_amount,
-            total          = total,
-        )
-
-        for item_data in line_items_data:
-            InvoiceLineItem.objects.create(invoice=invoice, **item_data)
+        # Serialize invoice number allocation with Project Time invoice batches.
+        with transaction.atomic():
+            from apps.tenants.models import Tenant
+            Tenant.objects.select_for_update().get(pk=tenant.pk)
+            invoice = Invoice.objects.create(
+                tenant         = tenant,
+                org            = org,
+                invoice_number = _next_invoice_number(tenant),
+                period_from    = period_from,
+                period_to      = period_to,
+                currency       = rate.currency,
+                subtotal       = subtotal,
+                tax_rate       = tax_rate,
+                tax_amount     = tax_amount,
+                total          = total,
+            )
+            for item_data in line_items_data:
+                InvoiceLineItem.objects.create(invoice=invoice, **item_data)
 
         inv = (Invoice.objects
                .filter(pk=invoice.pk)
@@ -237,9 +260,19 @@ class InvoiceDetailView(APIView):
         invoice = self._get(request, pk)
         if not invoice:
             return Response({'detail': 'Not found.'}, status=404)
+        if not _can_manage_project_invoice(request.user, invoice):
+            return Response({'detail': 'Project Manager access required.'}, status=403)
         if request.user.role not in MSP_ROLES:
             return Response({'detail': 'MSP staff only.'}, status=403)
         new_status = request.data.get('status')
+        if hasattr(invoice, 'project_time_run'):
+            allowed = {'draft': ('draft', 'sent', 'paid'),
+                       'sent': ('sent', 'paid'),
+                       'paid': ('paid',)}
+            if new_status not in allowed[invoice.status]:
+                return Response(
+                    {'detail': 'Sent or paid Project invoices cannot return to Draft.'}, status=409,
+                )
         if new_status not in ('draft', 'sent', 'paid'):
             return Response({'detail': 'Invalid status.'}, status=400)
         invoice.status = new_status
@@ -250,8 +283,15 @@ class InvoiceDetailView(APIView):
         invoice = self._get(request, pk)
         if not invoice:
             return Response({'detail': 'Not found.'}, status=404)
+        if not _can_manage_project_invoice(request.user, invoice):
+            return Response({'detail': 'Project Manager access required.'}, status=403)
         if request.user.role not in MSP_ROLES:
             return Response({'detail': 'MSP staff only.'}, status=403)
+        if hasattr(invoice, 'project_time_run'):
+            return Response(
+                {'detail': 'Use the Project Time invoice Void action for draft invoices.'},
+                status=409,
+            )
         invoice.delete()
         return Response(status=204)
 
@@ -260,6 +300,8 @@ class InvoicePDFView(APIView):
     permission_classes = [IsAuthenticated, IsTenantUser]
 
     def get(self, request, pk):
+        if request.user.role not in MSP_ROLES:
+            return Response({'detail': 'MSP staff only.'}, status=403)
         tenant  = _tenant(request)
         invoice = (Invoice.objects
                    .filter(id=pk, tenant=tenant)
@@ -268,6 +310,8 @@ class InvoicePDFView(APIView):
                    .first())
         if not invoice:
             return Response({'detail': 'Not found.'}, status=404)
+        if not _can_manage_project_invoice(request.user, invoice):
+            return Response({'detail': 'Project Manager access required.'}, status=403)
 
         try:
             pdf_bytes = generate_invoice_pdf(invoice)

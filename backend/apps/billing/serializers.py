@@ -32,10 +32,14 @@ class InvoiceSerializer(serializers.ModelSerializer):
     org_id     = serializers.UUIDField(source='org.id',   read_only=True)
     org_name   = serializers.CharField(source='org.name', read_only=True)
     line_items = InvoiceLineItemSerializer(many=True, read_only=True)
+    source = serializers.SerializerMethodField()
+
+    def get_source(self, invoice):
+        return 'project_time' if hasattr(invoice, 'project_time_run') else 'ticket'
 
     class Meta:
         model  = Invoice
-        fields = ['id', 'invoice_number', 'org_id', 'org_name',
+        fields = ['id', 'invoice_number', 'source', 'org_id', 'org_name',
                   'period_from', 'period_to', 'status', 'currency',
                   'subtotal', 'tax_rate', 'tax_amount', 'total',
                   'line_items', 'created_at']

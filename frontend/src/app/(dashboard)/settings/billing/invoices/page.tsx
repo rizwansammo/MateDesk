@@ -40,6 +40,7 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
 
   function cycleStatus(e: React.MouseEvent) {
     e.stopPropagation();
+    if (invoice.source === 'project_time' && invoice.status === 'paid') return;
     updateStatus.mutate({ id: invoice.id, status: st.next });
   }
 
@@ -87,10 +88,12 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
           <span
             style={{
               fontSize: 11, fontWeight: 600, color: st.color, background: st.bg,
-              padding: '2px 8px', cursor: 'pointer', display: 'inline-block',
+              padding: '2px 8px', cursor: invoice.source === 'project_time' && invoice.status === 'paid' ? 'default' : 'pointer', display: 'inline-block',
               border: `1px solid ${st.color}30`,
             }}
-            title="Click to change status"
+            title={invoice.source === 'project_time' && invoice.status === 'paid'
+              ? 'Paid Project invoices are final'
+              : 'Click to change status'}
           >
             {st.label}
           </span>
@@ -111,7 +114,7 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
           >
             {downloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
           </button>
-          <button
+          {invoice.source !== 'project_time' && <button
             onClick={() => onDelete(invoice.id)}
             title="Delete invoice"
             style={{
@@ -122,7 +125,10 @@ function InvoiceRow({ invoice, onDelete }: { invoice: Invoice; onDelete: (id: st
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-md)'; }}
           >
             <Trash2 size={11} />
-          </button>
+          </button>}
+          {invoice.source === 'project_time' && <span
+            className="text-[10px]" title="Void a draft invoice from the Project Time & Billing tab"
+            style={{ color: 'var(--text-3)' }}>Project Time</span>}
         </div>
       </div>
 

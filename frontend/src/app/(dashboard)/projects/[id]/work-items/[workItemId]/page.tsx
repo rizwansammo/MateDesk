@@ -16,6 +16,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectEmailDialog } from '@/components/projects/ProjectEmailDialog';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import { WorkItemAdvancedPanel, WorkItemProgressBadge } from '@/components/projects/WorkItemAdvancedPanel';
+import { ProjectTimePanel } from '@/components/projects/ProjectTimePanel';
 import type {
   WorkItem, WorkItemKind, WorkItemPriority, WorkItemStatus, WorkVisibility,
 } from '@/types/projects';
@@ -191,6 +192,7 @@ export default function WorkItemDetailPage() {
               </section>
 
               <WorkItemAdvancedPanel project={project} item={item}/>
+              {canEdit && <ProjectTimePanel project={project} workItems={[item]} workItemId={item.id}/>}
               <ProjectFilesPanel project={project} category="work_item" workItemId={item.id}/>
 
               <section className="panel">

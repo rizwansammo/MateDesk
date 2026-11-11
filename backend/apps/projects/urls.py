@@ -21,6 +21,11 @@ from .scope import (
 )
 from .email_views import WorkItemNotificationView
 from .communication import ProjectConversationView, ProjectNotificationInboxView
+from .time_tracking import (
+    ProjectTimeEntriesView, ProjectTimeEntryDetailView, ProjectTimeReviewView,
+    ProjectTimeSummaryView, ProjectTimeRateView, ProjectTimeInvoicesView,
+    ProjectTimeInvoiceVoidView,
+)
 
 from .ticket_links import (
     TicketProjectAssociationView, TicketWorkItemLinkView,
@@ -63,6 +68,13 @@ urlpatterns = [
     path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
     path('projects/notifications/', ProjectNotificationInboxView.as_view(), name='project-notification-inbox'),
     path('projects/<uuid:pk>/conversation/', ProjectConversationView.as_view(), name='project-conversation'),
+    path('projects/<uuid:pk>/time-entries/', ProjectTimeEntriesView.as_view(), name='project-time-entries'),
+    path('projects/<uuid:pk>/time-entries/<uuid:entry_id>/', ProjectTimeEntryDetailView.as_view(), name='project-time-entry-detail'),
+    path('projects/<uuid:pk>/time-entries/<uuid:entry_id>/review/', ProjectTimeReviewView.as_view(), name='project-time-review'),
+    path('projects/<uuid:pk>/time-summary/', ProjectTimeSummaryView.as_view(), name='project-time-summary'),
+    path('projects/<uuid:pk>/time-rate/', ProjectTimeRateView.as_view(), name='project-time-rate'),
+    path('projects/<uuid:pk>/time-invoices/', ProjectTimeInvoicesView.as_view(), name='project-time-invoices'),
+    path('projects/<uuid:pk>/time-invoices/<uuid:invoice_id>/void/', ProjectTimeInvoiceVoidView.as_view(), name='project-time-invoice-void'),
     path('projects/<uuid:pk>/activity/read/', ProjectActivityReadView.as_view(), name='project-activity-read'),
     path('projects/<uuid:pk>/reviewer-candidates/', ProjectReviewerCandidatesView.as_view(), name='project-reviewer-candidates'),
     path('work-items/<uuid:pk>/email-notifications/', WorkItemNotificationView.as_view(), name='work-item-email-notifications'),

@@ -19,6 +19,18 @@ class ValidatedModel(models.Model):
         return super().save(*args, **kwargs)
 
 
+def _assert_unchanged_fields(instance, field_names):
+    # The normal Model API must never silently change a submitted agreement.
+    # QuerySet.update() and raw SQL are intentionally outside the public API.
+    if instance._state.adding:
+        return
+    previous = type(instance).objects.filter(pk=instance.pk).values(*field_names).first()
+    if previous and any(getattr(instance, name) != previous[name] for name in field_names):
+        raise ValidationError({
+            'detail': 'Submitted Scope contents are immutable. Create a new proposal instead.'
+        })
+
+
 class Project(ValidatedModel):
     STATUS = [
         ('planned', 'Planned'),
@@ -541,6 +553,12 @@ class ProjectActivity(ValidatedModel):
         ('project_completed', 'Project Completed'),
         ('project_reopened', 'Project Reopened'),
         ('project_archived', 'Project Archived'),
+        ('scope_proposed', 'Scope Proposed'),
+        ('scope_approved', 'Scope Approved'),
+        ('scope_changes_requested', 'Scope Changes Requested'),
+        ('scope_change_requested', 'Scope Change Requested'),
+        ('scope_change_reviewed', 'Scope Change Reviewed'),
+        ('scope_rejected', 'Scope Rejected'),
     ]
     VISIBILITY = [('internal', 'Staff Only'), ('client', 'Client Visible')]
 
@@ -780,3 +798,209 @@ class ProjectDocumentVersion(ValidatedModel):
             raise ValidationError({'created_by': 'Version uploader belongs to another tenant.'})
         if not self.number or self.number < 1:
             raise ValidationError({'number': 'Version number must be positive.'})
+
+
+class ProjectScopeChangeRequest(ValidatedModel):
+    """Client or project team request for a controlled change of agreed scope."""
+
+    STATUS = [
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('awaiting_client', 'Awaiting Client Approval'),
+        ('changes_requested', 'Client Requested Changes'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='scope_change_requests')
+    title = models.CharField(max_length=200)
+    reason = models.TextField(blank=True)
+    requested_changes = models.TextField()
+    status = models.CharField(max_length=24, choices=STATUS, default='submitted')
+    requested_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='requested_project_scope_changes',
+    )
+    reviewed_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_project_scope_changes',
+    )
+    review_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_scope_change_requests'
+        ordering = ['-created_at', '-id']
+        indexes = [models.Index(fields=['project', 'status'], name='proj_scope_cr_status')]
+
+    def save(self, *args, **kwargs):
+        _assert_unchanged_fields(self, (
+            'project_id', 'requested_by_id', 'title', 'reason', 'requested_changes',
+        ))
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if not self.project_id:
+            return
+        if self.requested_by_id and (
+            self.requested_by.tenant_id != self.project.tenant_id
+            or not self.requested_by.is_active
+        ):
+            raise ValidationError({'requested_by': 'Requester must belong to the Project tenant.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != self.project.tenant_id
+            or not self.reviewed_by.is_active
+        ):
+            raise ValidationError({'reviewed_by': 'Reviewer must belong to the Project tenant.'})
+
+
+class ProjectScopeProposal(ValidatedModel):
+    """Immutable scope presented for a dedicated Client decision.
+
+    A revision request means a *new* proposal, retaining the earlier payload.
+    The resulting approved baseline is a separate immutable ScopeVersion.
+    """
+
+    STATUS = [
+        ('pending_client', 'Awaiting Client Approval'),
+        ('changes_requested', 'Changes Requested'),
+        ('rejected', 'Rejected'),
+        ('approved', 'Approved'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='scope_proposals')
+    change_request = models.ForeignKey(
+        ProjectScopeChangeRequest, on_delete=models.PROTECT, blank=True, null=True,
+        related_name='scope_proposals',
+    )
+    status = models.CharField(max_length=24, choices=STATUS, default='pending_client')
+    title = models.CharField(max_length=200)
+    requirements = models.TextField()
+    deliverables = models.JSONField(default=list)
+    acceptance_criteria = models.JSONField(default=list)
+    exclusions = models.TextField(blank=True)
+    budget_estimate = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    budget_currency = models.CharField(max_length=3, default='USD')
+    target_date = models.DateField(blank=True, null=True)
+    cost_impact = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    proposed_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='proposed_project_scopes',
+    )
+    decided_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='decided_project_scopes',
+    )
+    client_feedback = models.TextField(blank=True)
+    proposed_at = models.DateTimeField(auto_now_add=True)
+    decided_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'project_scope_proposals'
+        ordering = ['-proposed_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project'], condition=models.Q(status='pending_client'),
+                name='uniq_pending_scope_proposal',
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        _assert_unchanged_fields(self, (
+            'project_id', 'change_request_id', 'title', 'requirements',
+            'deliverables', 'acceptance_criteria', 'exclusions',
+            'budget_estimate', 'budget_currency', 'target_date',
+            'cost_impact', 'proposed_by_id',
+        ))
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if not self.project_id:
+            return
+        if self.change_request_id and self.change_request.project_id != self.project_id:
+            raise ValidationError({'change_request': 'Change Request must belong to this Project.'})
+        if self.proposed_by_id and (
+            self.proposed_by.tenant_id != self.project.tenant_id
+            or not self.proposed_by.is_active
+        ):
+            raise ValidationError({'proposed_by': 'Proposal author must belong to this Project tenant.'})
+        if self.decided_by_id and (
+            self.decided_by.tenant_id != self.project.tenant_id
+            or not self.decided_by.is_active
+        ):
+            raise ValidationError({'decided_by': 'Decision maker must belong to the Project tenant.'})
+        if self.decided_by_id and (
+            self.decided_by.role not in CLIENT_ROLES
+            or self.decided_by.client_org_id != self.project.client_org_id
+            or not self.project.members.filter(
+                user_id=self.decided_by_id, role='client_reviewer',
+            ).exists()
+        ):
+            raise ValidationError({
+                'decided_by': 'Scope approval requires the assigned Client Reviewer.'
+            })
+        if not isinstance(self.deliverables, list) or not isinstance(self.acceptance_criteria, list):
+            raise ValidationError('Deliverables and Acceptance Criteria must be lists.')
+
+
+class ProjectScopeVersion(ValidatedModel):
+    """Approved and immutable scope snapshot; past versions are never overwritten."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='scope_versions')
+    number = models.PositiveIntegerField()
+    proposal = models.OneToOneField(
+        ProjectScopeProposal, on_delete=models.PROTECT, related_name='approved_version',
+    )
+    title = models.CharField(max_length=200)
+    requirements = models.TextField()
+    deliverables = models.JSONField(default=list)
+    acceptance_criteria = models.JSONField(default=list)
+    exclusions = models.TextField(blank=True)
+    budget_estimate = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    budget_currency = models.CharField(max_length=3, default='USD')
+    target_date = models.DateField(blank=True, null=True)
+    cost_impact = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    approved_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='approved_project_scope_versions',
+    )
+    approved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_scope_versions'
+        ordering = ['-number']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'number'], name='uniq_project_scope_version'),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError({
+                'detail': 'An approved Project Scope Version cannot be edited.'
+            })
+        return super().save(*args, **kwargs)
+
+    def clean(self):
+        if not self.project_id or not self.proposal_id:
+            return
+        if self.proposal.project_id != self.project_id or self.proposal.status != 'approved':
+            raise ValidationError({
+                'proposal': 'Version must reference an approved proposal in this Project.'
+            })
+        if self.approved_by_id and (
+            self.approved_by.tenant_id != self.project.tenant_id
+            or not self.approved_by.is_active
+        ):
+            raise ValidationError({'approved_by': 'Approving user belongs to another tenant.'})
+        if self.approved_by_id and (
+            self.approved_by.role not in CLIENT_ROLES
+            or self.approved_by.client_org_id != self.project.client_org_id
+            or not self.project.members.filter(
+                user_id=self.approved_by_id, role='client_reviewer',
+            ).exists()
+        ):
+            raise ValidationError({
+                'approved_by': 'Only an assigned Client Reviewer may approve Project Scope.'
+            })

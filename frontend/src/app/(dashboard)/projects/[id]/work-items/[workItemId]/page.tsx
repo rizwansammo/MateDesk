@@ -14,6 +14,7 @@ import {
 import { useWorkItemSupportTickets } from '@/hooks/useTicketProjects';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectEmailDialog } from '@/components/projects/ProjectEmailDialog';
+import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import type {
   WorkItem, WorkItemKind, WorkItemPriority, WorkItemStatus, WorkVisibility,
 } from '@/types/projects';
@@ -186,6 +187,8 @@ export default function WorkItemDetailPage() {
                   )}
                 </div>
               </section>
+
+              <ProjectFilesPanel project={project} category="work_item" workItemId={item.id}/>
 
               <section className="panel">
                 <div className="panel-header">

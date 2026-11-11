@@ -9,6 +9,8 @@ from .delivery import (ProjectDeliveryView, ProjectDeliverySubmitView,
     ProjectDeliveryDecisionView, ProjectDeliveryCompleteView,
     ProjectDeliveryArchiveView, ProjectDeliveryReopenView)
 from .reviewers import ProjectReviewerCandidatesView
+from .files import (ProjectFilesView, ProjectFileDetailView,
+                    ProjectFileVersionsView, ProjectFileDownloadView)
 from .email_views import WorkItemNotificationView
 
 from .ticket_links import (
@@ -33,6 +35,10 @@ urlpatterns = [
     path('projects/capabilities/', ProjectCapabilitiesView.as_view(), name='project-capabilities'),
     path('projects/agent-permissions/', ProjectAgentPermissionsView.as_view(), name='project-agent-permissions'),
     path('projects/agent-permissions/<uuid:user_id>/', ProjectAgentPermissionsView.as_view(), name='project-agent-permission-detail'),
+    path('projects/<uuid:pk>/files/', ProjectFilesView.as_view(), name='project-files'),
+    path('projects/<uuid:pk>/files/<uuid:document_id>/', ProjectFileDetailView.as_view(), name='project-file-detail'),
+    path('projects/<uuid:pk>/files/<uuid:document_id>/versions/', ProjectFileVersionsView.as_view(), name='project-file-versions'),
+    path('projects/<uuid:pk>/files/<uuid:document_id>/versions/<uuid:version_id>/download/', ProjectFileDownloadView.as_view(), name='project-file-download'),
     path('projects/<uuid:pk>/delivery/', ProjectDeliveryView.as_view(), name='project-delivery'),
     path('projects/<uuid:pk>/delivery/submit/', ProjectDeliverySubmitView.as_view(), name='project-delivery-submit'),
     path('projects/<uuid:pk>/delivery/decision/', ProjectDeliveryDecisionView.as_view(), name='project-delivery-decision'),

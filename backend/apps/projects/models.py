@@ -669,3 +669,114 @@ class ProjectDeliveryReview(ValidatedModel):
             ).exists()
         ):
             raise ValidationError({'reviewed_by': 'Review must be made by an authorized client reviewer.'})
+
+
+
+def project_document_upload_path(instance, filename):
+    """Opaque paths: no client-supplied name, tenant and project namespaces."""
+    import os
+    extension = os.path.splitext(filename)[1].lower()
+    return (
+        f'project_files/{instance.document.project.tenant_id}/'
+        f'{instance.document.project_id}/{instance.document_id}/'
+        f'{uuid.uuid4().hex}{extension}'
+    )
+
+
+class ProjectDocument(ValidatedModel):
+    """Logical file. Immutable version blobs live in ProjectDocumentVersion."""
+
+    CATEGORIES = (
+        ('library', 'Project Library'),
+        ('work_item', 'Work Item Attachment'),
+        ('delivery', 'Delivery File'),
+    )
+    VISIBILITY = (('internal', 'Staff Only'), ('client', 'Client Visible'))
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='documents')
+    category = models.CharField(max_length=20, choices=CATEGORIES)
+    work_item = models.ForeignKey(
+        WorkItem, null=True, blank=True, on_delete=models.PROTECT, related_name='documents'
+    )
+    delivery_review = models.ForeignKey(
+        ProjectDeliveryReview, null=True, blank=True, on_delete=models.PROTECT,
+        related_name='documents',
+    )
+    title = models.CharField(max_length=255)
+    visibility = models.CharField(max_length=12, choices=VISIBILITY, default='internal')
+    created_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, related_name='project_documents'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    archived_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'project_documents'
+        ordering = ['-created_at', '-id']
+        indexes = [
+            models.Index(fields=['project', 'category', 'created_at'], name='proj_docs_by_cat'),
+            models.Index(fields=['project', 'work_item'], name='proj_docs_by_work'),
+        ]
+
+    def clean(self):
+        if not self.project_id:
+            return
+        if self.created_by_id and (
+            self.created_by.tenant_id != self.project.tenant_id or not self.created_by.is_active
+        ):
+            raise ValidationError({'created_by': 'Uploader must belong to the Project tenant.'})
+        if self.category == 'work_item':
+            if not self.work_item_id or self.work_item.project_id != self.project_id:
+                raise ValidationError({'work_item': 'Work Item must belong to this Project.'})
+        elif self.work_item_id:
+            raise ValidationError({'work_item': 'Only Work Item attachments may link a Work Item.'})
+        if self.category != 'delivery' and self.delivery_review_id:
+            raise ValidationError({'delivery_review': 'Only Delivery Files may link a review round.'})
+        if self.delivery_review_id and self.delivery_review.project_id != self.project_id:
+            raise ValidationError({'delivery_review': 'Delivery round belongs to another Project.'})
+        if self.category == 'delivery' and self.visibility != 'client':
+            raise ValidationError({'visibility': 'Delivery Files must be Client Visible.'})
+        if self.visibility == 'client' and self.category == 'work_item' and self.work_item.visibility != 'client':
+            raise ValidationError({'visibility': 'A private Work Item cannot have a Client Visible attachment.'})
+
+
+class ProjectDocumentVersion(ValidatedModel):
+    """File revisions are append-only. No public storage URLs are exposed."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        ProjectDocument, on_delete=models.CASCADE, related_name='versions',
+    )
+    number = models.PositiveIntegerField()
+    blob = models.FileField(upload_to=project_document_upload_path, max_length=500)
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    size = models.PositiveBigIntegerField()
+    sha256 = models.CharField(max_length=64)
+    created_by = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True,
+        related_name='project_document_versions',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_document_versions'
+        ordering = ['-number', '-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['document', 'number'], name='unique_project_document_version',
+            ),
+        ]
+
+    def clean(self):
+        if not self.document_id:
+            return
+        if self.created_by_id and (
+            self.created_by.tenant_id != self.document.project.tenant_id
+            or not self.created_by.is_active
+        ):
+            raise ValidationError({'created_by': 'Version uploader belongs to another tenant.'})
+        if not self.number or self.number < 1:
+            raise ValidationError({'number': 'Version number must be positive.'})

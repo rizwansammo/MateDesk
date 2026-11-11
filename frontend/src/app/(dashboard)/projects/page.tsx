@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, ChevronRight, FolderKanban, Layers, Plus, Search, ShieldCheck, Users } from 'lucide-react';
+import { CalendarDays, ChevronRight, FolderKanban, Layers, Plus, Search, ShieldCheck, Users, BarChart3 } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Project, ProjectStatus } from '@/types/projects';
@@ -10,7 +10,7 @@ import { CreateProjectDialog } from '@/components/projects/ProjectForms';
 import { AgentProjectAccessDialog } from '@/components/projects/AgentProjectAccessDialog';
 import { useProjectCapabilities } from '@/hooks/useProjectRequests';
 import { ClientProjectsOverview } from '@/components/projects/ClientProjectsOverview';
-import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
+import { ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, StatePill, formatProjectDate } from '@/components/projects/ProjectUI';
 
 const STATUSES: { value: ProjectStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All Projects' },
@@ -55,6 +55,9 @@ export default function ProjectsPage() {
     <div className="flex h-full min-h-0 flex-col" style={{ background: 'var(--bg-base)' }}>
       <ProjectTitleBar title="Projects" eyebrow="Workspace"
         right={<div className="flex flex-wrap items-center gap-2">
+          <Link href="/projects/reports" className="btn-secondary inline-flex items-center gap-1">
+            <BarChart3 size={13}/> Portfolio Reports
+          </Link>
           {capabilities?.can_manage_agent_permissions && <button className="btn-secondary" onClick={() => setAccessOpen(true)}>
             Agent Project Access
           </button>}
@@ -63,7 +66,7 @@ export default function ProjectsPage() {
           </button>}
         </div>} />
       <div className="flex-1 overflow-y-auto p-3 md:p-4">
-        <div className="flex w-full min-w-0 flex-col gap-3">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             {([
               { name: 'Total Projects', count: stats.all, Icon: FolderKanban, tint: 'var(--accent-info-fg)' },
@@ -112,7 +115,7 @@ export default function ProjectsPage() {
                     action={!projects.length && canCreate && <button className="btn-primary mt-2" onClick={() => setCreateOpen(true)}><Plus size={13} /> Create Project</button>} />
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="data-table w-full">
+                    <table className="data-table">
                       <thead><tr>
                         <th>Project</th><th>Client</th><th>Status</th><th>Visibility</th><th>Due Date</th><th aria-label="Open" />
                       </tr></thead>
@@ -133,10 +136,7 @@ export default function ProjectsPage() {
                             </td>
                             <td><span className="inline-flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-2)' }}>
                               <Users size={13} /> {project.client_org_name}</span></td>
-                            <td><span className="flex flex-wrap items-center gap-1.5">
-                              <StatePill value={project.status} />
-                              <ProjectProgressIndicator indicator={project.status_indicator} />
-                            </span></td>
+                            <td><StatePill value={project.status} /></td>
                             <td><span className="text-xs" style={{ color: 'var(--text-3)' }}>{project.visibility === 'client' ? 'Client Visible' : 'Internal'}</span></td>
                             <td><span className="text-xs" style={{ color: 'var(--text-3)' }}>{formatProjectDate(project.due_date)}</span></td>
                             <td className="text-right"><Link aria-label={`Open ${project.name}`} href={`/projects/${project.id}`}

@@ -21,6 +21,11 @@ from .scope import (
 )
 from .email_views import WorkItemNotificationView
 from .communication import ProjectConversationView, ProjectNotificationInboxView
+from .analytics import ProjectReportView, ProjectTimelineView, ProjectPortfolioReportView
+from .templates import (
+    ProjectTemplatesView, ProjectTemplateDetailView, CaptureProjectTemplateView,
+    ApplyProjectTemplateView, CreateProjectFromTemplateView,
+)
 from .time_tracking import (
     ProjectTimeEntriesView, ProjectTimeEntryDetailView, ProjectTimeReviewView,
     ProjectTimeSummaryView, ProjectTimeRateView, ProjectTimeInvoicesView,
@@ -67,6 +72,14 @@ urlpatterns = [
     path('projects/<uuid:pk>/support-tickets/', ProjectSupportTicketsView.as_view(), name='project-support-tickets'),
     path('projects/<uuid:pk>/activity/', ProjectActivityView.as_view(), name='project-activity'),
     path('projects/notifications/', ProjectNotificationInboxView.as_view(), name='project-notification-inbox'),
+    path('projects/reports/', ProjectPortfolioReportView.as_view(), name='project-portfolio-reports'),
+    path('projects/templates/', ProjectTemplatesView.as_view(), name='project-templates'),
+    path('projects/templates/<uuid:template_id>/', ProjectTemplateDetailView.as_view(), name='project-template-detail'),
+    path('projects/templates/<uuid:template_id>/create-project/', CreateProjectFromTemplateView.as_view(), name='project-template-create-project'),
+    path('projects/<uuid:pk>/reports/', ProjectReportView.as_view(), name='project-report'),
+    path('projects/<uuid:pk>/timeline/', ProjectTimelineView.as_view(), name='project-timeline'),
+    path('projects/<uuid:pk>/templates/capture/', CaptureProjectTemplateView.as_view(), name='project-template-capture'),
+    path('projects/<uuid:pk>/templates/<uuid:template_id>/apply/', ApplyProjectTemplateView.as_view(), name='project-template-apply'),
     path('projects/<uuid:pk>/conversation/', ProjectConversationView.as_view(), name='project-conversation'),
     path('projects/<uuid:pk>/time-entries/', ProjectTimeEntriesView.as_view(), name='project-time-entries'),
     path('projects/<uuid:pk>/time-entries/<uuid:entry_id>/', ProjectTimeEntryDetailView.as_view(), name='project-time-entry-detail'),

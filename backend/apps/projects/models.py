@@ -134,6 +134,7 @@ class ProjectMilestone(ValidatedModel):
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS, default='planned')
     visibility = models.CharField(max_length=20, choices=VISIBILITY, default='internal')
+    start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -142,6 +143,11 @@ class ProjectMilestone(ValidatedModel):
     class Meta:
         db_table = 'project_milestones'
         ordering = ['position', 'created_at', 'id']
+
+    def clean(self):
+        if self.start_date and self.due_date and self.start_date > self.due_date:
+            raise ValidationError({'due_date': 'Milestone due date must follow start date.'})
+
 
 
 class WorkItem(ValidatedModel):
@@ -171,8 +177,10 @@ class WorkItem(ValidatedModel):
     kind = models.CharField(max_length=20, choices=KINDS, default='task')
     status = models.CharField(max_length=20, choices=STATUSES, default='backlog')
     priority = models.CharField(max_length=20, choices=PRIORITIES, default='normal')
+    estimated_minutes = models.PositiveIntegerField(default=0)
     visibility = models.CharField(max_length=20, choices=VISIBILITY, default='internal')
     assignee = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_work_items')
+    start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     position = models.PositiveIntegerField(default=0)
     created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='created_work_items')
@@ -191,6 +199,10 @@ class WorkItem(ValidatedModel):
         return f'{self.project.key}-{self.number}'
 
     def clean(self):
+        if self.start_date and self.due_date and self.start_date > self.due_date:
+            raise ValidationError({'due_date': 'Work Item due date must follow start date.'})
+        if self.estimated_minutes > 1000000:
+            raise ValidationError({'estimated_minutes': 'Estimate must be at most 1000000 minutes.'})
         if self.milestone_id and self.project_id and self.milestone.project_id != self.project_id:
             raise ValidationError({'milestone': 'Milestone belongs to another project.'})
         if self.assignee_id and self.project_id:
@@ -1377,3 +1389,55 @@ class ProjectTimeInvoiceRun(ValidatedModel):
             or not can_manage_project(self.created_by, self.project)
         ):
             raise ValidationError({'created_by': 'Only a Project Manager may invoice time.'})
+
+class ProjectTemplate(ValidatedModel):
+    """Reusable tenant scoped project blueprint. Never contains tickets, billing or approvals."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE,
+                               related_name='project_templates')
+    name = models.CharField(max_length=160)
+    description = models.TextField(blank=True, max_length=2000)
+    snapshot = models.JSONField()
+    version = models.PositiveSmallIntegerField(default=1, editable=False)
+    source_project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='saved_templates',
+    )
+    created_by = models.ForeignKey(
+        'users.User', null=True, on_delete=models.SET_NULL,
+        related_name='created_project_templates',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_templates'
+        ordering = ['name', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tenant', 'name'], name='unique_project_template_name',
+            ),
+        ]
+
+    def clean(self):
+        if not isinstance(self.snapshot, dict) or self.snapshot.get('version') != 1:
+            raise ValidationError({'snapshot': 'Unsupported Project Template format.'})
+        if self.source_project_id and self.source_project.tenant_id != self.tenant_id:
+            raise ValidationError({'source_project': 'Template source must belong to this tenant.'})
+        if self.created_by_id and (
+            self.created_by.tenant_id != self.tenant_id
+            or self.created_by.role not in MSP_ROLES
+        ):
+            raise ValidationError({'created_by': 'Template creator must be tenant staff.'})
+        if not self._state.adding:
+            original = ProjectTemplate.objects.filter(pk=self.pk).values(
+                'snapshot', 'tenant_id', 'source_project_id', 'created_by_id',
+            ).first()
+            if original and (
+                original['snapshot'] != self.snapshot
+                or original['tenant_id'] != self.tenant_id
+                or original['source_project_id'] != self.source_project_id
+                or original['created_by_id'] != self.created_by_id
+            ):
+                raise ValidationError({'snapshot': 'Templates are immutable. Capture a new template.'})

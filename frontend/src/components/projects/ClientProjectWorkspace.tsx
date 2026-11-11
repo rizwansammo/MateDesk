@@ -10,6 +10,7 @@ import type { Project, WorkItem } from '@/types/projects';
 import { ProjectSupportPanel } from './ProjectSupportPanel';
 import { ProjectActivityPanel } from './ProjectActivityPanel';
 import { ProjectConversationPanel } from './ProjectConversationPanel';
+import { ProjectReportsPanel, ProjectTimelinePanel } from './ProjectInsightsPanel';
 import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
 import { ProjectScopePanel } from './ProjectScopePanel';
@@ -19,7 +20,7 @@ import {
   WORK_STATES, formatProjectDate,
 } from './ProjectUI';
 
-type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'delivery';
+type ClientTab = 'overview' | 'work' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'timeline' | 'reports' | 'delivery';
 
 export function ClientProjectWorkspace({ project }: { project: Project }) {
   const projectId = project.id;
@@ -27,7 +28,10 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
   const milestonesQuery = useProjectMilestones(projectId);
   const [tab, setTab] = useState<ClientTab>('overview');
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('tab') === 'conversation') setTab('conversation');
+    const selected = new URLSearchParams(window.location.search).get('tab');
+    if (selected === 'conversation' || selected === 'timeline' || selected === 'reports') {
+      setTab(selected);
+    }
   }, []);
   const [query, setQuery] = useState('');
   const items = useMemo(() =>
@@ -86,6 +90,8 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           { value: 'support', label: 'Support Tickets' },
           { value: 'activity', label: 'Activity' },
           { value: 'conversation', label: 'Conversation' },
+          { value: 'timeline', label: 'Timeline' },
+          { value: 'reports', label: 'Reports' },
           { value: 'delivery', label: 'Delivery & Approval' },
         ] as const).map(item => (
           <button key={item.value} type="button" role="tab"
@@ -108,6 +114,8 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
           {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
           {tab === 'conversation' && <ProjectConversationPanel project={project}/>}
+          {tab === 'timeline' && <ProjectTimelinePanel projectId={projectId}/>}
+          {tab === 'reports' && <ProjectReportsPanel projectId={projectId}/>}
           {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
           {tab === 'overview' && (
             <>

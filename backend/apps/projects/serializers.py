@@ -103,7 +103,7 @@ class ProjectMemberWriteSerializer(serializers.Serializer):
 class ProjectMilestoneReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMilestone
-        fields = ['id', 'name', 'description', 'status', 'visibility', 'due_date', 'position', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'status', 'visibility', 'start_date', 'due_date', 'position', 'created_at', 'updated_at']
 
 
 class ProjectMilestoneWriteSerializer(serializers.Serializer):
@@ -111,6 +111,7 @@ class ProjectMilestoneWriteSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True, required=False)
     status = serializers.ChoiceField(choices=MILESTONE_STATUSES, required=False)
     visibility = serializers.ChoiceField(choices=MILESTONE_VISIBILITY, required=False)
+    start_date = serializers.DateField(allow_null=True, required=False)
     due_date = serializers.DateField(allow_null=True, required=False)
     position = serializers.IntegerField(min_value=0, required=False)
 
@@ -171,7 +172,7 @@ class WorkItemReadSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'project', 'ref', 'number', 'milestone_id',
             'title', 'description', 'kind', 'status', 'priority', 'visibility',
-            'assignee_id', 'assignee_name', 'due_date', 'position',
+            'assignee_id', 'assignee_name', 'start_date', 'due_date', 'estimated_minutes', 'position',
             'is_blocked', 'blocked_by_count', 'checklist_total', 'checklist_completed',
             'created_at', 'updated_at',
         ]
@@ -183,9 +184,11 @@ class WorkItemWriteSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=WORK_KINDS, required=False)
     status = serializers.ChoiceField(choices=WORK_STATUSES, required=False)
     priority = serializers.ChoiceField(choices=WORK_PRIORITIES, required=False)
+    estimated_minutes = serializers.IntegerField(min_value=0, max_value=1000000, required=False)
     visibility = serializers.ChoiceField(choices=WORK_VISIBILITY, required=False)
     milestone_id = serializers.UUIDField(allow_null=True, required=False)
     assignee_id = serializers.UUIDField(allow_null=True, required=False)
+    start_date = serializers.DateField(allow_null=True, required=False)
     due_date = serializers.DateField(allow_null=True, required=False)
     position = serializers.IntegerField(min_value=0, required=False)
 

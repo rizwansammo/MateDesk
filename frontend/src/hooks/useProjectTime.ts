@@ -99,6 +99,7 @@ function refreshTime(qc: ReturnType<typeof useQueryClient>, projectId: string) {
   void qc.invalidateQueries({ queryKey: ['projects', projectId, 'time'] });
   void qc.invalidateQueries({ queryKey: ['projects', projectId, 'timeRate'] });
   void qc.invalidateQueries({ queryKey: ['projects', projectId, 'timeInvoices'] });
+  void qc.invalidateQueries({ queryKey: ['projects', projectId, 'reports'] });
 }
 
 export function useProjectTimeEntries(projectId: string, page: number, workItemId?: string) {

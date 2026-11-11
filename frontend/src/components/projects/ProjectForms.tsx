@@ -4,6 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useClientOrgs } from '@/hooks/useClientOrgs';
 import { useAgents } from '@/hooks/useAgents';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useProjectTemplates, useCreateProjectFromTemplate, useProjectTemplatePreview } from '@/hooks/useProjectInsights';
 import {
   useCreateProject, useCreateMilestone, useCreateWorkItem,
   useAddProjectMember, useUpdateProject,
@@ -27,6 +29,13 @@ export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { data: orgs = [], isLoading: orgsLoading, error: orgsError } = useClientOrgs();
   const create = useCreateProject();
+  const createFromTemplate = useCreateProjectFromTemplate();
+  const role = useAuthStore(state => state.user?.role);
+  const canUseTemplates = role === 'msp_owner' || role === 'msp_manager';
+  const templates = useProjectTemplates(canUseTemplates);
+  const [templateId, setTemplateId] = useState('');
+  const preview = useProjectTemplatePreview(templateId, canUseTemplates && Boolean(templateId));
+  const [startDate, setStartDate] = useState('');
   const [orgId, setOrgId] = useState('');
   const [name, setName] = useState('');
   const [key, setKey] = useState('');
@@ -37,11 +46,18 @@ export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!orgId || !name.trim() || !/^[A-Z0-9]{2,12}$/.test(key)) return;
+    if (templateId && !window.confirm(
+      'Create Project from this Template? Confirm all template descriptions are suitable for the selected Client Organization.',
+    )) return;
     try {
-      const result = await create.mutateAsync({
+      const payload = {
         client_org_id: orgId, key, name: name.trim(), description,
-        visibility, ...(dueDate ? { due_date: dueDate } : {}),
-      });
+        visibility, ...(startDate ? { start_date: startDate } : {}),
+        ...(dueDate ? { due_date: dueDate } : {}),
+      };
+      const result = templateId && canUseTemplates
+        ? await createFromTemplate.mutateAsync({ ...payload, template_id: templateId })
+        : await create.mutateAsync(payload);
       onClose();
       router.push(`/projects/${result.id}`);
     } catch { /* Error is displayed below. */ }
@@ -52,6 +68,27 @@ export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
       <form onSubmit={submit} className="space-y-3">
         {orgsError && <ProjectError error={orgsError} />}
         {create.error && <ProjectError error={create.error} />}
+        {createFromTemplate.error && <ProjectError error={createFromTemplate.error}/>}
+        {canUseTemplates && templates.error && <ProjectError error={templates.error}/>}
+        {canUseTemplates && Boolean(templates.data?.length) && <div>
+          <label className="label" htmlFor="project-template">Create From Template</label>
+          <select id="project-template" className="select" value={templateId}
+            onChange={e => setTemplateId(e.target.value)}>
+            <option value="">Start Empty Project</option>
+            {templates.data?.map(row => <option key={row.id} value={row.id}>
+              {row.name} ({row.work_item_count} Work Items)
+            </option>)}
+          </select>
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--text-3)' }}>
+            Timeline dates shift from the new Project Start Date. No historical billing or approvals are copied. Review source descriptions before reusing with another Client.
+          </p>
+          {preview.data && <div className="mt-2 border p-3" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="text-xs font-semibold">Template Preview</div>
+            <p className="mt-1 whitespace-pre-wrap text-[11px]" style={{ color: 'var(--text-3)' }}>{preview.data.snapshot.project_description}</p>
+            {preview.data.snapshot.work_items.map((item, index) => <p key={index}
+              className="mt-1 text-[11px]" style={{ color: 'var(--text-3)' }}>{item.title} · {item.visibility}</p>)}
+          </div>}
+        </div>}
         <div>
           <label className="label" htmlFor="project-org">Client Organization</label>
           <select id="project-org" className="select" required value={orgId} onChange={e => setOrgId(e.target.value)}
@@ -88,11 +125,17 @@ export function CreateProjectDialog({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
+            <label className="label" htmlFor="project-start">Start Date</label>
+            <input id="project-start" className="input" type="date" value={startDate}
+              onChange={e => setStartDate(e.target.value)}/>
+          </div>
+          <div>
             <label className="label" htmlFor="project-due">Due Date</label>
             <input id="project-due" className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
         </div>
-        <Footer busy={create.isPending} submit="Create Project" onClose={onClose} />
+        <Footer busy={create.isPending || createFromTemplate.isPending}
+          submit={templateId ? 'Create From Template' : 'Create Project'} onClose={onClose} />
       </form>
     </ProjectDialog>
   );
@@ -104,13 +147,15 @@ export function EditProjectDialog({ project, onClose }: { project: Project; onCl
   const [description, setDescription] = useState(project.description);
   const [status, setStatus] = useState<ProjectStatus>(['completed', 'archived'].includes(project.status) ? 'active' : project.status);
   const [visibility, setVisibility] = useState<ProjectVisibility>(project.visibility);
+  const [startDate, setStartDate] = useState(project.start_date || '');
   const [dueDate, setDueDate] = useState(project.due_date || '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
       await update.mutateAsync({
-        name: name.trim(), description, status, visibility, due_date: dueDate || null,
+        name: name.trim(), description, status, visibility,
+        start_date: startDate || null, due_date: dueDate || null,
       });
       onClose();
     } catch { /* Error is displayed below. */ }
@@ -147,6 +192,12 @@ export function EditProjectDialog({ project, onClose }: { project: Project; onCl
           </div>
         </div>
         <div>
+          <label className="label" htmlFor="edit-project-start">Start Date</label>
+          <input id="edit-project-start" className="input" type="date"
+            value={startDate} max={dueDate || undefined}
+            onChange={e => setStartDate(e.target.value)}/>
+        </div>
+        <div>
           <label className="label" htmlFor="edit-project-due">Due Date</label>
           <input id="edit-project-due" className="input" type="date"
             value={dueDate} onChange={e => setDueDate(e.target.value)} />
@@ -161,6 +212,7 @@ export function CreateMilestoneDialog({ projectId, onClose }: { projectId: strin
   const create = useCreateMilestone(projectId);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [visibility, setVisibility] = useState<WorkVisibility>('internal');
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -168,6 +220,7 @@ export function CreateMilestoneDialog({ projectId, onClose }: { projectId: strin
     try {
       await create.mutateAsync({
         name: name.trim(), description, visibility,
+        ...(startDate ? { start_date: startDate } : {}),
         ...(dueDate ? { due_date: dueDate } : {}),
       });
       onClose();
@@ -186,6 +239,11 @@ export function CreateMilestoneDialog({ projectId, onClose }: { projectId: strin
           <label className="label" htmlFor="milestone-description">Description</label>
           <textarea id="milestone-description" className="input min-h-[85px]"
             value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
+        <div>
+          <label className="label" htmlFor="milestone-start">Start Date</label>
+          <input id="milestone-start" className="input" type="date" value={startDate}
+            max={dueDate || undefined} onChange={e => setStartDate(e.target.value)}/>
         </div>
         <div>
           <label className="label" htmlFor="milestone-due">Due Date</label>
@@ -219,7 +277,9 @@ export function CreateWorkItemDialog({ projectId, milestones, members, canManage
   const [priority, setPriority] = useState<WorkItemPriority>('normal');
   const [milestoneId, setMilestoneId] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [estimateHours, setEstimateHours] = useState('0');
   const [clientVisible, setClientVisible] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -229,7 +289,9 @@ export function CreateWorkItemDialog({ projectId, milestones, members, canManage
         title: title.trim(), description, kind, priority,
         ...(milestoneId ? { milestone_id: milestoneId } : {}),
         ...(assigneeId && canManage ? { assignee_id: assigneeId } : {}),
+        ...(startDate ? { start_date: startDate } : {}),
         ...(dueDate ? { due_date: dueDate } : {}),
+        estimated_minutes: Math.round(Number(estimateHours || 0) * 60),
         visibility: clientVisible && canManage ? 'client' : 'internal',
       });
       onClose();
@@ -268,6 +330,17 @@ export function CreateWorkItemDialog({ projectId, milestones, members, canManage
               <option value="">No milestone</option>
               {milestones.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="label" htmlFor="work-start">Start Date</label>
+            <input id="work-start" className="input" type="date" value={startDate}
+              max={dueDate || undefined} onChange={e => setStartDate(e.target.value)}/>
+          </div>
+          <div>
+            <label className="label" htmlFor="work-hours">Estimated Hours</label>
+            <input id="work-hours" className="input" type="number" min="0"
+              max="16666" step="0.25" value={estimateHours}
+              onChange={e => setEstimateHours(e.target.value)}/>
           </div>
           <div>
             <label className="label" htmlFor="work-due">Due Date</label>

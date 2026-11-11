@@ -44,6 +44,7 @@ export interface ProjectMilestone {
   description: string;
   status: MilestoneStatus;
   visibility: WorkVisibility;
+  start_date: string | null;
   due_date: string | null;
   position: number;
   created_at: string;
@@ -63,7 +64,9 @@ export interface WorkItem {
   visibility: WorkVisibility;
   assignee_id: string | null;
   assignee_name: string | null;
+  start_date: string | null;
   due_date: string | null;
+  estimated_minutes: number;
   position: number;
   is_blocked: boolean;
   blocked_by_count: number;
@@ -92,7 +95,7 @@ export interface CreateProject {
   due_date?: string | null;
 }
 export type UpdateProject = Partial<Pick<Project, 'name' | 'description' | 'status' | 'visibility' | 'start_date' | 'due_date'>>;
-export type CreateMilestone = Pick<ProjectMilestone, 'name'> & Partial<Pick<ProjectMilestone, 'description' | 'status' | 'visibility' | 'due_date' | 'position'>>;
-export type UpdateMilestone = Partial<Pick<ProjectMilestone, 'name' | 'description' | 'status' | 'visibility' | 'due_date' | 'position'>>;
-export type CreateWorkItem = Pick<WorkItem, 'title'> & Partial<Pick<WorkItem, 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;
-export type UpdateWorkItem = Partial<Pick<WorkItem, 'title' | 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'due_date' | 'position'>>;
+export type CreateMilestone = Pick<ProjectMilestone, 'name'> & Partial<Pick<ProjectMilestone, 'description' | 'status' | 'visibility' | 'start_date' | 'due_date' | 'position'>>;
+export type UpdateMilestone = Partial<Pick<ProjectMilestone, 'name' | 'description' | 'status' | 'visibility' | 'start_date' | 'due_date' | 'position'>>;
+export type CreateWorkItem = Pick<WorkItem, 'title'> & Partial<Pick<WorkItem, 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'start_date' | 'due_date' | 'estimated_minutes' | 'position'>>;
+export type UpdateWorkItem = Partial<Pick<WorkItem, 'title' | 'description' | 'kind' | 'status' | 'priority' | 'visibility' | 'milestone_id' | 'assignee_id' | 'start_date' | 'due_date' | 'estimated_minutes' | 'position'>>;

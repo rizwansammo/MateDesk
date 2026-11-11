@@ -20,6 +20,7 @@ import { ClientProjectWorkspace } from '@/components/projects/ClientProjectWorks
 import { ProjectSupportPanel } from '@/components/projects/ProjectSupportPanel';
 import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel';
 import { ProjectConversationPanel } from '@/components/projects/ProjectConversationPanel';
+import { ProjectTimePanel } from '@/components/projects/ProjectTimePanel';
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import { ProjectScopePanel } from '@/components/projects/ProjectScopePanel';
@@ -29,7 +30,7 @@ import {
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
 } from '@/components/projects/ProjectUI';
 
-type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'delivery' | 'team';
+type Tab = 'overview' | 'board' | 'list' | 'milestones' | 'files' | 'scope' | 'support' | 'activity' | 'conversation' | 'time' | 'delivery' | 'team';
 type KindFilter = WorkItemKind | 'all';
 type PriorityFilter = WorkItemPriority | 'all';
 
@@ -195,6 +196,7 @@ export default function ProjectWorkspacePage() {
     { value: 'support', label: 'Support Tickets', Icon: LifeBuoy },
     { value: 'activity', label: 'Activity', Icon: Activity },
     { value: 'conversation', label: 'Conversation', Icon: MessageSquare },
+    ...(canEdit ? [{ value: 'time' as const, label: 'Time & Billing', Icon: Clock3 }] : []),
     { value: 'delivery', label: 'Delivery', Icon: ClipboardCheck },
     ...(canManage ? [{ value: 'team' as const, label: 'Team & Reviewers', Icon: Users }] : []),
   ];
@@ -239,6 +241,7 @@ export default function ProjectWorkspacePage() {
         {tab === 'support' && <ProjectSupportPanel project={project} workItems={items}/>}
         {tab === 'activity' && <ProjectActivityPanel projectId={projectId}/>}
         {tab === 'conversation' && <ProjectConversationPanel project={project}/>}
+        {tab === 'time' && canEdit && <ProjectTimePanel project={project} workItems={items}/>}
         {tab === 'delivery' && <ProjectDeliveryPanel project={project}/>}
         {tab === 'overview' && (
           <div className="flex w-full min-w-0 flex-col gap-3">

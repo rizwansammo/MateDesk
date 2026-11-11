@@ -1213,3 +1213,167 @@ class ProjectMessage(ValidatedModel):
                 raise ValidationError({'visibility': 'Client updates require a visible project and manager.'})
         else:
             raise ValidationError({'author': 'Unsupported project message sender.'})
+
+
+class ProjectTimeRate(ValidatedModel):
+    """Explicit hourly rate for project work, independent from support ticket rates."""
+    from apps.billing.models import CURRENCY_CHOICES
+    CURRENCIES = CURRENCY_CHOICES + [('BDT', 'BDT')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name='time_rate')
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=CURRENCIES, default='USD')
+    updated_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL,
+                                   related_name='updated_project_time_rates')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_time_rates'
+
+    def clean(self):
+        if self.hourly_rate is None or self.hourly_rate <= 0:
+            raise ValidationError({'hourly_rate': 'Set a positive hourly rate.'})
+        from .permissions import can_manage_project
+        if self.updated_by_id and (
+            self.updated_by.tenant_id != self.project.tenant_id
+            or self.updated_by.role not in MSP_ROLES
+            or not can_manage_project(self.updated_by, self.project)
+        ):
+            raise ValidationError({'updated_by': 'Only a Project Manager may set the rate.'})
+
+
+class ProjectTimeEntry(ValidatedModel):
+    """Staff effort is not ticket time and is never invoiced until manager review."""
+    REVIEW_STATES = [
+        ('pending', 'Pending Review'), ('approved', 'Approved'), ('rejected', 'Rejected'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='time_entries')
+    work_item = models.ForeignKey(WorkItem, on_delete=models.PROTECT, related_name='time_entries')
+    staff = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL,
+                              related_name='project_time_entries')
+    staff_name = models.CharField(max_length=200)
+    logged_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL,
+                                  related_name='logged_project_time')
+    spent_on = models.DateField()
+    minutes = models.PositiveIntegerField()
+    description = models.TextField(max_length=2000)
+    billable = models.BooleanField(default=False)
+    review_state = models.CharField(max_length=12, choices=REVIEW_STATES, default='pending')
+    review_note = models.CharField(max_length=1000, blank=True)
+    reviewed_by = models.ForeignKey('users.User', null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name='reviewed_project_time')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    request_id = models.UUIDField(default=uuid.uuid4)
+    invoice_line = models.OneToOneField('billing.InvoiceLineItem', null=True, blank=True,
+                                        on_delete=models.PROTECT,
+                                        related_name='project_time_entry')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project_time_entries'
+        ordering = ['-spent_on', '-created_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'logged_by', 'request_id'], name='unique_project_time_request',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['project', 'spent_on'], name='proj_time_date_idx'),
+            models.Index(fields=['project', 'billable', 'review_state'], name='proj_time_bill_idx'),
+        ]
+
+    def clean(self):
+        from django.utils import timezone
+        from .permissions import can_manage_project
+        if not self.project_id or not self.work_item_id:
+            return
+        project = self.project
+        if project.status == 'archived':
+            raise ValidationError({'project': 'Archived projects are read only.'})
+        if self.work_item.project_id != self.project_id:
+            raise ValidationError({'work_item': 'Work Item belongs to another project.'})
+        if self.minutes < 1 or self.minutes > 1440:
+            raise ValidationError({'minutes': 'Enter 1 to 1440 minutes per entry.'})
+        if self.spent_on and self.spent_on > timezone.localdate():
+            raise ValidationError({'spent_on': 'Future work time cannot be recorded.'})
+        if not self.description or not self.description.strip():
+            raise ValidationError({'description': 'Describe the work performed.'})
+        if self.staff_id and self._state.adding and (
+            not self.staff.is_active or self.staff.tenant_id != project.tenant_id
+            or self.staff.role not in MSP_ROLES
+            or (not can_manage_project(self.staff, project)
+                and not project.members.filter(
+                    user=self.staff, role__in=['manager', 'contributor'],
+                ).exists())
+        ):
+            raise ValidationError({'staff': 'Staff must belong to this project.'})
+        from .permissions import can_edit_work
+        if self.logged_by_id and self._state.adding and (
+            self.logged_by.tenant_id != project.tenant_id
+            or self.logged_by.role not in MSP_ROLES
+            or not can_edit_work(self.logged_by, project)
+        ):
+            raise ValidationError({'logged_by': 'Logger must belong to the project tenant.'})
+        if self.reviewed_by_id and (
+            self.reviewed_by.tenant_id != project.tenant_id
+            or not can_manage_project(self.reviewed_by, project)
+        ):
+            raise ValidationError({'reviewed_by': 'Reviewer must manage this project.'})
+        if self.invoice_line_id:
+            line = self.invoice_line
+            if (line.invoice.tenant_id != project.tenant_id
+                    or line.invoice.org_id != project.client_org_id
+                    or not self.billable or self.review_state != 'approved'):
+                raise ValidationError({'invoice_line': 'Invoice must match approved Project time.'})
+        if self.review_state == 'approved' and (not self.reviewed_by_id or not self.reviewed_at):
+            raise ValidationError({'review_state': 'Approved time requires a reviewer and timestamp.'})
+        if self.review_state != 'approved' and self.reviewed_at and self.reviewed_by_id:
+            # Rejections are audited too, while pending edits clear the reviewer.
+            pass
+        if not self._state.adding:
+            previous = ProjectTimeEntry.objects.filter(pk=self.pk).values(
+                'invoice_line_id', 'work_item_id', 'project_id', 'staff_id',
+                'logged_by_id',
+            ).first()
+            if previous and previous['invoice_line_id']:
+                raise ValidationError({'detail': 'Invoiced time is immutable.'})
+            if previous and (previous['work_item_id'] != self.work_item_id
+                             or previous['project_id'] != self.project_id
+                             or previous['staff_id'] != self.staff_id
+                             or previous['logged_by_id'] != self.logged_by_id):
+                raise ValidationError({'work_item': 'Time history and ownership are immutable.'})
+
+
+class ProjectTimeInvoiceRun(ValidatedModel):
+    """Idempotent, traceable Project billing batch for an existing draft invoice."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name='time_invoice_runs')
+    invoice = models.OneToOneField('billing.Invoice', on_delete=models.CASCADE,
+                                   related_name='project_time_run')
+    request_id = models.UUIDField()
+    created_by = models.ForeignKey('users.User', null=True, on_delete=models.SET_NULL,
+                                   related_name='created_project_time_invoices')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'project_time_invoice_runs'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'request_id'],
+                                    name='unique_project_time_invoice_request'),
+        ]
+
+    def clean(self):
+        if self.project_id and self.invoice_id:
+            if (self.invoice.tenant_id != self.project.tenant_id
+                    or self.invoice.org_id != self.project.client_org_id):
+                raise ValidationError({'invoice': 'Invoice must belong to the project client and tenant.'})
+        from .permissions import can_manage_project
+        if self.created_by_id and (
+            self.created_by.tenant_id != self.project.tenant_id
+            or not can_manage_project(self.created_by, self.project)
+        ):
+            raise ValidationError({'created_by': 'Only a Project Manager may invoice time.'})

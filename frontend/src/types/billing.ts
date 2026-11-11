@@ -45,6 +45,7 @@ export type InvoiceStatus = 'draft' | 'sent' | 'paid';
 
 export interface Invoice {
   id:             string;
+  source?:        'ticket' | 'project_time';
   invoice_number: string;
   org_id:         string;
   org_name:       string;

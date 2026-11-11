@@ -15,6 +15,7 @@ import { useWorkItemSupportTickets } from '@/hooks/useTicketProjects';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectEmailDialog } from '@/components/projects/ProjectEmailDialog';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
+import { WorkItemAdvancedPanel, WorkItemProgressBadge } from '@/components/projects/WorkItemAdvancedPanel';
 import type {
   WorkItem, WorkItemKind, WorkItemPriority, WorkItemStatus, WorkVisibility,
 } from '@/types/projects';
@@ -166,6 +167,7 @@ export default function WorkItemDetailPage() {
             <span className="font-mono" style={{ color: 'var(--text-1)' }}>{item.ref}</span>
           </div>
 
+          <WorkItemProgressBadge item={item}/>
           {update.error && <ProjectError error={update.error} />}
           {addComment.error && <ProjectError error={addComment.error} />}
           <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -188,6 +190,7 @@ export default function WorkItemDetailPage() {
                 </div>
               </section>
 
+              <WorkItemAdvancedPanel project={project} item={item}/>
               <ProjectFilesPanel project={project} category="work_item" workItemId={item.id}/>
 
               <section className="panel">
@@ -265,7 +268,11 @@ export default function WorkItemDetailPage() {
                     <label className="label" htmlFor="item-status">Status</label>
                     {canEdit ? <select id="item-status" className="select" value={item.status}
                       disabled={update.isPending} onChange={e => save({ status: e.target.value as WorkItemStatus })}>
-                      {WORK_STATES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      {WORK_STATES.map(s => <option key={s.value} value={s.value}
+                        disabled={(item.is_blocked && ['in_progress','in_review','done'].includes(s.value))
+                || (s.value === 'done' && item.checklist_total > item.checklist_completed)}>
+                        {s.label}
+                      </option>)}
                     </select> : <StatePill value={item.status} label={WORK_STATES.find(s => s.value === item.status)?.label} />}
                   </div>
                   <div>

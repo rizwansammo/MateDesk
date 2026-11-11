@@ -131,9 +131,10 @@ export function useUpdateWorkItem(projectId: string) {
       apiFetch<WorkItem>(`/api/work-items/${id}/`, {
         method: 'PATCH', body: JSON.stringify(changes),
       }),
-    onSuccess: (_result, variables) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'workItems'] });
-      qc.invalidateQueries({ queryKey: ['workItems', variables.id] });
+      // Completing a prerequisite may unblock a different Work Item.
+      qc.invalidateQueries({ queryKey: ['workItems'] });
       qc.invalidateQueries({ queryKey: ['projects', projectId] });
       qc.invalidateQueries({ queryKey: ['projects'] });
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'delivery'] });

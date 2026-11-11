@@ -65,6 +65,10 @@ export interface WorkItem {
   assignee_name: string | null;
   due_date: string | null;
   position: number;
+  is_blocked: boolean;
+  blocked_by_count: number;
+  checklist_total: number;
+  checklist_completed: number;
   created_at: string;
   updated_at: string;
 }

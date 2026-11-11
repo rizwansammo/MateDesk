@@ -12,6 +12,7 @@ import { ProjectActivityPanel } from './ProjectActivityPanel';
 import { ProjectDeliveryPanel } from './ProjectDeliveryPanel';
 import { ProjectFilesPanel } from './ProjectFilesPanel';
 import { ProjectScopePanel } from './ProjectScopePanel';
+import { WorkItemProgressBadge } from './WorkItemAdvancedPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, formatProjectDate,
@@ -54,6 +55,7 @@ export function ClientProjectWorkspace({ project }: { project: Project }) {
           </span>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2">
+          <WorkItemProgressBadge item={item}/>
           <StatePill value={item.status} label={WORK_STATES.find(s => s.value === item.status)?.label} />
           <ArrowUpRight size={14} style={{ color: 'var(--text-3)' }} />
         </div>

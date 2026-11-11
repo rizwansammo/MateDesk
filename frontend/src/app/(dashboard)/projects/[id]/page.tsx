@@ -22,6 +22,7 @@ import { ProjectActivityPanel } from '@/components/projects/ProjectActivityPanel
 import { ProjectDeliveryPanel } from '@/components/projects/ProjectDeliveryPanel';
 import { ProjectFilesPanel } from '@/components/projects/ProjectFilesPanel';
 import { ProjectScopePanel } from '@/components/projects/ProjectScopePanel';
+import { WorkItemProgressBadge } from '@/components/projects/WorkItemAdvancedPanel';
 import {
   ProjectEmpty, ProjectError, ProjectLoading, ProjectTitleBar, ProjectProgressIndicator, StatePill,
   WORK_STATES, WORK_KINDS, WORK_PRIORITIES, formatProjectDate,
@@ -50,6 +51,7 @@ function WorkLink({ item, projectId }: { item: WorkItem; projectId: string }) {
   return <Link href={`/projects/${projectId}/work-items/${item.id}`} className="flex min-w-0 flex-col gap-1 py-0.5">
     <span className="truncate text-xs font-semibold" style={{ color: 'var(--text-0)' }}>{item.title}</span>
     <span className="font-mono text-[11px]" style={{ color: 'var(--text-3)' }}>{item.ref}</span>
+    <WorkItemProgressBadge item={item}/>
   </Link>;
 }
 
@@ -64,7 +66,9 @@ function WorkRow({ item, projectId, canEdit, move, busy }: {
         {canEdit ? (
           <select aria-label={`Status for ${item.ref}`} className="select max-w-[146px] min-w-[116px]"
             value={item.status} disabled={busy} onChange={e => move(item.id, e.target.value as WorkItemStatus)}>
-            {WORK_STATES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            {WORK_STATES.map(s => <option key={s.value} value={s.value}
+              disabled={(item.is_blocked && ['in_progress','in_review','done'].includes(s.value))
+                || (s.value === 'done' && item.checklist_total > item.checklist_completed)}>{s.label}</option>)}
           </select>
         ) : <StatePill value={item.status} label={WORK_STATES.find(s => s.value === item.status)?.label} />}
       </td>
@@ -90,6 +94,7 @@ function WorkCard({ item, projectId, canEdit, move, busy, startDrag, finishDrag 
       </div>
       <Link href={`/projects/${projectId}/work-items/${item.id}`} className="block text-[13px] font-semibold leading-snug"
         style={{ color: 'var(--text-0)' }}>{item.title}</Link>
+      <div className="mt-2"><WorkItemProgressBadge item={item}/></div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <StatePill value={item.kind} />
         <span className="max-w-[120px] truncate text-[11px]" title={item.assignee_name || 'Unassigned'}
@@ -97,7 +102,9 @@ function WorkCard({ item, projectId, canEdit, move, busy, startDrag, finishDrag 
       </div>
       {canEdit && <select className="select mt-2 w-full" aria-label={`Move ${item.ref}`}
         disabled={busy} value={item.status} onChange={e => move(item.id, e.target.value as WorkItemStatus)}>
-        {WORK_STATES.map(s => <option key={s.value} value={s.value}>Move to {s.label}</option>)}
+        {WORK_STATES.map(s => <option key={s.value} value={s.value}
+              disabled={(item.is_blocked && ['in_progress','in_review','done'].includes(s.value))
+                || (s.value === 'done' && item.checklist_total > item.checklist_completed)}>Move to {s.label}</option>)}
       </select>}
     </div>
   );

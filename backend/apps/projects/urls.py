@@ -11,6 +11,10 @@ from .delivery import (ProjectDeliveryView, ProjectDeliverySubmitView,
 from .reviewers import ProjectReviewerCandidatesView
 from .files import (ProjectFilesView, ProjectFileDetailView,
                     ProjectFileVersionsView, ProjectFileDownloadView)
+from .work_advanced import (
+    WorkItemDependenciesView, WorkItemDependencyDetailView,
+    WorkItemChecklistView, WorkItemChecklistDetailView,
+)
 from .scope import (
     ProjectScopeView, ProjectScopeProposalsView, ProjectScopeDecisionView,
     ProjectScopeChangeRequestsView, ProjectScopeChangeReviewView,
@@ -72,5 +76,9 @@ urlpatterns = [
     path('projects/<uuid:pk>/milestones/<uuid:milestone_id>/', ProjectMilestoneDetailView.as_view(), name='projects-milestone-detail'),
     path('projects/<uuid:pk>/work-items/', ProjectWorkItemsView.as_view(), name='projects-work-items'),
     path('work-items/<uuid:pk>/', WorkItemDetailView.as_view(), name='work-items-detail'),
+    path('work-items/<uuid:pk>/dependencies/', WorkItemDependenciesView.as_view(), name='work-item-dependencies'),
+    path('work-items/<uuid:pk>/dependencies/<uuid:dependency_id>/', WorkItemDependencyDetailView.as_view(), name='work-item-dependency-detail'),
+    path('work-items/<uuid:pk>/checklist/', WorkItemChecklistView.as_view(), name='work-item-checklist'),
+    path('work-items/<uuid:pk>/checklist/<uuid:entry_id>/', WorkItemChecklistDetailView.as_view(), name='work-item-checklist-detail'),
     path('work-items/<uuid:pk>/comments/', WorkItemCommentsView.as_view(), name='work-items-comments'),
 ]

@@ -197,16 +197,18 @@ class ProjectMilestonesView(APIView):
     def post(self, request, pk):
         project = _project(request, pk)
         _manage(request.user, project)
-        from .delivery import ensure_delivery_unlocked
-        ensure_delivery_unlocked(project)
         data = ProjectMilestoneWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         if not data.validated_data.get('name'):
             raise ValidationError({'name': 'Name is required.'})
-        milestone = _save_validated(ProjectMilestone(project=project, **data.validated_data))
-        record_activity(project, kind='milestone_created', actor=request.user,
-                        summary=f'Milestone added: {milestone.name}',
-                        visibility=milestone.visibility, milestone=milestone)
+        with transaction.atomic():
+            project = Project.objects.select_for_update().get(pk=project.pk)
+            from .delivery import ensure_delivery_unlocked
+            ensure_delivery_unlocked(project)
+            milestone = _save_validated(ProjectMilestone(project=project, **data.validated_data))
+            record_activity(project, kind='milestone_created', actor=request.user,
+                            summary=f'Milestone added: {milestone.name}',
+                            visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data, status=status.HTTP_201_CREATED)
 
 
@@ -216,17 +218,22 @@ class ProjectMilestoneDetailView(APIView):
     def patch(self, request, pk, milestone_id):
         project = _project(request, pk)
         _manage(request.user, project)
-        from .delivery import ensure_delivery_unlocked
-        ensure_delivery_unlocked(project)
-        milestone = get_object_or_404(project.milestones.all(), pk=milestone_id)
         data = ProjectMilestoneWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
-        for field, value in data.validated_data.items():
-            setattr(milestone, field, value)
-        _save_validated(milestone)
-        record_activity(project, kind='milestone_updated', actor=request.user,
-                        summary=f'Milestone updated: {milestone.name}',
-                        visibility=milestone.visibility, milestone=milestone)
+        with transaction.atomic():
+            project = Project.objects.select_for_update().get(pk=project.pk)
+            from .delivery import ensure_delivery_unlocked
+            ensure_delivery_unlocked(project)
+            milestone = get_object_or_404(
+                ProjectMilestone.objects.select_for_update().filter(project=project),
+                pk=milestone_id,
+            )
+            for field, value in data.validated_data.items():
+                setattr(milestone, field, value)
+            _save_validated(milestone)
+            record_activity(project, kind='milestone_updated', actor=request.user,
+                            summary=f'Milestone updated: {milestone.name}',
+                            visibility=milestone.visibility, milestone=milestone)
         return Response(ProjectMilestoneReadSerializer(milestone).data)
 
 
@@ -327,6 +334,8 @@ class WorkItemCommentsView(APIView):
 
     def post(self, request, pk):
         item = _work_item(request, pk)
+        if item.project.status == 'archived':
+            raise ValidationError({'detail': 'Archived Projects are read only.'})
         is_client = request.user.role in CLIENT_ROLES
         if not is_client:
             _edit(request.user, item.project)
@@ -338,9 +347,16 @@ class WorkItemCommentsView(APIView):
                 raise PermissionDenied('Clients can only post client visible comments.')
         elif visibility == 'client' and not can_manage_project(request.user, item.project):
             raise PermissionDenied('Only a project manager can publish client visible comments.')
-        comment = WorkItemComment(
-            work_item=item, author=request.user,
-            body=data.validated_data['body'], visibility=visibility,
-        )
-        _save_validated(comment)
+        with transaction.atomic():
+            project = Project.objects.select_for_update().get(pk=item.project_id)
+            if project.status == 'archived':
+                raise ValidationError({'detail': 'Archived Projects are read only.'})
+            item = get_object_or_404(WorkItem, pk=item.pk, project=project)
+            if is_client and item.visibility != 'client':
+                raise PermissionDenied('This Work Item is not visible to Clients.')
+            comment = WorkItemComment(
+                work_item=item, author=request.user,
+                body=data.validated_data['body'], visibility=visibility,
+            )
+            _save_validated(comment)
         return Response(WorkItemCommentReadSerializer(comment).data, status=status.HTTP_201_CREATED)

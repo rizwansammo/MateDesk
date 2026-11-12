@@ -66,7 +66,7 @@ export interface WorkItem {
   assignee_name: string | null;
   start_date: string | null;
   due_date: string | null;
-  estimated_minutes: number;
+  estimated_minutes: number | null;
   position: number;
   is_blocked: boolean;
   blocked_by_count: number;

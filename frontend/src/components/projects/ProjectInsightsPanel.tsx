@@ -7,6 +7,7 @@ import {
   useProjectReport, useProjectTimeline, type ProjectReport, type ProjectTimeline,
 } from '@/hooks/useProjectInsights';
 import { ProjectError, ProjectLoading } from './ProjectUI';
+import { encodeCsv } from '@/lib/csv';
 
 function asHours(minutes: number) {
   return `${(minutes / 60).toFixed(1)}h`;
@@ -20,7 +21,7 @@ function stat(label: string, value: string | number) {
 }
 
 function saveCsv(name: string, rows: string[][]) {
-  const data = rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n');
+  const data = encodeCsv(rows);
   const url = URL.createObjectURL(new Blob([data], { type: 'text/csv;charset=utf-8' }));
   const anchor = document.createElement('a');
   anchor.href = url;

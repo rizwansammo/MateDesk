@@ -108,6 +108,14 @@ jobs:
         # Faster than waiting for the Docker build to type-check, and fails earlier.
         run: npx tsc --noEmit
 
+      - name: Project report CSV security tests
+        working-directory: frontend
+        run: node --test tests/csv-export.test.mjs
+
+      - name: Audit frontend production dependencies
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint
         working-directory: frontend
         # No --max-warnings: the config deliberately keeps a backlog of ~76
@@ -221,6 +229,11 @@ jobs:
             # read them. The shared config is left untouched.
             export DOCKER_CONFIG=/root/.docker-matedesk
             mkdir -p "$DOCKER_CONFIG"
+            cleanup_ghcr() {
+              docker logout ghcr.io >/dev/null 2>&1 || true
+              rm -rf "$DOCKER_CONFIG"
+            }
+            trap cleanup_ghcr EXIT
             printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             # Pin this deploy to the exact commit that was just built, so a
@@ -228,7 +241,18 @@ jobs:
             export MATEDESK_BACKEND_IMAGE=ghcr.io/rizwansammo/matedesk-backend:${GITHUB_SHA}
             export MATEDESK_FRONTEND_IMAGE=ghcr.io/rizwansammo/matedesk-frontend:${GITHUB_SHA}
 
-            docker compose pull backend frontend
+            # Retry transient GHCR network resets without rerunning CI builds.
+            for attempt in 1 2 3; do
+              if docker compose pull backend frontend; then
+                break
+              fi
+              if [ "$attempt" = "3" ]; then
+                echo "GHCR image pull failed after 3 attempts"
+                exit 1
+              fi
+              echo "GHCR pull interrupted, retrying attempt $((attempt + 1))"
+              sleep $((attempt * 5))
+            done
             docker compose up -d --remove-orphans
 
             # The Host header is required: ALLOWED_HOSTS lists only real public
@@ -266,7 +290,7 @@ jobs:
             docker compose ps
 
             # Drop the ephemeral credential; the token is dead after this run anyway.
-            docker logout ghcr.io || true
-            rm -rf "$DOCKER_CONFIG"
+            cleanup_ghcr
+            trap - EXIT
             unset DOCKER_CONFIG
             docker image prune -f --filter "until=168h" || true

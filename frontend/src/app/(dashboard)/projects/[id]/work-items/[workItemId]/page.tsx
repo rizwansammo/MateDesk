@@ -35,7 +35,7 @@ function EditWorkItemDialog({ item, projectId, canManage, onClose }: {
   const [visibility, setVisibility] = useState<WorkVisibility>(item.visibility);
   const [startDate, setStartDate] = useState(item.start_date || '');
   const [dueDate, setDueDate] = useState(item.due_date || '');
-  const [estimatedHours, setEstimatedHours] = useState(String(item.estimated_minutes / 60));
+  const [estimatedHours, setEstimatedHours] = useState(String((item.estimated_minutes ?? 0) / 60));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

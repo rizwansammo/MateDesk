@@ -118,13 +118,34 @@ class ProjectMilestoneWriteSerializer(serializers.Serializer):
 
 class WorkItemReadSerializer(serializers.ModelSerializer):
     ref = serializers.ReadOnlyField()
-    milestone_id = serializers.UUIDField(read_only=True)
+    milestone_id = serializers.SerializerMethodField()
+    estimated_minutes = serializers.SerializerMethodField()
     assignee_id = serializers.UUIDField(read_only=True)
     assignee_name = serializers.CharField(source='assignee.full_name', read_only=True, allow_null=True)
     is_blocked = serializers.SerializerMethodField()
     blocked_by_count = serializers.SerializerMethodField()
     checklist_total = serializers.SerializerMethodField()
     checklist_completed = serializers.SerializerMethodField()
+
+    def _client_request(self):
+        request = self.context.get('request')
+        if request is None:
+            return False
+        from apps.users.permissions import CLIENT_ROLES
+        return request.user.role in CLIENT_ROLES
+
+    def get_milestone_id(self, obj):
+        if not obj.milestone_id:
+            return None
+        if self._client_request() and obj.milestone.visibility != 'client':
+            # A public Work Item may be attached to an internal Milestone.
+            # Never expose the internal Milestone UUID via the legacy API.
+            return None
+        return str(obj.milestone_id)
+
+    def get_estimated_minutes(self, obj):
+        # Estimated effort is internal staff planning data, not Client metadata.
+        return None if self._client_request() else obj.estimated_minutes
 
     def _progress(self, obj):
         cached = getattr(obj, '_advanced_progress', None)
